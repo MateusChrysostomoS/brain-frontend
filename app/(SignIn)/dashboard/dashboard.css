@@ -1,0 +1,1045 @@
+/* ─────────────────────────────────────────────────────────────
+   PreCheck — Dashboard (/dashboard)
+   Ported from the Claude Design handoff (Dashboard.html).
+   Shares the landing/login visual identity: cream + teal + Instrument
+   Serif. Every selector is scoped to `.dash-route` so the new look
+   never collides with the legacy `.summary-card` / `.filter-pill`
+   styles still living in globals.css (those will fade out as the
+   old class names get removed from JSX).
+   ───────────────────────────────────────────────────────────── */
+
+/* The legacy app shell paints two big blue radial circles via body
+   pseudo-elements (globals.css). They're tuned for the original GitHub-
+   dark theme and clash with the cream/teal palette, so we hide them when
+   a dashboard route is mounted. `:has()` keeps the override scoped to
+   this route only — no need to touch globals.css. */
+body:has(.dash-route)::before,
+body:has(.dash-route)::after { display: none; }
+
+.dash-route {
+  /* Landing tokens (light identity) — same scale as login.css */
+  --bg:         #f7f6f2;
+  --surface:    #ffffff;
+  --surface-2:  #f1efe8;
+  --ink:        #0b1f2a;
+  --ink-2:      #1c3344;
+  --muted:      #5a6b76;
+  --dim:        #8a98a1;
+  --border:     #e6e1d6;
+  --border-2:   #d8d2c4;
+  --navy:       #0b3a4a;
+  --teal:       #1a8c93;
+  --teal-2:     #2aa6a8;
+  --green:      #5b8c5a;
+  --warning:    #c89638;
+  --danger:     #c4544c;
+  --radius-lg:  20px;
+  --font-ui:    'Inter', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  --shadow:     0 2px 8px rgba(11, 31, 42, .05), 0 8px 24px rgba(11, 31, 42, .06);
+
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Smooth handoff when toggling light ↔ dark elsewhere in the app */
+  transition: background-color .3s ease, color .3s ease;
+}
+
+/* ── Top nav ──────────────────────────────────────────────── */
+
+.dash-route .dash-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(247, 246, 242, .82);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+          backdrop-filter: saturate(180%) blur(14px);
+  border-bottom: 1px solid var(--border);
+  transition: background .3s ease, border-color .3s ease;
+}
+.dash-route .dash-nav-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 28px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.dash-route .dash-brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--font-serif);
+  font-size: 24px;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--ink);
+  text-decoration: none;
+}
+.dash-route .dash-brand em {
+  font-style: italic;
+  color: var(--teal);
+}
+.dash-route .dash-nav-left {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  min-width: 0;
+}
+
+/* Segmented tab strip — admin only, switches between Dashboard e Inbound. */
+.dash-route .dash-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+}
+.dash-route .dash-tab {
+  padding: 7px 16px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-radius: 100px;
+  transition: background .15s ease, color .15s ease;
+  white-space: nowrap;
+}
+.dash-route .dash-tab:hover {
+  color: var(--ink);
+  background: var(--surface-2);
+}
+.dash-route .dash-tab.active,
+.dash-route .dash-tab.active:hover {
+  color: #fff;
+  background: var(--teal);
+}
+
+.dash-route .dash-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.dash-route .dash-role {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.dash-route .dash-role .avatar {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--teal);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+}
+
+/* Theme toggle — both icons rendered, only the active one shown via data-theme */
+.dash-route .theme-toggle {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  color: var(--ink-2);
+  background: transparent;
+  border: 1px solid var(--border-2);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.dash-route .theme-toggle:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+.dash-route .theme-toggle svg {
+  transition: transform .4s cubic-bezier(.2, .7, .2, 1);
+}
+.dash-route .theme-toggle:hover svg { transform: rotate(-20deg); }
+.dash-route .theme-toggle .sun { display: none; }
+html[data-theme="dark"] .dash-route .theme-toggle .sun  { display: block; }
+html[data-theme="dark"] .dash-route .theme-toggle .moon { display: none; }
+
+/* "Sair" — ghost-outline like a tertiary button */
+.dash-route .dash-signout {
+  font-family: var(--font-ui);
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 8px 14px;
+  color: var(--ink-2);
+  background: transparent;
+  border: 1px solid var(--border-2);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.dash-route .dash-signout:hover {
+  background: var(--surface-2);
+  border-color: var(--ink-2);
+  color: var(--ink);
+}
+
+/* ── Page shell ──────────────────────────────────────────── */
+
+.dash-route .dash {
+  position: relative;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 40px 28px 100px;
+}
+/* Two soft ambient glows — same vocabulary used in the hero + login background */
+.dash-route .dash::before {
+  content: '';
+  position: fixed;
+  width: 720px;
+  height: 720px;
+  top: -240px;
+  right: -240px;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(circle, rgba(26, 140, 147, .08) 0%, transparent 60%);
+}
+.dash-route .dash::after {
+  content: '';
+  position: fixed;
+  width: 520px;
+  height: 520px;
+  bottom: -200px;
+  left: -160px;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(circle, rgba(91, 140, 90, .06) 0%, transparent 65%);
+}
+.dash-route .dash > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Header ──────────────────────────────────────────────── */
+
+.dash-route .dash-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 32px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+.dash-route .dash-head .eyebrow {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.dash-route .dash-head h1 {
+  margin-top: 8px;
+  font-family: var(--font-serif);
+  font-size: clamp(36px, 4.2vw, 52px);
+  font-weight: 400;
+  letter-spacing: -0.024em;
+  line-height: 1.02;
+  color: var(--ink);
+  text-wrap: balance;
+}
+.dash-route .dash-head h1 em {
+  font-style: italic;
+  color: var(--teal);
+}
+
+.dash-route .dash-stats {
+  display: flex;
+  gap: 22px;
+  flex-wrap: wrap;
+  padding-bottom: 6px;
+}
+.dash-route .dash-stat .num {
+  font-family: var(--font-serif);
+  font-size: 30px;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.dash-route .dash-stat .num em {
+  font-style: italic;
+  color: var(--teal);
+}
+.dash-route .dash-stat .label {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+/* ── Search bar ──────────────────────────────────────────── */
+
+.dash-route .dash-search {
+  position: relative;
+  margin-bottom: 22px;
+}
+.dash-route .dash-search > svg {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--muted);
+}
+.dash-route .dash-search input {
+  width: 100%;
+  padding: 16px 18px 16px 50px;
+  font-family: var(--font-ui);
+  font-size: 15.5px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--border-2);
+  border-radius: 14px;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s, background .15s;
+}
+.dash-route .dash-search input::placeholder { color: var(--muted); }
+.dash-route .dash-search input:focus {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 4px rgba(26, 140, 147, .10);
+}
+
+/* ── Filter row ──────────────────────────────────────────── */
+
+.dash-route .dash-filters {
+  position: relative;
+  /* Lifts the filter row — and the trash button that drops out of it —
+     above the count strip below, so the trash stays clickable. */
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+  /* Animates the gap that opens/closes as delete mode is armed (rule below). */
+  transition: margin-bottom .2s ease;
+}
+
+/* While delete mode is armed, the "Confirmar deleção" button drops out of
+   the filter row (absolutely positioned, ~50px below it). Widen the bottom
+   margin so the dropped button clears the patient list with a comfortable
+   gap instead of overlapping the first bar. The toggle keeps its place. */
+.dash-route .dash-filters:has(.delete-toggle.on) {
+  margin-bottom: 48px;
+}
+.dash-route .dash-filters .filter-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.dash-route .dash-filters .filter-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.dash-route .pill-row {
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+}
+.dash-route .pill {
+  padding: 7px 14px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-2);
+  background: transparent;
+  border: none;
+  border-radius: 100px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s, color .15s;
+}
+.dash-route .pill:hover {
+  color: var(--ink);
+  background: var(--surface-2);
+}
+.dash-route .pill.active,
+.dash-route .pill.active:hover {
+  color: #fff;
+  background: var(--teal);
+}
+
+.dash-route .filter-spacer { flex: 1; }
+
+/* ── Delete controls (toggle + trash) ────────────────────── */
+
+/* The cluster sits at the right end of the filter row. Only the toggle
+   is in flow; the trash button is positioned absolutely so arming
+   delete mode never shifts the patient list below it. */
+.dash-route .delete-controls {
+  position: relative;
+  display: inline-flex;
+}
+
+/* Binary on/off toggle — a pill with an embedded switch track. */
+.dash-route .delete-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  /* Matches the height of the filter pill-rows sitting beside it. */
+  min-height: 40px;
+  padding: 6px 16px 6px 10px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-2);
+  background: var(--surface);
+  border: 1px solid var(--border-2);
+  border-radius: 100px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.dash-route .delete-toggle:hover {
+  color: var(--ink);
+  border-color: var(--danger);
+}
+.dash-route .delete-toggle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(196, 84, 76, .22);
+}
+/* Armed state — the whole pill picks up the danger accent. */
+.dash-route .delete-toggle.on {
+  color: var(--danger);
+  background: rgba(196, 84, 76, .07);
+  border-color: rgba(196, 84, 76, .42);
+}
+
+/* Switch track + sliding knob inside the toggle. */
+.dash-route .delete-toggle-track {
+  position: relative;
+  flex-shrink: 0;
+  width: 32px;
+  height: 18px;
+  background: var(--border-2);
+  border-radius: 100px;
+  transition: background .18s ease;
+}
+.dash-route .delete-toggle.on .delete-toggle-track {
+  background: var(--danger);
+}
+.dash-route .delete-toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(11, 31, 42, .35);
+  /* Springy slide — borrows the modal-scale-in easing vocabulary. */
+  transition: transform .2s cubic-bezier(.34, 1.4, .64, 1);
+}
+.dash-route .delete-toggle.on .delete-toggle-knob {
+  transform: translateX(14px);
+}
+.dash-route .delete-toggle-text { white-space: nowrap; }
+
+/* "Confirmar deleção" button — drops in beneath the toggle while delete
+   mode is armed, mirroring the toggle's pill silhouette (icon + label).
+   The icon/label are gray in light theme; the dark block below makes
+   them red. */
+.dash-route .delete-trash {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 5;
+  /* Identical box to .delete-toggle above it — height, radius, padding. */
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 40px;
+  padding: 6px 16px 6px 10px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border-2);
+  border-radius: 100px;
+  cursor: pointer;
+  transition: color .15s, background .15s, border-color .15s,
+    transform .15s, box-shadow .15s;
+  animation: delete-trash-in .2s cubic-bezier(.34, 1.4, .64, 1);
+}
+.dash-route .delete-trash-text { white-space: nowrap; }
+.dash-route .delete-trash:hover:not(:disabled) {
+  color: var(--danger);
+  border-color: rgba(196, 84, 76, .45);
+  transform: translateY(-1px);
+}
+.dash-route .delete-trash:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(196, 84, 76, .28);
+}
+.dash-route .delete-trash:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+/* Eye-catching state — filled red on the literal press and for as long
+   as the confirmation flow stays on screen. */
+.dash-route .delete-trash:active:not(:disabled),
+.dash-route .delete-trash.is-active {
+  color: #fff;
+  background: var(--danger);
+  border-color: var(--danger);
+  transform: scale(1.08);
+  box-shadow: 0 8px 22px rgba(196, 84, 76, .42);
+}
+.dash-route .delete-trash.is-active {
+  animation: delete-trash-pulse 1.6s ease-in-out infinite;
+}
+/* Solid red when patients are selected — draws attention to the action. */
+.dash-route .delete-trash.has-selection {
+  color: #fff;
+  background: var(--danger);
+  border-color: var(--danger);
+}
+.dash-route .delete-trash.has-selection:hover:not(:disabled) {
+  color: #fff;
+  border-color: var(--danger);
+  background: #b33a34;
+}
+
+@keyframes delete-trash-in {
+  from { opacity: 0; transform: translateY(-8px) scale(.85); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes delete-trash-pulse {
+  0%, 100% {
+    box-shadow: 0 8px 22px rgba(196, 84, 76, .42),
+                0 0 0 0 rgba(196, 84, 76, .4);
+  }
+  50% {
+    box-shadow: 0 8px 22px rgba(196, 84, 76, .42),
+                0 0 0 10px rgba(196, 84, 76, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dash-route .delete-trash,
+  .dash-route .delete-trash.is-active { animation: none; }
+  .dash-route .delete-toggle-knob { transition: none; }
+  .dash-route .dash-filters { transition: none; }
+}
+
+/* On narrow screens the trash button sits in flow (a column under the
+   toggle) instead of dropping out absolutely — avoids any overlap
+   where the filter row wraps. */
+@media (max-width: 760px) {
+  .dash-route .delete-controls {
+    flex-direction: column;
+    align-items: flex-end;
+  }
+  .dash-route .delete-trash {
+    position: static;
+    margin-top: 8px;
+  }
+  /* The button is in flow here (static), so the extra reserved gap the
+     desktop rule adds isn't needed — fall back to the base margin. */
+  .dash-route .dash-filters:has(.delete-toggle.on) {
+    margin-bottom: 18px;
+  }
+}
+
+/* ── Count strip ─────────────────────────────────────────── */
+
+.dash-route .dash-count {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0 14px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.dash-route .dash-count .selection { color: var(--teal); }
+.dash-route .dash-count .sep {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  background: var(--border-2);
+  border-radius: 50%;
+}
+
+/* ── Patient list ────────────────────────────────────────── */
+
+.dash-route .dash-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dash-route .p-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: center;
+  padding: 18px 22px 18px 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s, transform .15s,
+    padding-left .28s cubic-bezier(.34, 1.4, .64, 1);
+}
+/* Delete mode — left padding opens up so the select button slides in,
+   pulling the card content (name, date, etc.) to the right. */
+.dash-route .p-card.delete-mode {
+  padding-left: 74px;
+}
+/* Teal accent strip on the left edge — strengthens on hover/selection */
+.dash-route .p-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 12px;
+  bottom: 12px;
+  width: 3px;
+  background: var(--teal);
+  border-radius: 0 3px 3px 0;
+  opacity: .55;
+  transition: opacity .15s, width .15s;
+}
+.dash-route .p-card:hover {
+  border-color: var(--border-2);
+  box-shadow: var(--shadow);
+}
+.dash-route .p-card:hover::before {
+  opacity: 1;
+  width: 4px;
+}
+/* Marked for deletion — red accent so accumulated cards read at a glance. */
+.dash-route .p-card.selected {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(196, 84, 76, .10);
+}
+.dash-route .p-card.selected::before {
+  opacity: 1;
+  width: 4px;
+  background: var(--danger);
+}
+
+/* Select control — absolutely positioned on the card's left edge, so it
+   sits in the space that the animating left padding opens up. Invisible
+   and non-interactive until delete mode is armed. */
+.dash-route .p-select-slot {
+  position: absolute;
+  left: 20px;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s ease;
+}
+.dash-route .p-card.delete-mode .p-select-slot {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Square trash button that marks a card for deletion. */
+.dash-route .p-select-btn {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  color: var(--muted);
+  background: var(--bg);
+  border: 1px solid var(--border-2);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: color .15s, background .15s, border-color .15s, transform .12s;
+}
+.dash-route .p-select-btn:hover {
+  color: var(--danger);
+  border-color: rgba(196, 84, 76, .45);
+}
+.dash-route .p-select-btn:active {
+  transform: scale(.9);
+}
+.dash-route .p-select-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(196, 84, 76, .26);
+}
+/* Marked — filled red, matching the card's red accent strip. */
+.dash-route .p-card.selected .p-select-btn {
+  color: #fff;
+  background: var(--danger);
+  border-color: var(--danger);
+}
+
+.dash-route .p-body { min-width: 0; }
+.dash-route .p-name {
+  margin-bottom: 3px;
+  font-size: 15.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  text-wrap: balance;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+/* "NOVO" affordance — a real UX cue from the original dashboard. Kept as a
+   small, low-emphasis teal pill so it sits inside the design vocabulary. */
+.dash-route .p-name .badge-new {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--teal);
+  background: rgba(26, 140, 147, .08);
+  border: 1px solid rgba(26, 140, 147, .22);
+  border-radius: 100px;
+}
+.dash-route .p-meta {
+  margin-bottom: 6px;
+  font-size: 12.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.dash-route .p-meta .meta-type {
+  color: var(--ink-2);
+  font-weight: 500;
+}
+.dash-route .p-desc {
+  overflow: hidden;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dash-route .p-desc.empty {
+  color: var(--dim);
+  font-style: italic;
+}
+
+.dash-route .p-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+.dash-route .p-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border: 1px solid;
+  border-radius: 100px;
+  white-space: nowrap;
+}
+/* Leading status dot — inherits the badge's per-status text color via
+   currentColor, so each status reads at a glance even before the label. */
+.dash-route .p-status::before {
+  content: '';
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  background: currentColor;
+  border-radius: 50%;
+}
+.dash-route .p-status.waiting {
+  color: #2a7ab5;
+  background: rgba(42, 122, 181, .08);
+  border-color: rgba(42, 122, 181, .32);
+}
+.dash-route .p-status.attended {
+  color: #3c5e3b;
+  background: rgba(91, 140, 90, .10);
+  border-color: rgba(91, 140, 90, .32);
+}
+.dash-route .p-status.rejected {
+  color: var(--danger);
+  background: rgba(196, 84, 76, .08);
+  border-color: rgba(196, 84, 76, .32);
+}
+
+/* ── Status-themed card accents ──────────────────────── */
+/* Waiting — blue accent */
+.dash-route .p-card.st-waiting::before { background: #2a7ab5; }
+.dash-route .p-card.st-waiting {
+  border-left: 3px solid rgba(42, 122, 181, .45);
+  background: linear-gradient(90deg, rgba(42, 122, 181, .04) 0%, var(--surface) 40%);
+}
+/* Attended — green accent */
+.dash-route .p-card.st-attended::before { background: var(--green); }
+.dash-route .p-card.st-attended {
+  border-left: 3px solid rgba(91, 140, 90, .45);
+  background: linear-gradient(90deg, rgba(91, 140, 90, .04) 0%, var(--surface) 40%);
+}
+/* Rejected — red accent */
+.dash-route .p-card.st-rejected::before { background: var(--danger); }
+.dash-route .p-card.st-rejected {
+  border-left: 3px solid rgba(196, 84, 76, .45);
+  background: linear-gradient(90deg, rgba(196, 84, 76, .04) 0%, var(--surface) 40%);
+}
+/* Selected overrides status accent — deletion takes priority */
+.dash-route .p-card.selected { border-left-color: var(--danger); }
+
+.dash-route .p-dots {
+  display: inline-flex;
+  gap: 4px;
+}
+.dash-route .p-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.dash-route .p-dot.red    { background: var(--danger);  box-shadow: 0 0 0 2px rgba(196, 84, 76, .16); }
+.dash-route .p-dot.amber  { background: var(--warning); box-shadow: 0 0 0 2px rgba(200, 150, 56, .16); }
+.dash-route .p-dot.green  { background: var(--green);   box-shadow: 0 0 0 2px rgba(91, 140, 90, .16); }
+
+/* States for the list shell (loading / error / empty) */
+.dash-route .dash-list .state {
+  padding: 48px 24px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+/* ── Pagination ──────────────────────────────────────────── */
+
+.dash-route .dash-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-top: 32px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+}
+.dash-route .page-size {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.dash-route .page-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.dash-route .page-nav .label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.dash-route .page-btn {
+  padding: 7px 14px;
+  font-family: var(--font-ui);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink-2);
+  background: var(--surface);
+  border: 1px solid var(--border-2);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.dash-route .page-btn:hover:not(:disabled) {
+  background: var(--surface-2);
+  border-color: var(--ink-2);
+  color: var(--ink);
+}
+.dash-route .page-btn:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+
+@media (max-width: 760px) {
+  /* ── Nav: wrap into rows so the admin tabs stay tappable ──────
+     On desktop the nav is one fixed-height row. On a phone that row
+     overflows horizontally and the Inbound tab slips under the account
+     controls, becoming impossible to tap. We dissolve the .dash-nav-left
+     wrapper (display:contents) so brand, tabs and the account cluster all
+     become direct flex items of the row, then reorder: brand + account
+     controls on row 1, the full-width segmented tabs on row 2 beneath
+     them. Every tab gets the width it needs and stays clickable. */
+  .dash-route .dash-nav-inner {
+    height: auto;
+    min-height: 64px;
+    flex-wrap: wrap;
+    gap: 12px 16px;
+    padding: 12px 18px;
+  }
+  .dash-route .dash-nav-left { display: contents; }
+  .dash-route .dash-brand { order: 1; }
+  /* Account cluster sits at the right end of row 1, beside the brand. */
+  .dash-route .dash-nav-right {
+    order: 2;
+    margin-left: auto;
+    gap: 12px;
+  }
+  /* Tabs drop to their own full-width row below the account info. */
+  .dash-route .dash-tabs {
+    order: 3;
+    flex-basis: 100%;
+    width: 100%;
+  }
+  .dash-route .dash-tab {
+    flex: 1;
+    text-align: center;
+    /* ≥44px tap target (9px*2 + ~18px text + 4px container padding). */
+    padding: 9px 16px;
+  }
+
+  .dash-route .dash { padding: 28px 18px 80px; }
+  .dash-route .dash-head { flex-direction: column; align-items: flex-start; gap: 18px; }
+  /* Stack each filter row vertically so the "Status" label sits above its
+     pills instead of fighting them for width on a narrow screen. */
+  .dash-route .dash-filters { gap: 16px; }
+  .dash-route .dash-filters .filter-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    width: 100%;
+  }
+  .dash-route .filter-spacer { display: none; }
+  /* The pill-row is a single rounded container; letting pills free-wrap
+     leaves a lone pill stranded on a second line. A 2-column grid keeps
+     the options evenly balanced (Status → tidy 2×2) and full-width. */
+  .dash-route .pill-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    width: 100%;
+    border-radius: 18px;
+  }
+  .dash-route .pill {
+    text-align: center;
+    padding: 9px 12px;
+  }
+  .dash-route .p-card {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 16px 16px 16px 22px;
+  }
+  .dash-route .p-card.delete-mode {
+    padding-left: 62px;
+  }
+  .dash-route .p-select-slot { left: 14px; }
+  /* On narrow screens, the right column drops below the body. The status
+     badge anchors the left, alert dots the right — a clean two-end row. */
+  .dash-route .p-right {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 4px;
+  }
+  .dash-route .p-desc { white-space: normal; }
+}
+
+/* On very narrow phones (e.g. folded Galaxy Z Fold cover screen) the clinic
+   name would push the brand + controls past the viewport. Drop the label —
+   the avatar still carries identity — so row 1 fits without overflow. */
+@media (max-width: 480px) {
+  .dash-route .dash-clinic-name { display: none; }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   DARK THEME (data-theme="dark" on <html>)
+   Mirrors the dark block in Dashboard.html. Tokens swap to the
+   navy + cream palette that the landing's `.problem` / `.security`
+   sections already use, so the whole app feels of-a-piece in dark.
+   ───────────────────────────────────────────────────────────── */
+
+html[data-theme="dark"] .dash-route {
+  --bg:        #0b1f2a;
+  --surface:   #122a35;
+  --surface-2: #173342;
+  --ink:       #f3eee0;
+  --ink-2:     #e0d8c4;
+  --muted:     #a0adb8;
+  --dim:       #6e7c87;
+  --border:    rgba(255, 255, 255, 0.07);
+  --border-2:  rgba(255, 255, 255, 0.14);
+  --teal:      #2aa6a8;
+  --teal-2:    #45c2c4;
+  --warning:   #d4a851;
+  --danger:    #e57168;
+}
+
+/* Sticky nav backdrop matches the dark page bg */
+html[data-theme="dark"] .dash-route .dash-nav {
+  background: rgba(11, 31, 42, .78);
+}
+
+/* Brighter, more saturated glows over deep navy */
+html[data-theme="dark"] .dash-route .dash::before {
+  background: radial-gradient(circle, rgba(42, 166, 168, .12) 0%, transparent 60%);
+}
+html[data-theme="dark"] .dash-route .dash::after {
+  background: radial-gradient(circle, rgba(91, 140, 90, .10) 0%, transparent 65%);
+}
+
+/* The "attended" green needs a softer hue in dark mode to clear contrast */
+html[data-theme="dark"] .dash-route .p-status.attended { color: #8fb98f; }
+html[data-theme="dark"] .dash-route .p-status.waiting { color: #5ba3d9; }
+
+/* Brighter focus halo over the deep navy field — the light-theme alpha
+   disappears against a dark background. */
+html[data-theme="dark"] .dash-route .dash-search input:focus {
+  box-shadow: 0 0 0 4px rgba(42, 166, 168, .18);
+}
+
+/* Trash button — soft red icon + label in dark theme (gray in light), and
+   only in the resting state. The filled states (.has-selection, .is-active)
+   paint #fff on a --danger fill; excluding them keeps this override from
+   outranking those rules and repainting the label red-on-red (invisible
+   until hovered). */
+html[data-theme="dark"] .dash-route .delete-trash:not(.has-selection):not(.is-active) {
+  color: var(--danger);
+}

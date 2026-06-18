@@ -78,6 +78,9 @@ web_modules/
 .next
 out
 
+# Design handoff source (reference only — not shipped)
+_design-source
+
 # Nuxt.js build / generate output
 .nuxt
 dist

@@ -1,0 +1,1104 @@
+/* ─────────────────────────────────────────────────────────────
+   PreCheck — Patient summary (/summary)
+   Ported from the Claude Design handoff (Paciente.html).
+   Shares the dashboard/login identity: warm-neutral + teal in
+   light, deep-navy + cream in dark. Every selector is scoped to
+   `.patient-route` so the new look never collides with the legacy
+   `.detail-*` / `.section-*` / `.soap-*` styles still in globals.css.
+   ───────────────────────────────────────────────────────────── */
+
+/* The legacy app shell paints two big radial circles via body
+   pseudo-elements (globals.css), tuned for the old GitHub-dark
+   theme. Hide them while a patient route is mounted — `:has()`
+   keeps the override scoped here, no globals.css edit needed. */
+body:has(.patient-route)::before,
+body:has(.patient-route)::after { display: none; }
+
+.patient-route {
+  /* Light identity — same token scale as dashboard.css / styles.css */
+  --bg:         #f7f6f2;
+  --surface:    #ffffff;
+  --surface-2:  #f1efe8;
+  --ink:        #0b1f2a;
+  --ink-2:      #1c3344;
+  --muted:      #5a6b76;
+  --dim:        #8a98a1;
+  --border:     #e6e1d6;
+  --border-2:   #d8d2c4;
+  --teal:       #1a8c93;
+  --teal-2:     #2aa6a8;
+  --green:      #5b8c5a;          /* medical green — NOT WhatsApp green */
+  --green-2:    #6fa371;
+  --warning:    #c89638;
+  --danger:     #c4544c;
+  --font-ui:    'Inter', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  --font-mono:  'JetBrains Mono', ui-monospace, monospace;
+  --shadow-sm:  0 1px 2px rgba(11, 31, 42, .04), 0 1px 1px rgba(11, 31, 42, .03);
+  --shadow:     0 2px 8px rgba(11, 31, 42, .05), 0 8px 24px rgba(11, 31, 42, .06);
+  --shadow-lg:  0 4px 16px rgba(11, 31, 42, .08), 0 24px 48px rgba(11, 31, 42, .10);
+
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Smooth handoff when toggling light <-> dark */
+  transition: background-color .3s ease, color .3s ease;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   DARK THEME — navy + cream, mirrors Paciente.html's dark block
+   and the dashboard's `.dash-route` dark palette.
+   ───────────────────────────────────────────────────────────── */
+html[data-theme="dark"] .patient-route {
+  --bg:        #0b1f2a;
+  --surface:   #122a35;
+  --surface-2: #173342;
+  --ink:       #f3eee0;
+  --ink-2:     #e0d8c4;
+  --muted:     #a0adb8;
+  --dim:       #6e7c87;
+  --border:    rgba(255, 255, 255, 0.07);
+  --border-2:  rgba(255, 255, 255, 0.14);
+  --teal:      #2aa6a8;
+  --teal-2:    #45c2c4;
+  --warning:   #d4a851;
+  --danger:    #e57168;
+}
+
+/* ── Top nav (reused DashNav component) ──────────────────────── */
+
+.patient-route .dash-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(247, 246, 242, .82);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+          backdrop-filter: saturate(180%) blur(14px);
+  border-bottom: 1px solid var(--border);
+  transition: background .3s ease, border-color .3s ease;
+}
+html[data-theme="dark"] .patient-route .dash-nav {
+  background: rgba(11, 31, 42, .78);
+}
+.patient-route .dash-nav-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 28px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.patient-route .dash-brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--font-serif);
+  font-size: 24px;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--ink);
+  text-decoration: none;
+  border-radius: 6px;
+}
+.patient-route .dash-brand em {
+  font-style: italic;
+  color: var(--teal);
+}
+.patient-route .dash-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.patient-route .dash-role {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.patient-route .dash-role .avatar {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--teal);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+}
+
+/* Theme toggle — both icons render; CSS shows the one for the active theme */
+.patient-route .theme-toggle {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  color: var(--ink-2);
+  background: transparent;
+  border: 1px solid var(--border-2);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.patient-route .theme-toggle:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+.patient-route .theme-toggle svg {
+  transition: transform .4s cubic-bezier(.2, .7, .2, 1);
+}
+.patient-route .theme-toggle:hover svg { transform: rotate(-20deg); }
+.patient-route .theme-toggle .sun { display: none; }
+html[data-theme="dark"] .patient-route .theme-toggle .sun  { display: block; }
+html[data-theme="dark"] .patient-route .theme-toggle .moon { display: none; }
+
+/* "Sair" — ghost-outline tertiary button */
+.patient-route .dash-signout {
+  font-family: var(--font-ui);
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 8px 14px;
+  color: var(--ink-2);
+  background: transparent;
+  border: 1px solid var(--border-2);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.patient-route .dash-signout:hover {
+  background: var(--surface-2);
+  border-color: var(--ink-2);
+  color: var(--ink);
+}
+.patient-route .dash-brand:focus-visible,
+.patient-route .theme-toggle:focus-visible,
+.patient-route .dash-signout:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(26, 140, 147, .28);
+}
+
+/* ── Page shell ──────────────────────────────────────────────── */
+
+.patient-route .page {
+  position: relative;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 32px 28px 120px;
+}
+/* Two soft ambient glows — same vocabulary as the hero / dashboard */
+.patient-route .page::before {
+  content: '';
+  position: fixed;
+  width: 720px;
+  height: 720px;
+  top: -260px;
+  right: -260px;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(circle, rgba(26, 140, 147, .08) 0%, transparent 60%);
+}
+.patient-route .page::after {
+  content: '';
+  position: fixed;
+  width: 520px;
+  height: 520px;
+  bottom: -220px;
+  left: -180px;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(circle, rgba(91, 140, 90, .06) 0%, transparent 65%);
+}
+html[data-theme="dark"] .patient-route .page::before {
+  background: radial-gradient(circle, rgba(42, 166, 168, .12) 0%, transparent 60%);
+}
+html[data-theme="dark"] .patient-route .page::after {
+  background: radial-gradient(circle, rgba(91, 140, 90, .10) 0%, transparent 65%);
+}
+.patient-route .page > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Back link ───────────────────────────────────────────────── */
+
+.patient-route .back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  text-decoration: none;
+  padding: 8px 4px;
+  margin-bottom: 22px;
+  border-radius: 8px;
+  transition: color .15s, gap .15s;
+}
+.patient-route .back-link:hover {
+  color: var(--teal);
+  gap: 12px;
+}
+.patient-route .back-link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(26, 140, 147, .28);
+}
+
+/* ── Patient header card ─────────────────────────────────────── */
+
+.patient-route .patient-head {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 32px 36px 28px;
+  box-shadow: var(--shadow-sm);
+}
+/* Teal -> green accent strip along the top edge */
+.patient-route .patient-head::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--teal) 0%, var(--green) 60%, transparent 100%);
+}
+.patient-route .patient-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--teal);
+}
+.patient-route .patient-eyebrow .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--teal);
+  box-shadow: 0 0 0 4px rgba(26, 140, 147, .18);
+  animation: patient-pulse 2.4s ease-in-out infinite;
+}
+.patient-route .patient-name {
+  margin-bottom: 22px;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: clamp(38px, 4.6vw, 54px);
+  line-height: 1.02;
+  letter-spacing: -0.024em;
+  color: var(--ink);
+  text-wrap: balance;
+}
+.patient-route .patient-name em {
+  font-style: italic;
+  color: var(--teal);
+}
+.patient-route .patient-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.patient-route .meta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 13px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+}
+.patient-route .meta-chip .k {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+/* Status chips — tonal, one per workflow state */
+.patient-route .meta-chip.status {
+  font-weight: 600;
+}
+.patient-route .meta-chip.status .pip {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.patient-route .meta-chip.status-waiting {
+  color: var(--warning);
+  background: rgba(200, 150, 56, .08);
+  border-color: rgba(200, 150, 56, .32);
+}
+html[data-theme="dark"] .patient-route .meta-chip.status-waiting { color: #e6c074; }
+.patient-route .meta-chip.status-attended {
+  color: #3c5e3b;
+  background: rgba(91, 140, 90, .10);
+  border-color: rgba(91, 140, 90, .32);
+}
+html[data-theme="dark"] .patient-route .meta-chip.status-attended { color: #8fb98f; }
+.patient-route .meta-chip.status-rejected {
+  color: var(--danger);
+  background: rgba(196, 84, 76, .08);
+  border-color: rgba(196, 84, 76, .32);
+}
+
+/* ── Action row + buttons ────────────────────────────────────── */
+
+.patient-route .action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 22px 0 28px;
+}
+.patient-route .action-row-left,
+.patient-route .action-row-right {
+  display: inline-flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.patient-route .btn-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 11px 18px;
+  border-radius: 100px;
+  border: 1px solid;
+  background: var(--surface);
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s, transform .08s;
+}
+.patient-route .btn-action:active { transform: translateY(1px); }
+.patient-route .btn-action:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+  transform: none;
+}
+.patient-route .btn-action.primary {
+  color: #fff;
+  background: var(--green);
+  border-color: var(--green);
+  box-shadow: 0 4px 14px -6px rgba(91, 140, 90, .55);
+}
+.patient-route .btn-action.primary:hover:not(:disabled) {
+  background: var(--green-2);
+  border-color: var(--green-2);
+}
+.patient-route .btn-action.danger {
+  color: var(--danger);
+  background: rgba(196, 84, 76, .06);
+  border-color: rgba(196, 84, 76, .32);
+}
+.patient-route .btn-action.danger:hover:not(:disabled) {
+  background: rgba(196, 84, 76, .12);
+  border-color: rgba(196, 84, 76, .55);
+}
+.patient-route .btn-action.ghost {
+  color: var(--ink-2);
+  background: transparent;
+  border-color: var(--border-2);
+}
+.patient-route .btn-action.ghost:hover:not(:disabled) {
+  background: var(--surface-2);
+  border-color: var(--ink-2);
+  color: var(--ink);
+}
+.patient-route .btn-action:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(26, 140, 147, .30);
+}
+.patient-route .btn-action.primary:focus-visible {
+  box-shadow: 0 0 0 3px rgba(91, 140, 90, .38);
+}
+.patient-route .btn-action.danger:focus-visible {
+  box-shadow: 0 0 0 3px rgba(196, 84, 76, .32);
+}
+
+/* ── Section cards ───────────────────────────────────────────── */
+
+.patient-route .sections {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.patient-route .sec {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px 24px 22px;
+  transition: border-color .15s, box-shadow .15s;
+}
+.patient-route .sec:hover { border-color: var(--border-2); }
+.patient-route .sec-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px dashed var(--border);
+}
+.patient-route .sec-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--teal);
+}
+.patient-route .sec-num {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  color: var(--dim);
+}
+.patient-route .sec-body {
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+.patient-route .sec-body p {
+  white-space: pre-line;
+}
+.patient-route .sec-body p + p { margin-top: 10px; }
+.patient-route .sec-body .ni {
+  color: var(--dim);
+  font-style: italic;
+}
+
+/* Emphasis card — the AI synthesis */
+.patient-route .sec.emphasis {
+  background: linear-gradient(180deg, rgba(26, 140, 147, .04) 0%, transparent 100%);
+  border-color: rgba(26, 140, 147, .22);
+}
+html[data-theme="dark"] .patient-route .sec.emphasis {
+  background: linear-gradient(180deg, rgba(42, 166, 168, .08) 0%, rgba(42, 166, 168, .02) 100%);
+  border-color: rgba(42, 166, 168, .28);
+}
+.patient-route .sec.emphasis .sec-body {
+  font-size: 15px;
+  color: var(--ink);
+}
+
+/* ── Clinical alerts ─────────────────────────────────────────── */
+
+.patient-route .alerts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.patient-route .alert {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 14px;
+  align-items: start;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid;
+  background: var(--surface);
+}
+.patient-route .alert .a-icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-top: 1px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+.patient-route .alert .a-body {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+.patient-route .alert .a-tag {
+  font-weight: 600;
+  margin-right: 4px;
+}
+.patient-route .alert.amber {
+  border-color: rgba(200, 150, 56, .28);
+  background: rgba(200, 150, 56, .05);
+}
+.patient-route .alert.amber .a-icon { background: rgba(200, 150, 56, .14); color: var(--warning); }
+.patient-route .alert.amber .a-tag  { color: #8a6520; }
+html[data-theme="dark"] .patient-route .alert.amber .a-tag { color: #e6c074; }
+
+.patient-route .alert.red {
+  border-color: rgba(196, 84, 76, .28);
+  background: rgba(196, 84, 76, .05);
+}
+.patient-route .alert.red .a-icon { background: rgba(196, 84, 76, .14); color: var(--danger); }
+.patient-route .alert.red .a-tag  { color: #8a3530; }
+html[data-theme="dark"] .patient-route .alert.red .a-tag { color: #f08a82; }
+
+.patient-route .alert.green {
+  border-color: rgba(91, 140, 90, .28);
+  background: rgba(91, 140, 90, .05);
+}
+.patient-route .alert.green .a-icon { background: rgba(91, 140, 90, .14); color: var(--green); }
+.patient-route .alert.green .a-tag  { color: #3c5e3b; }
+html[data-theme="dark"] .patient-route .alert.green .a-tag { color: #8fb98f; }
+
+/* ── Anthropometry rows ──────────────────────────────────────── */
+
+.patient-route .antro {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.patient-route .antro-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  font-size: 13.5px;
+  color: var(--ink-2);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.patient-route .antro-row .k {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--teal);
+  background: rgba(26, 140, 147, .08);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+/* ── Q & A ───────────────────────────────────────────────────── */
+
+.patient-route .qa {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.patient-route .qa-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.patient-route .qa-q {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+.patient-route .qa-q::before {
+  content: '';
+  width: 14px;
+  height: 1px;
+  background: var(--teal);
+  flex-shrink: 0;
+}
+.patient-route .qa-a {
+  margin-left: 24px;
+  padding: 10px 14px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  white-space: pre-line;
+}
+
+/* ── Patient exam photos ─────────────────────────────────────── */
+
+.patient-route .patient-images {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+  gap: 12px;
+}
+.patient-route .patient-image-thumb {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  padding: 0;
+  overflow: hidden;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: zoom-in;
+  transition: border-color .15s, transform .08s, box-shadow .15s;
+}
+.patient-route .patient-image-thumb:hover {
+  border-color: var(--teal);
+  box-shadow: var(--shadow-sm);
+}
+.patient-route .patient-image-thumb:active { transform: translateY(1px); }
+.patient-route .patient-image-thumb:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(26, 140, 147, .30);
+}
+.patient-route .patient-image-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.patient-route .patient-image-ph {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  font-size: 12px;
+  color: var(--dim);
+}
+
+/* Lightbox — fixed full-viewport overlay; dark in both themes by design */
+.patient-route .patient-image-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 32px;
+  background: rgba(11, 31, 42, .82);
+  -webkit-backdrop-filter: blur(6px);
+          backdrop-filter: blur(6px);
+  animation: patient-fade .18s ease;
+}
+.patient-route .patient-image-stage {
+  display: grid;
+  place-items: center;
+  max-width: min(1100px, 92vw);
+  max-height: 86vh;
+}
+.patient-route .patient-image-stage img {
+  max-width: 100%;
+  max-height: 86vh;
+  object-fit: contain;
+  border-radius: 10px;
+  box-shadow: var(--shadow-lg);
+}
+.patient-route .patient-image-ph.lg {
+  font-size: 14px;
+  color: #e6e1d6;
+}
+.patient-route .patient-image-close {
+  position: fixed;
+  top: 18px;
+  right: 20px;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  color: #fff;
+  background: rgba(255, 255, 255, .10);
+  border: 1px solid rgba(255, 255, 255, .22);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background .15s;
+}
+.patient-route .patient-image-close:hover { background: rgba(255, 255, 255, .20); }
+.patient-route .patient-image-nav {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  font-size: 30px;
+  line-height: 1;
+  color: #fff;
+  background: rgba(255, 255, 255, .10);
+  border: 1px solid rgba(255, 255, 255, .22);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background .15s;
+}
+.patient-route .patient-image-nav:hover { background: rgba(255, 255, 255, .20); }
+.patient-route .patient-image-nav.prev { left: 18px; }
+.patient-route .patient-image-nav.next { right: 18px; }
+.patient-route .patient-image-counter {
+  position: fixed;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 14px;
+  font-size: 12.5px;
+  color: #fff;
+  background: rgba(255, 255, 255, .12);
+  border-radius: 100px;
+}
+.patient-route .patient-image-close:focus-visible,
+.patient-route .patient-image-nav:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, .5);
+}
+@keyframes patient-fade { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .patient-route .patient-image-lightbox { animation: none; }
+  .patient-route .patient-image-thumb { transition: none; }
+}
+
+
+/* ── SOAP format extras ──────────────────────────────────────── */
+
+/* S / O / A / P letter badge inside a section title */
+.patient-route .soap-letter {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+/* Deep, fixed tones — keep white letters legible (>= 4.5:1) in both
+   themes, since --teal / --warning / --ink-2 invert too light in dark. */
+.patient-route .soap-letter-s { background: #1a6e74; }
+.patient-route .soap-letter-o { background: #0e4a5e; }
+.patient-route .soap-letter-a { background: #9a6b1f; }
+.patient-route .soap-letter-p { background: #43663f; }
+
+/* Problem list — three tonal columns */
+.patient-route .soap-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.patient-route .soap-col h4 {
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.patient-route .soap-col ul { list-style: none; }
+.patient-route .soap-col li {
+  display: flex;
+  gap: 8px;
+  padding: 2px 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+.patient-route .soap-col li::before {
+  content: '•';
+  color: var(--teal);
+}
+
+/* Objective metric pills (height / weight / BMI) */
+.patient-route .soap-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.patient-route .soap-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+}
+.patient-route .soap-pill .k {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+/* Standard physical-exam block */
+.patient-route .soap-exam {
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--teal);
+  border-radius: 10px;
+}
+.patient-route .soap-exam-label {
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.patient-route .soap-exam-text {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-2);
+  white-space: pre-line;
+}
+
+/* Bullet groups (findings / hypotheses / alerts) */
+.patient-route .bullet-group + .bullet-group { margin-top: 12px; }
+.patient-route .bullet-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.patient-route .bullet-list { list-style: none; }
+.patient-route .bullet-list li {
+  display: flex;
+  gap: 8px;
+  padding: 2px 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+.patient-route .bullet-list li::before {
+  content: '•';
+  color: var(--teal);
+}
+
+/* Risk classification badge */
+.patient-route .soap-risk-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+.patient-route .soap-risk-row .bullet-label { margin-bottom: 0; }
+.patient-route .soap-risk {
+  padding: 4px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 100px;
+  border: 1px solid;
+}
+.patient-route .soap-risk-baixo {
+  color: var(--green);
+  background: rgba(91, 140, 90, .10);
+  border-color: rgba(91, 140, 90, .32);
+}
+.patient-route .soap-risk-moderado {
+  color: var(--warning);
+  background: rgba(200, 150, 56, .10);
+  border-color: rgba(200, 150, 56, .32);
+}
+.patient-route .soap-risk-moderado-alto {
+  color: #d2702f;
+  background: rgba(210, 112, 47, .10);
+  border-color: rgba(210, 112, 47, .32);
+}
+.patient-route .soap-risk-alto {
+  color: var(--danger);
+  background: rgba(196, 84, 76, .10);
+  border-color: rgba(196, 84, 76, .32);
+}
+
+/* ── Footer action bar ───────────────────────────────────────── */
+
+.patient-route .foot-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+.patient-route .foot-actions .left {
+  font-size: 12px;
+  color: var(--dim);
+}
+.patient-route .foot-actions .right {
+  display: inline-flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ── Toast ───────────────────────────────────────────────────── */
+
+.patient-route .toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  z-index: 100;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100vw - 36px);
+  padding: 12px 18px;
+  font-size: 13.5px;
+  font-weight: 500;
+  /* Inverts against the page so the toast always reads — bg/ink swap by theme */
+  color: var(--bg);
+  background: var(--ink);
+  border-radius: 100px;
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(20px);
+  transition: opacity .25s, transform .25s;
+}
+.patient-route .toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.patient-route .toast .ok {
+  display: inline-flex;
+  color: var(--teal-2);
+}
+
+/* ── Loading skeleton ────────────────────────────────────────── */
+
+.patient-route .skel-line {
+  display: block;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--surface-2) 0%,
+    var(--border) 50%,
+    var(--surface-2) 100%
+  );
+  background-size: 200% 100%;
+  animation: patient-skel 1.3s ease-in-out infinite;
+}
+.patient-route .skel-eyebrow { width: 110px; height: 11px; }
+.patient-route .skel-name {
+  width: 60%;
+  height: 42px;
+  margin-top: 14px;
+  border-radius: 10px;
+}
+.patient-route .skel-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 24px;
+}
+.patient-route .skel-chip { width: 104px; height: 32px; border-radius: 100px; }
+.patient-route .skel-chip:nth-child(2) { width: 148px; }
+.patient-route .skel-chip:nth-child(3) { width: 132px; }
+.patient-route .skel-sectitle { width: 150px; height: 11px; }
+.patient-route .skel-body { height: 13px; margin-top: 12px; }
+.patient-route .skel-body.short { width: 72%; }
+/* Stands in for the back link + action row absent from the skeleton */
+.patient-route .patient-skeleton .sections { margin-top: 28px; }
+
+/* ── Suspense fallback + error state ─────────────────────────── */
+
+.patient-route .patient-loading {
+  display: grid;
+  place-items: center;
+  min-height: 70vh;
+  font-size: 14px;
+  color: var(--muted);
+}
+.patient-route .patient-error {
+  max-width: 480px;
+  margin: 56px auto 0;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 40px 32px;
+  box-shadow: var(--shadow-sm);
+}
+.patient-route .patient-error-icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 18px;
+  color: var(--warning);
+  background: rgba(200, 150, 56, .12);
+  border: 1px solid rgba(200, 150, 56, .28);
+  border-radius: 14px;
+}
+.patient-route .patient-error h2 {
+  margin-bottom: 8px;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 26px;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.patient-route .patient-error p {
+  margin-bottom: 22px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+/* The button is inline-flex, so the card's text-align centres it. */
+
+/* ── Keyframes ───────────────────────────────────────────────── */
+
+@keyframes patient-pulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(26, 140, 147, .18); }
+  50%      { box-shadow: 0 0 0 7px rgba(26, 140, 147, .04); }
+}
+@keyframes patient-skel {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Responsive ──────────────────────────────────────────────── */
+
+@media (max-width: 720px) {
+  .patient-route .dash-nav-inner { padding: 0 18px; }
+  .patient-route .dash-role { display: none; }
+  .patient-route .page { padding: 24px 18px 100px; }
+  .patient-route .patient-head { padding: 24px 22px 22px; }
+  .patient-route .action-row { flex-direction: column; align-items: stretch; }
+  .patient-route .action-row-left,
+  .patient-route .action-row-right { width: 100%; }
+  .patient-route .btn-action { justify-content: center; }
+  .patient-route .soap-grid { grid-template-columns: 1fr; }
+  .patient-route .qa-a { margin-left: 0; }
+  .patient-route .foot-actions { flex-direction: column; align-items: stretch; }
+  .patient-route .foot-actions .right { width: 100%; }
+}
+
+/* ── Reduced motion ──────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .patient-route,
+  .patient-route .dash-nav,
+  .patient-route .back-link,
+  .patient-route .theme-toggle svg,
+  .patient-route .toast { transition: none; }
+  .patient-route .patient-eyebrow .dot,
+  .patient-route .skel-line { animation: none; }
+  .patient-route .back-link:hover { gap: 8px; }
+}
