@@ -53,8 +53,12 @@ function LoginInner() {
     setLoading(true);
     try {
       // login() authenticates against brain-api and persists the session.
-      await login(email.trim(), password);
-      router.push("/app");
+      const session = await login(email.trim(), password);
+      // Route by JWT role (RBAC task 3A): platform admins to the admin portal,
+      // tenant_owner/tenant_staff to the doctor portal.
+      router.push(
+        session.role === "admin" ? "/admin/dashboard" : "/doctor/dashboard",
+      );
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";
       setError(

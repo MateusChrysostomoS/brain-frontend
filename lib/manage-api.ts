@@ -12,10 +12,17 @@
 // Types
 // ---------------------------------------------------------------------------
 
+// Brain role names (mirror brain-api). `admin` is platform-level (no tenant);
+// tenant_owner/tenant_staff are tenant-scoped doctor users.
+export type Role = "admin" | "tenant_owner" | "tenant_staff";
+
 export type Session = {
   token: string;
   tenantId: string;
   email: string;
+  // Decoded from the JWT `role` claim at login — drives post-login portal routing
+  // (admin -> /admin/dashboard, tenant_owner|tenant_staff -> /doctor/dashboard).
+  role: string;
 };
 
 // Portal-facing entitlement shape consumed by the /app dashboard shell. Mapped
@@ -161,7 +168,8 @@ export async function login(email: string, password: string): Promise<Session> {
   const claims = decodeJwtPayload(data.access_token);
   const tenantId =
     typeof claims?.tenant_id === "string" ? (claims.tenant_id as string) : "";
-  const session: Session = { token: data.access_token, tenantId, email };
+  const role = typeof claims?.role === "string" ? (claims.role as string) : "";
+  const session: Session = { token: data.access_token, tenantId, email, role };
   saveSession(session);
   return session;
 }
@@ -171,7 +179,7 @@ export async function getMe(session: Session): Promise<MeResponse> {
   return manageFetch<MeResponse>("/auth/me", {}, session.token);
 }
 
-type EntitlementResponse = {
+export type EntitlementResponse = {
   tenant_id: string;
   clinic_name: string;
   products: { precheck: boolean; secretaria: boolean };
@@ -226,4 +234,300 @@ export async function getPrecheckSsoToken(
     expires_in: number;
   }>("/sso/precheck/token", { method: "POST" }, session.token);
   return { token: data.token, expiresIn: data.expires_in };
+}
+
+// ---------------------------------------------------------------------------
+// Admin API (role=admin) — RBAC task Part 3B
+//
+// Every call sends the admin's Bearer token; brain-api re-checks the `admin` role
+// server-side (router-level require_role("admin")). Tenant ids here are RESOURCE path
+// params on admin (cross-tenant) routes — never a scoping bypass.
+// ---------------------------------------------------------------------------
+
+// Uniform paginated envelope returned by every admin list endpoint.
+export type Page<T> = {
+  items: T[];
+  total: number;
+  skip: number;
+  limit: number;
+};
+
+export type AdminTenant = {
+  id: string;
+  clinic_name: string;
+  created_at: string;
+  plan: string;
+  status: string;
+  precheck_enabled: boolean;
+  secretaria_enabled: boolean;
+  users_count: number;
+};
+
+export type EntitlementAdmin = {
+  tenant_id: string;
+  precheck_enabled: boolean;
+  secretaria_enabled: boolean;
+  plan: string;
+  status: string;
+  addons: Record<string, unknown>;
+  limits: Record<string, unknown>;
+  usage: Record<string, unknown>;
+  period_start: string | null;
+  period_end: string | null;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  updated_at: string | null;
+};
+
+export type AdminTenantDetail = {
+  id: string;
+  clinic_name: string;
+  created_at: string;
+  updated_at: string;
+  users_count: number;
+  entitlements: EntitlementAdmin;
+};
+
+// Partial entitlement update — only the fields present are applied server-side.
+export type EntitlementPatch = {
+  precheck_enabled?: boolean;
+  secretaria_enabled?: boolean;
+  plan?: string;
+  status?: string;
+  addons?: Record<string, unknown>;
+  limits?: Record<string, unknown>;
+};
+
+export type AdminUser = {
+  id: string;
+  tenant_id: string | null;
+  clinic_name: string | null; // null => "Platform Admin"
+  email: string;
+  name: string;
+  role: string;
+  created_at: string;
+};
+
+export type AdminUserCreate = {
+  email: string;
+  name: string;
+  password: string;
+  role: Role;
+  tenant_id?: string | null; // required for tenant roles; omitted for admin
+};
+
+export type AdminDemoRequest = {
+  id: string;
+  name: string;
+  email: string;
+  clinic: string | null;
+  profile: string | null;
+  product_interest: string | null;
+  message: string | null;
+  source: string | null;
+  status: string;
+  created_at: string;
+};
+
+export type DemoRequestStatus = "contacted" | "converted" | "dismissed";
+
+// One inbound lead as returned by PreCheck (proxied via brain-api GET /admin/inbound).
+export type PrecheckInbound = {
+  id: number;
+  name: string;
+  email: string;
+  clinic_name: string | null;
+  profile: string | null;
+  message: string | null;
+  status: string;
+  ip_address: string | null;
+  user_agent: string | null;
+  created_at: string;
+};
+
+export type PrecheckInboundList = {
+  items: PrecheckInbound[];
+  total: number;
+  skip: number;
+  limit: number;
+  has_next?: boolean;
+  stub?: boolean; // true when brain-api has no PreCheck upstream configured
+};
+
+// Build a `?skip=&limit=` query string for the paginated list endpoints.
+function pageQuery(skip: number, limit: number): string {
+  return `?skip=${skip}&limit=${limit}`;
+}
+
+export function adminListTenants(
+  session: Session,
+  skip = 0,
+  limit = 50,
+): Promise<Page<AdminTenant>> {
+  return manageFetch<Page<AdminTenant>>(
+    "/admin/tenants" + pageQuery(skip, limit),
+    {},
+    session.token,
+  );
+}
+
+export function adminGetTenant(
+  session: Session,
+  tenantId: string,
+): Promise<AdminTenantDetail> {
+  return manageFetch<AdminTenantDetail>(
+    `/admin/tenants/${tenantId}`,
+    {},
+    session.token,
+  );
+}
+
+export function adminGetEntitlements(
+  session: Session,
+  tenantId: string,
+): Promise<EntitlementAdmin> {
+  return manageFetch<EntitlementAdmin>(
+    `/admin/tenants/${tenantId}/entitlements`,
+    {},
+    session.token,
+  );
+}
+
+export function adminPatchEntitlements(
+  session: Session,
+  tenantId: string,
+  patch: EntitlementPatch,
+): Promise<EntitlementAdmin> {
+  return manageFetch<EntitlementAdmin>(
+    `/admin/tenants/${tenantId}/entitlements`,
+    { method: "PATCH", body: JSON.stringify(patch) },
+    session.token,
+  );
+}
+
+export function adminListUsers(
+  session: Session,
+  skip = 0,
+  limit = 50,
+): Promise<Page<AdminUser>> {
+  return manageFetch<Page<AdminUser>>(
+    "/admin/users" + pageQuery(skip, limit),
+    {},
+    session.token,
+  );
+}
+
+export function adminCreateUser(
+  session: Session,
+  payload: AdminUserCreate,
+): Promise<AdminUser> {
+  return manageFetch<AdminUser>(
+    "/admin/users",
+    { method: "POST", body: JSON.stringify(payload) },
+    session.token,
+  );
+}
+
+export function adminListDemoRequests(
+  session: Session,
+  skip = 0,
+  limit = 50,
+): Promise<Page<AdminDemoRequest>> {
+  return manageFetch<Page<AdminDemoRequest>>(
+    "/admin/demo_requests" + pageQuery(skip, limit),
+    {},
+    session.token,
+  );
+}
+
+export function adminPatchDemoRequest(
+  session: Session,
+  id: string,
+  status: DemoRequestStatus,
+): Promise<AdminDemoRequest> {
+  return manageFetch<AdminDemoRequest>(
+    `/admin/demo_requests/${id}`,
+    { method: "PATCH", body: JSON.stringify({ status }) },
+    session.token,
+  );
+}
+
+export function adminGetInbound(
+  session: Session,
+  skip = 0,
+  limit = 50,
+): Promise<PrecheckInboundList> {
+  return manageFetch<PrecheckInboundList>(
+    "/admin/inbound" + pageQuery(skip, limit),
+    {},
+    session.token,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Doctor API (role=tenant_owner|tenant_staff) — RBAC task Part 3C
+//
+// The tenant is ALWAYS derived server-side from the JWT — these calls never send a
+// tenant_id. Anamneses are proxied by brain-api to PreCheck.
+// ---------------------------------------------------------------------------
+
+export type DoctorMe = {
+  user: { id: string; email: string; name: string; role: string };
+  tenant: { id: string; clinic_name: string };
+  entitlements: EntitlementResponse;
+};
+
+// One anamnesis row (list). `summary_preview` is a 120-char teaser — no full PHI.
+export type Anamnesis = {
+  id: number;
+  patient_name: string;
+  created_at: string;
+  status: string;
+  summary_preview: string;
+};
+
+export type AnamnesisList = {
+  items: Anamnesis[];
+  total: number;
+  skip: number;
+  limit: number;
+  stub?: boolean; // true when brain-api has no PreCheck upstream configured
+};
+
+export type AnamnesisDetail = {
+  id: number;
+  patient_name: string;
+  created_at: string;
+  updated_at: string;
+  status: string;
+  ai_summary: string;
+  final_summary: string | null;
+  structured_data: Record<string, unknown>;
+};
+
+export function getDoctorMe(session: Session): Promise<DoctorMe> {
+  return manageFetch<DoctorMe>("/doctor/me", {}, session.token);
+}
+
+export function listAnamneses(
+  session: Session,
+  skip = 0,
+  limit = 50,
+): Promise<AnamnesisList> {
+  return manageFetch<AnamnesisList>(
+    "/doctor/anamneses" + pageQuery(skip, limit),
+    {},
+    session.token,
+  );
+}
+
+export function getAnamnesis(
+  session: Session,
+  id: number,
+): Promise<AnamnesisDetail> {
+  return manageFetch<AnamnesisDetail>(
+    `/doctor/anamneses/${id}`,
+    {},
+    session.token,
+  );
 }
