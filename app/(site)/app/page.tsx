@@ -14,9 +14,13 @@ import { ThemeToggle } from "../_components/ThemeToggle";
 import {
   clearSession,
   getEntitlements,
+  getPrecheckSsoToken,
   getSession,
+  ManageApiError,
   type Entitlements,
+  type Session,
 } from "@/lib/manage-api";
+import { setToken } from "@/lib/auth";
 import "./dashboard-shell.css";
 
 // ---------------------------------------------------------------------------
@@ -214,7 +218,17 @@ function SecretariaRow({ r }: { r: SaRow }) {
 }
 
 // PreCheckPanel — full PreCheck section including head, search, filters, rows, pagination.
-function PreCheckPanel() {
+// `onOpen` runs the SSO handoff into the ported PreCheck dashboard; `pending`/`error`
+// drive the "Abrir painel completo" button state.
+function PreCheckPanel({
+  onOpen,
+  pending,
+  error,
+}: {
+  onOpen: () => void;
+  pending: boolean;
+  error: string | null;
+}) {
   return (
     <section className="panel">
       <div className="panel-head">
@@ -235,12 +249,37 @@ function PreCheckPanel() {
               <div className="k">Em espera</div>
             </div>
           </div>
-          {/* Link to the full dedicated PreCheck dashboard at /dashboard */}
-          <div className="panel-actions">
-            <Link href="/dashboard" className="btn btn--outline btn--sm">
+          {/* SSO handoff into the ported PreCheck dashboard (/dashboard): brain-api mints
+              a PreCheck-compatible token, the page stores it as `precheck_token` (same
+              origin), then navigates — no second login. 403/409 surface inline. */}
+          <div
+            className="panel-actions"
+            style={{ flexDirection: "column", alignItems: "flex-end", gap: 6 }}
+          >
+            <button
+              type="button"
+              className="btn btn--outline btn--sm"
+              onClick={onOpen}
+              disabled={pending}
+            >
               <BrandIcon name="arrowR" />
-              Abrir painel completo
-            </Link>
+              {pending ? "Abrindo…" : "Abrir painel completo"}
+            </button>
+            {error && (
+              <p
+                role="alert"
+                style={{
+                  fontSize: 12.5,
+                  lineHeight: 1.4,
+                  color: "var(--danger, #c0392b)",
+                  maxWidth: 260,
+                  textAlign: "right",
+                  margin: 0,
+                }}
+              >
+                {error}
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -398,16 +437,22 @@ export default function AppPage() {
   const [clinicLabel, setClinicLabel] = useState("Administrador");
   // Active product tab; resolved after entitlements load
   const [activeTab, setActiveTab] = useState<"precheck" | "secretaria">("precheck");
+  // Session kept in state for the PreCheck SSO handoff (POST /sso/precheck/token).
+  const [session, setSession] = useState<Session | null>(null);
+  // "Abrir PreCheck" handoff UI state.
+  const [ssoPending, setSsoPending] = useState(false);
+  const [ssoError, setSsoError] = useState<string | null>(null);
 
   // --- Boot: require a session, then fetch entitlements from brain-api ---
   useEffect(() => {
-    const session = getSession();
-    if (!session?.token) {
+    const current = getSession();
+    if (!current?.token) {
       // Not logged in — send the user to the unified login.
       router.replace("/login");
       return;
     }
-    getEntitlements(session)
+    setSession(current);
+    getEntitlements(current)
       .then((e) => {
         setEnt(e);
         // Strip "Consultório " prefix; fall back to "Administrador"
@@ -424,6 +469,31 @@ export default function AppPage() {
         router.replace("/login");
       });
   }, [router]);
+
+  // --- PreCheck SSO handoff ---
+  // Exchange the brain session for a PreCheck-compatible token, store it as PreCheck's
+  // own `precheck_token` (same origin as /dashboard), then navigate. The ported dashboard
+  // reads that token and calls the real PreCheck backend — no second login.
+  async function openPrecheck() {
+    if (!session) return;
+    setSsoError(null);
+    setSsoPending(true);
+    try {
+      const { token } = await getPrecheckSsoToken(session);
+      setToken(token);
+      router.push("/dashboard");
+    } catch (e) {
+      const status = e instanceof ManageApiError ? e.status : 0;
+      setSsoError(
+        status === 403
+          ? "Sua clínica não tem o PreCheck habilitado."
+          : status === 409
+            ? "Sua conta ainda não está conectada ao PreCheck. Peça ao administrador da clínica para vincular seu acesso."
+            : "Não foi possível abrir o PreCheck agora. Tente novamente.",
+      );
+      setSsoPending(false); // on success we navigate away, so only reset on failure
+    }
+  }
 
   // --- Derived: which tab is logically active given current entitlements ---
   const resolvedTab =
@@ -512,7 +582,13 @@ export default function AppPage() {
       {/* ==================== MAIN ==================== */}
       {!loading && ent && (
         <main className="dash-main">
-          {resolvedTab === "precheck" && ent.precheck && <PreCheckPanel />}
+          {resolvedTab === "precheck" && ent.precheck && (
+            <PreCheckPanel
+              onOpen={openPrecheck}
+              pending={ssoPending}
+              error={ssoError}
+            />
+          )}
           {resolvedTab === "secretaria" && ent.secretaria && <SecretariaPanel />}
           {!ent.precheck && !ent.secretaria && <NoEntitlementsPanel />}
         </main>

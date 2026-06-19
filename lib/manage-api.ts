@@ -94,6 +94,19 @@ export function clearSession(): void {
 // Low-level fetch
 // ---------------------------------------------------------------------------
 
+// Error carrying the HTTP status so callers can branch on it (e.g. the SSO handoff
+// distinguishes 403 `precheck_not_entitled` from 409 `precheck_account_not_linked`).
+// `.message` is FastAPI's `detail` string (a stable machine code for typed errors), so
+// existing callers that only read `.message` keep working.
+export class ManageApiError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = "ManageApiError";
+    this.status = status;
+  }
+}
+
 async function manageFetch<T>(
   path: string,
   opts: RequestInit = {},
@@ -112,7 +125,7 @@ async function manageFetch<T>(
     // FastAPI uses { detail: string } (or a list for 422). Surface a string.
     const detail =
       typeof body?.detail === "string" ? body.detail : res.statusText;
-    throw new Error(detail);
+    throw new ManageApiError(res.status, detail);
   }
   return res.json() as Promise<T>;
 }
@@ -193,4 +206,24 @@ export async function submitDemoRequest(
     method: "POST",
     body: JSON.stringify(payload),
   });
+}
+
+// Result of the PreCheck SSO handoff: a PreCheck-compatible token + its lifetime (s).
+export type PrecheckSsoToken = { token: string; expiresIn: number };
+
+// MANAGE-API CALL SITE #3 — "Abrir PreCheck" handoff. POST /sso/precheck/token (Bearer
+// brain JWT). brain-api verifies the tenant owns PreCheck and that the user has a linked
+// PreCheck account, then mints a token PreCheck's backend already trusts (shared
+// SECRET_KEY). The caller stores it as PreCheck's `precheck_token` (same-origin
+// localStorage) and routes to /dashboard — no second login. Throws ManageApiError with
+// status 403 (`precheck_not_entitled`) or 409 (`precheck_account_not_linked`).
+export async function getPrecheckSsoToken(
+  session: Session,
+): Promise<PrecheckSsoToken> {
+  const data = await manageFetch<{
+    token: string;
+    token_type: string;
+    expires_in: number;
+  }>("/sso/precheck/token", { method: "POST" }, session.token);
+  return { token: data.token, expiresIn: data.expires_in };
 }
