@@ -7,14 +7,15 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { BrandGlyph } from "../_components/BrandGlyph";
 import { BrandIcon } from "../_components/BrandIcon";
 import { ThemeToggle } from "../_components/ThemeToggle";
 import {
+  clearSession,
   getEntitlements,
-  SESSION_KEY,
+  getSession,
   type Entitlements,
-  type Session,
 } from "@/lib/manage-api";
 import "./dashboard-shell.css";
 
@@ -386,74 +387,43 @@ function NoEntitlementsPanel() {
 }
 
 // ---------------------------------------------------------------------------
-// EntitlementSimulator — review-only control (fixed bottom bar).
-// Reloads the page with ?ent=both|precheck|secretaria so every shell state
-// stays inspectable during design review without touching the backend.
-// ---------------------------------------------------------------------------
-function EntitlementSimulator({ active }: { active: string }) {
-  function reload(mode: string) {
-    const u = new URL(window.location.href);
-    u.searchParams.set("ent", mode);
-    window.location.href = u.toString();
-  }
-
-  return (
-    /* review control — simulate tenant entitlement states via query param */
-    <div className="ent-sim" role="group" aria-label="Simular entitlements">
-      <span className="lbl">manage-api · entitlements</span>
-      {(["both", "precheck", "secretaria"] as const).map((mode) => (
-        <button
-          key={mode}
-          className={active === mode ? "on" : ""}
-          onClick={() => reload(mode)}
-        >
-          {mode === "both" ? "Ambos" : mode === "precheck" ? "Só PreCheck" : "Só secretarIA"}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Page — root component for the /app route.
 // Manages async boot: reads session → calls getEntitlements → updates state.
 // ---------------------------------------------------------------------------
 export default function AppPage() {
   // --- State ---
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [ent, setEnt] = useState<Entitlements | null>(null);
   const [clinicLabel, setClinicLabel] = useState("Administrador");
   // Active product tab; resolved after entitlements load
   const [activeTab, setActiveTab] = useState<"precheck" | "secretaria">("precheck");
-  // The simulator reads ?ent= from the URL on load to highlight the active button
-  const [simMode, setSimMode] = useState("both");
 
-  // --- Boot: read session + fetch entitlements ---
+  // --- Boot: require a session, then fetch entitlements from brain-api ---
   useEffect(() => {
-    let session: Session | null = null;
-    try {
-      const raw = sessionStorage.getItem(SESSION_KEY);
-      if (raw) session = JSON.parse(raw) as Session;
-    } catch {
-      // Malformed session — proceed without it; stub will handle gracefully
+    const session = getSession();
+    if (!session?.token) {
+      // Not logged in — send the user to the unified login.
+      router.replace("/login");
+      return;
     }
-
-    // Read active simulator mode from URL for the button highlight
-    const urlMode =
-      new URLSearchParams(window.location.search).get("ent") || "both";
-    setSimMode(urlMode);
-
-    getEntitlements(session).then((e) => {
-      setEnt(e);
-      // Strip "Consultório " prefix; fall back to "Administrador"
-      setClinicLabel(
-        e.clinicName ? e.clinicName.replace("Consultório ", "") : "Administrador",
-      );
-      // Default active tab: precheck if entitled, else secretaria, else none matters
-      setActiveTab(e.precheck ? "precheck" : "secretaria");
-      setLoading(false);
-    });
-  }, []);
+    getEntitlements(session)
+      .then((e) => {
+        setEnt(e);
+        // Strip "Consultório " prefix; fall back to "Administrador"
+        setClinicLabel(
+          e.clinicName ? e.clinicName.replace("Consultório ", "") : "Administrador",
+        );
+        // Default active tab: precheck if entitled, else secretaria
+        setActiveTab(e.precheck ? "precheck" : "secretaria");
+        setLoading(false);
+      })
+      .catch(() => {
+        // Expired/invalid session (401) — clear it and bounce to login.
+        clearSession();
+        router.replace("/login");
+      });
+  }, [router]);
 
   // --- Derived: which tab is logically active given current entitlements ---
   const resolvedTab =
@@ -518,7 +488,11 @@ export default function AppPage() {
               {avatarInitial}
             </span>
             <span className="uname">{clinicLabel}</span>
-            <Link className="btn btn--outline btn--sm" href="/login">
+            <Link
+              className="btn btn--outline btn--sm"
+              href="/login"
+              onClick={() => clearSession()}
+            >
               Sair
             </Link>
           </div>
@@ -544,9 +518,6 @@ export default function AppPage() {
         </main>
       )}
 
-      {/* ==================== ENTITLEMENT SIMULATOR ==================== */}
-      {/* Review-only: lets the reviewer cycle through entitlement states */}
-      <EntitlementSimulator active={simMode} />
     </>
   );
 }

@@ -1,15 +1,15 @@
 "use client";
 
-// Login (/login) — authenticates a clinician and stores the JWT.
-// Visual chrome is provided by <AuthShell>; this file owns only the
-// form state, validation, and the call into `lib/api.login()`.
+// Login (/login) — the unified Brain portal login. Authenticates against brain-api
+// (POST /auth/token), stores the JWT session, and routes to the /app dashboard.
+// Visual chrome is the existing PreCheck-design <AuthShell>; this file owns only the
+// form state, validation, and the call into `lib/manage-api.login()`.
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 
-import { login } from "@/lib/api";
-import { setToken } from "@/lib/auth";
+import { login } from "@/lib/manage-api";
 
 import { AuthShell } from "../_shared/AuthShell";
 import { PasswordField } from "../_shared/PasswordField";
@@ -52,9 +52,9 @@ function LoginInner() {
     }
     setLoading(true);
     try {
-      const data = await login(email.trim(), password);
-      setToken(data.access_token);
-      router.push("/dashboard");
+      // login() authenticates against brain-api and persists the session.
+      await login(email.trim(), password);
+      router.push("/app");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";
       setError(

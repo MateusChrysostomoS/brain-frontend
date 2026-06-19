@@ -1,16 +1,39 @@
 "use client";
 
-// ContactForm — demo request form matching the #contato section in brain.html / SecretarIA.html.
-// "brain" variant: interest radio (PreCheck / secretarIA / Os dois).
-// "secretaria" variant: profile radio (Clínica privada / Médico autônomo / Setor público).
-// No network call on submit — shows a friendly success message (stub for future integration).
+// ContactForm — "Agendar demo" lead-capture form (the #contato section).
+// "brain" variant: interest radio (PreCheck / secretarIA / Os dois) -> product_interest.
+// "secretaria" variant: profile radio (Clínica privada / Médico autônomo / Setor público) -> profile.
+// Submits to brain-api POST /demo-requests, then shows the confirmation state.
 
 import { useState, type FormEvent } from "react";
+import {
+  submitDemoRequest,
+  type DemoProductInterest,
+  type DemoProfile,
+} from "@/lib/manage-api";
 import { BrandIcon } from "./BrandIcon";
 
 type ContactFormProps = {
   variant?: "brain" | "secretaria";
 };
+
+// The "brain" radio captures product interest.
+function mapInterest(radio: string): DemoProductInterest | null {
+  if (radio === "PreCheck") return "precheck";
+  if (radio === "secretarIA") return "secretaria";
+  if (radio === "Os dois") return "ambos";
+  return null;
+}
+
+// The "secretaria" radio captures the caller's profile. "Setor público" maps to
+// the public-sector enum value (secretaria_municipal); hospital/outro aren't
+// offered by this variant (the enum is a superset).
+function mapProfile(radio: string): DemoProfile | null {
+  if (radio === "Clínica privada") return "clinica_privada";
+  if (radio === "Médico autônomo") return "medico_autonomo";
+  if (radio === "Setor público") return "secretaria_municipal";
+  return null;
+}
 
 // Field state shape for the controlled form.
 type FormState = {
@@ -36,15 +59,39 @@ export function ContactForm({ variant = "brain" }: ContactFormProps) {
 
   // When true, replaces the form with a success message.
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   function update(key: keyof FormState, value: string) {
     setFields((prev) => ({ ...prev, [key]: value }));
   }
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    // Stub: no network call. Future: POST to /api/demo-request.
-    setSubmitted(true);
+    setError("");
+    setSubmitting(true);
+    try {
+      await submitDemoRequest({
+        name: fields.name.trim(),
+        email: fields.email.trim(),
+        clinic: fields.clinic.trim() || null,
+        message: fields.message.trim() || null,
+        source: variant === "secretaria" ? "secretaria" : "brain",
+        // secretaria variant collects a profile; brain variant collects interest.
+        profile:
+          variant === "secretaria" ? mapProfile(fields.radioValue) : null,
+        product_interest:
+          variant === "secretaria"
+            ? "secretaria"
+            : mapInterest(fields.radioValue),
+      });
+      setSubmitted(true);
+    } catch {
+      setError(
+        "Não foi possível enviar agora. Verifique os dados e tente novamente.",
+      );
+      setSubmitting(false);
+    }
   }
 
   if (submitted) {
@@ -156,10 +203,18 @@ export function ContactForm({ variant = "brain" }: ContactFormProps) {
       <button
         className="btn btn--primary btn--block btn--lg mt-m"
         type="submit"
+        disabled={submitting}
       >
-        {variant === "secretaria" && <BrandIcon name="whatsapp" />}
-        Agendar minha demonstração
+        {!submitting && variant === "secretaria" && <BrandIcon name="whatsapp" />}
+        {submitting ? "Enviando…" : "Agendar minha demonstração"}
       </button>
+
+      {/* Submit error */}
+      {error && (
+        <p className="center mt-s" role="alert" style={{ fontSize: 13, color: "var(--danger, #c0392b)" }}>
+          {error}
+        </p>
+      )}
 
       {/* Privacy note */}
       <p
