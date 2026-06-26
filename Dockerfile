@@ -14,7 +14,7 @@ COPY . .
 #   --build-arg; empty makes calls same-origin and they won't reach brain-api.
 ARG NEXT_PUBLIC_API_URL=https://precheckv2-precheck-api.cpux9k.easypanel.host
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-ARG NEXT_PUBLIC_MANAGE_API_BASE_URL=
+ARG NEXT_PUBLIC_MANAGE_API_BASE_URL=https://secretaria-brain-api.cpux9k.easypanel.host
 ENV NEXT_PUBLIC_MANAGE_API_BASE_URL=${NEXT_PUBLIC_MANAGE_API_BASE_URL}
 RUN npm run build
 

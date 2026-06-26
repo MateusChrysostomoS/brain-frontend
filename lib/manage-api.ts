@@ -72,7 +72,11 @@ export type DemoRequestConfirmation = {
 // Base URL for brain-api. Inlined at build time from the env var. Empty in dev
 // (set NEXT_PUBLIC_MANAGE_API_BASE_URL to the brain-api origin, e.g.
 // http://localhost:8000 locally or the deployed URL in production).
-export const MANAGE_API_BASE = process.env.NEXT_PUBLIC_MANAGE_API_BASE_URL ?? "";
+// Strip any trailing slash so `MANAGE_API_BASE + "/auth/token"` can never become
+// `//auth/token` (which the API treats as a different, non-existent route).
+export const MANAGE_API_BASE = (
+  process.env.NEXT_PUBLIC_MANAGE_API_BASE_URL ?? ""
+).replace(/\/+$/, "");
 
 // sessionStorage key holding the logged-in Session (set by login, read by /app).
 export const SESSION_KEY = "brain.session";

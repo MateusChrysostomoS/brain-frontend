@@ -109,19 +109,40 @@ export default function ConfiguracaoPage() {
     clinicName: "Consultório Dr. Aurélio Lima",
     specialty: "Clínica geral",
     about: "",
-    address: "",
+    // Structured address (Feature 1) — fed to the agent for "onde fica?" replies.
+    addressLine: "",
+    addressComplement: "",
+    neighborhood: "",
+    city: "",
+    state: "",
+    postalCode: "",
     phone: "+55 11 3000-0000",
     insurances: "Unimed, Bradesco Saúde, SulAmérica",
+    // Convênio collection (Feature 3) — on by default; clinic can opt out.
+    collectInsurance: true,
     tone: "",
   });
-  const setCtxK = (key: keyof ClinicCtx, value: string) =>
+  // Generic setter — preserves each key's value type (string or boolean).
+  const setCtxK = <K extends keyof ClinicCtx>(key: K, value: ClinicCtx[K]) =>
     setCtx(prev => ({ ...prev, [key]: value }));
 
-  // --- Section 02: services ---
+  // --- Section 02: services (appointment types) ---
+  // Each type carries an active flag and its pre-visit requirements (Feature 2).
   const [services, setServices] = useState<Service[]>([
-    { id: 1, name: "Primeira consulta", dur: 60, price: "R$ 450" },
-    { id: 2, name: "Retorno",           dur: 30, price: ""       },
-    { id: 3, name: "Teleconsulta",      dur: 40, price: "R$ 350" },
+    {
+      id: 1, name: "Primeira consulta", dur: 60, price: "R$ 450", active: true,
+      requirements: [
+        { id: 11, text: "Trazer documento com foto e carteirinha do convênio" },
+        { id: 12, text: "Chegar 15 minutos antes para o cadastro" },
+      ],
+    },
+    {
+      id: 2, name: "Retorno", dur: 30, price: "", active: true,
+      requirements: [
+        { id: 21, text: "Trazer exames solicitados na consulta anterior" },
+      ],
+    },
+    { id: 3, name: "Teleconsulta", dur: 40, price: "R$ 350", active: true, requirements: [] },
   ]);
 
   // --- Section 03: availability ---

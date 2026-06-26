@@ -10,7 +10,7 @@ import type { Dispatch, SetStateAction } from "react";
 import { Icon, Btn, Field, TextInput } from "../../_shared/ui";
 import { Section } from "./Section";
 import { CSelect } from "./CSelect";
-import { CToggle } from "./CToggle";
+import { ToggleRow } from "./ToggleRow";
 import { GoogleGlyph } from "./GoogleGlyph";
 import type { GcalState } from "../lib/types";
 
@@ -185,25 +185,12 @@ export function GoogleSection({ gcal, setGcal }: GoogleSectionProps) {
           </div>
 
           {/* two-way sync toggle row */}
-          <label style={{
-            display: "flex", alignItems: "center", gap: 12,
-            padding: "12px 14px", borderRadius: 12,
-            background: "var(--surface-2)", border: "1px solid var(--line)",
-            cursor: "pointer",
-          }}>
-            <CToggle
-              on={gcal.twoWay}
-              onChange={v => setGcal(g => ({ ...g, twoWay: v }))}
-            />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--ink)" }}>
-                Sincronização nos dois sentidos
-              </div>
-              <div style={{ fontSize: 12, color: "var(--ink-faint)" }}>
-                Eventos criados direto no Google também bloqueiam horários na secretarIA.
-              </div>
-            </div>
-          </label>
+          <ToggleRow
+            on={gcal.twoWay}
+            onChange={v => setGcal(g => ({ ...g, twoWay: v }))}
+            title="Sincronização nos dois sentidos"
+            desc="Eventos criados direto no Google também bloqueiam horários na secretarIA."
+          />
         </div>
       )}
     </Section>

@@ -1,15 +1,19 @@
 "use client";
 // ContextSection — Section 01 "Contexto da clínica".
-// Collects the clinic name, specialty, about blurb, address, phone,
-// accepted insurances, and tone-of-voice rules for the WhatsApp assistant.
+// Collects the clinic name, specialty, about blurb, structured address, phone,
+// accepted insurances, convênio-collection preference, and tone-of-voice rules
+// for the WhatsApp assistant.
 
 import { Field, TextInput, TextArea } from "../../_shared/ui";
 import { Section } from "./Section";
+import { AddressFields } from "./AddressFields";
+import { ToggleRow } from "./ToggleRow";
 import type { ClinicCtx } from "../lib/types";
 
 type ContextSectionProps = {
   v: ClinicCtx;
-  set: (key: keyof ClinicCtx, value: string) => void;
+  // Generic setter — keeps each key bound to its own value type (string/boolean).
+  set: <K extends keyof ClinicCtx>(key: K, value: ClinicCtx[K]) => void;
 };
 
 // Renders all context fields inside a Section card with HelpTip annotations.
@@ -60,18 +64,11 @@ export function ContextSection({ v, set }: ContextSectionProps) {
           />
         </Field>
 
-        {/* row 2: address + phone */}
-        <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 16 }}>
-          <Field
-            label="Endereço"
-            tip="A secretarIA envia ao paciente quando perguntam “onde fica?” e na confirmação da consulta."
-          >
-            <TextInput
-              value={v.address}
-              onChange={e => set("address", e.target.value)}
-              placeholder="Rua, número, bairro, cidade"
-            />
-          </Field>
+        {/* structured clinic address */}
+        <AddressFields v={v} set={set} />
+
+        {/* row: WhatsApp + accepted insurances */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: 16 }}>
           <Field
             label="WhatsApp de atendimento"
             tip="Número conectado ao chatbot. É por ele que a secretarIA conversa com os pacientes."
@@ -82,19 +79,25 @@ export function ContextSection({ v, set }: ContextSectionProps) {
               placeholder="+55 11 99999-9999"
             />
           </Field>
+          <Field
+            label="Convênios aceitos"
+            tip="Liste os convênios separados por vírgula. O bot informa o paciente e evita agendamentos indevidos. Deixe em branco se for só particular."
+          >
+            <TextInput
+              value={v.insurances}
+              onChange={e => set("insurances", e.target.value)}
+              placeholder="Unimed, Bradesco Saúde… (ou vazio para só particular)"
+            />
+          </Field>
         </div>
 
-        {/* insurances */}
-        <Field
-          label="Convênios aceitos"
-          tip="Liste os convênios separados por vírgula. O bot informa o paciente e evita agendamentos indevidos. Deixe em branco se for só particular."
-        >
-          <TextInput
-            value={v.insurances}
-            onChange={e => set("insurances", e.target.value)}
-            placeholder="Unimed, Bradesco Saúde, SulAmérica… (ou deixe vazio para só particular)"
-          />
-        </Field>
+        {/* convênio collection preference (patient PII — minimized per LGPD) */}
+        <ToggleRow
+          on={v.collectInsurance}
+          onChange={value => set("collectInsurance", value)}
+          title="Coletar convênio do paciente"
+          desc="Quando ativo, a secretarIA pergunta no agendamento se o paciente tem convênio e qual. Ative apenas se for usar essa informação."
+        />
 
         {/* tone of voice */}
         <Field
