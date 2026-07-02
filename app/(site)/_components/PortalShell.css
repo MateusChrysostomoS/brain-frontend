@@ -81,6 +81,38 @@
   white-space: nowrap;
 }
 
+/* --- Banner (full-width notice under the header: "Modo médico", errors) --- */
+.portal-banner {
+  position: sticky;
+  top: 64px; /* sits directly under the sticky header */
+  z-index: 55;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 24px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--brand-ink);
+  background: var(--brand-tint);
+  border-bottom: 1px solid color-mix(in oklab, var(--brand) 22%, transparent);
+}
+.portal-banner svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+.portal-banner-strong {
+  font-weight: 700;
+}
+.portal-banner-spacer {
+  margin-left: auto;
+}
+.portal-banner--error {
+  color: var(--al-red-ink);
+  background: var(--al-red-bg);
+  border-bottom-color: var(--al-red-bd);
+}
+
 /* --- Body layout --- */
 .portal-body {
   display: grid;

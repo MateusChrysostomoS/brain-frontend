@@ -80,6 +80,11 @@ export const MANAGE_API_BASE = (
 
 // sessionStorage key holding the logged-in Session (set by login, read by /app).
 export const SESSION_KEY = "brain.session";
+// "Modo médico" (admin doctor-mode) keys: a marker describing the active impersonation, and
+// a stash of the admin's own Session so "Voltar ao admin" can restore it without re-login.
+// See enterDoctorMode / exitDoctorMode below and CONTRACTS §11.4.
+export const IMPERSONATION_KEY = "brain.impersonation";
+const ADMIN_STASH_KEY = "brain.admin_session";
 
 export function saveSession(session: Session): void {
   if (typeof window === "undefined") return;
@@ -98,7 +103,11 @@ export function getSession(): Session | null {
 
 export function clearSession(): void {
   if (typeof window === "undefined") return;
+  // A full logout also leaves doctor-mode: drop the marker + the stashed admin session so no
+  // impersonation state outlives the session it belonged to.
   sessionStorage.removeItem(SESSION_KEY);
+  sessionStorage.removeItem(IMPERSONATION_KEY);
+  sessionStorage.removeItem(ADMIN_STASH_KEY);
 }
 
 // ---------------------------------------------------------------------------
@@ -238,6 +247,94 @@ export async function getPrecheckSsoToken(
     expires_in: number;
   }>("/sso/precheck/token", { method: "POST" }, session.token);
   return { token: data.token, expiresIn: data.expires_in };
+}
+
+// ---------------------------------------------------------------------------
+// Admin "Modo médico" — act as a clinic's doctor (CONTRACTS §11.4)
+// ---------------------------------------------------------------------------
+
+// What the doctor portal reads to render its "you are impersonating" banner.
+export type ImpersonationMarker = { clinicName: string; adminEmail: string };
+
+type ImpersonationTokenResponse = {
+  access_token: string;
+  token_type: string;
+  tenant_id: string;
+  clinic_name: string;
+  email: string;
+  role: string;
+  expires_in: number;
+};
+
+// MANAGE-API CALL SITE #4 — admin "Modo médico". POST /admin/impersonate/token (Bearer
+// admin JWT). brain-api mints a tenant-scoped DOCTOR token for the configured demo clinic;
+// the returned token is shape-identical to that doctor's own login, so the doctor portal +
+// PreCheck SSO accept it unchanged. Admin-only (403 otherwise); 404
+// (`impersonation_target_unavailable`) when the demo clinic is not seeded/configured.
+async function fetchImpersonationDoctor(
+  adminSession: Session,
+): Promise<{ session: Session; clinicName: string }> {
+  const data = await manageFetch<ImpersonationTokenResponse>(
+    "/admin/impersonate/token",
+    { method: "POST" },
+    adminSession.token,
+  );
+  const session: Session = {
+    token: data.access_token,
+    tenantId: data.tenant_id,
+    email: data.email,
+    role: data.role,
+  };
+  return { session, clinicName: data.clinic_name };
+}
+
+// Enter "Modo médico": mint the doctor session, STASH the admin session first (so a failure
+// before this point leaves the admin intact), swap the doctor session into `brain.session`,
+// and record the banner marker. The caller routes to /doctor/dashboard on success. Throws
+// ManageApiError (401 admin session expired, 403 not admin, 404 demo clinic unavailable) for
+// the caller to surface inline.
+export async function enterDoctorMode(adminSession: Session): Promise<void> {
+  const { session, clinicName } = await fetchImpersonationDoctor(adminSession);
+  if (typeof window === "undefined") return;
+  sessionStorage.setItem(ADMIN_STASH_KEY, JSON.stringify(adminSession));
+  saveSession(session);
+  const marker: ImpersonationMarker = {
+    clinicName,
+    adminEmail: adminSession.email,
+  };
+  sessionStorage.setItem(IMPERSONATION_KEY, JSON.stringify(marker));
+}
+
+// The active impersonation, or null. Read AFTER mount (sessionStorage is client-only).
+export function getImpersonation(): ImpersonationMarker | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(IMPERSONATION_KEY);
+    return raw ? (JSON.parse(raw) as ImpersonationMarker) : null;
+  } catch {
+    return null;
+  }
+}
+
+// Leave "Modo médico": restore the stashed admin session and clear the doctor session +
+// marker. Returns true if an admin session was restored (caller routes to /admin/dashboard);
+// false if there was nothing to restore (caller falls back to /login).
+export function exitDoctorMode(): boolean {
+  if (typeof window === "undefined") return false;
+  const raw = sessionStorage.getItem(ADMIN_STASH_KEY);
+  sessionStorage.removeItem(IMPERSONATION_KEY);
+  sessionStorage.removeItem(ADMIN_STASH_KEY);
+  if (!raw) {
+    clearSession();
+    return false;
+  }
+  try {
+    saveSession(JSON.parse(raw) as Session);
+    return true;
+  } catch {
+    clearSession();
+    return false;
+  }
 }
 
 // ---------------------------------------------------------------------------

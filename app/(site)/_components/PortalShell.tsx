@@ -29,6 +29,12 @@ type PortalShellProps = {
   nav: PortalNavItem[];
   onLogout: () => void;
   children: ReactNode;
+  // Optional controls rendered in the header between the user identity and "Sair"
+  // (e.g. the admin "Modo médico" switch). Omitted on portals that don't need them.
+  headerActions?: ReactNode;
+  // Optional full-width notice rendered directly under the header, above the body
+  // (e.g. the doctor portal's "you are in Modo médico" banner, or an admin error).
+  banner?: ReactNode;
 };
 
 // Active when the current path equals the item or is nested under it (tolerant of the
@@ -45,6 +51,8 @@ export function PortalShell({
   nav,
   onLogout,
   children,
+  headerActions,
+  banner,
 }: PortalShellProps) {
   const pathname = usePathname();
   const initial = (userLabel.trim()[0] || "B").toUpperCase();
@@ -67,11 +75,15 @@ export function PortalShell({
             </span>
             <span className="portal-user-label">{userLabel}</span>
           </span>
+          {headerActions}
           <button type="button" className="btn btn--outline btn--sm" onClick={onLogout}>
             Sair
           </button>
         </div>
       </header>
+
+      {/* Optional full-width notice (e.g. the "Modo médico" banner) under the header. */}
+      {banner}
 
       {/* --- Body: sidebar + content --- */}
       <div className="portal-body">
