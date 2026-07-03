@@ -1,7 +1,9 @@
 "use client";
 // AddressFields — the structured clinic address block for Section 01.
-// Splits the address into the same fields the backend tenant_config stores,
-// so SecretarIA can read out a complete, well-formed address to patients.
+// demo-only: TenantConfigUpdate (secretarIA schemas/config.py) has no address
+// fields at all — none of the inputs below persist on save. Kept in the UI
+// (not removed) so the layout/copy is ready once secretarIA adds them; see
+// the per-field comments on ClinicCtx in lib/types.ts.
 
 import { Field, TextInput } from "../../_shared/ui";
 import type { ClinicCtx } from "../lib/types";

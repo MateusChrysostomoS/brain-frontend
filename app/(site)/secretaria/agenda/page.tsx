@@ -44,6 +44,16 @@ import {
   BlockModal,
 } from "./modals";
 
+import { HubNotice } from "../_shared/HubNotice";
+import { useSecretariaHub } from "../_shared/useSecretariaHub";
+import {
+  listCalendarEvents,
+  createAppointment,
+  createBlock as createHubBlock,
+  HubApiError,
+} from "@/lib/secretaria-hub";
+import { currentWeekIsoRange, slotToIsoRange, mapHubEventsToAppts } from "./lib/hub-mapping";
+
 // ---------------------------------------------------------------------------
 // Local types
 // ---------------------------------------------------------------------------
@@ -276,6 +286,41 @@ export default function AgendaPage() {
   // Ref used to hold the auto-dismiss timer for the toast
   const toastRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
+  // --- secretarIA hub: entitlement-gated real data path ---
+  const { session, ready: hubCheckReady, notEntitled, hubReady } = useSecretariaHub();
+  // Real events for the current week, once a hub fetch has succeeded. null
+  // means "no real data yet" — the grid falls back to the demo seed data.
+  const [hubAppts, setHubAppts] = useState<Appt[] | null>(null);
+  const [hubFetchFailed, setHubFetchFailed] = useState(false);
+
+  // Refetches the current week's real calendar events. Shared by the initial
+  // load effect below AND by createAppt/createBlock after a successful hub
+  // write, so the grid always reflects what secretarIA's Calendar actually
+  // holds instead of a fabricated local row.
+  const reloadWeek = useCallback(() => {
+    if (!session) return Promise.resolve();
+    const { startIso, endIso } = currentWeekIsoRange();
+    return listCalendarEvents(session, startIso, endIso)
+      .then((events) => {
+        setHubAppts(mapHubEventsToAppts(events));
+        setHubFetchFailed(false);
+      })
+      .catch((e) => {
+        console.error("secretaria hub: failed to load calendar events", e);
+        setHubAppts(null);
+        setHubFetchFailed(true);
+      });
+  }, [session]);
+
+  // Load the current week's real calendar events when the hub becomes usable.
+  // CANCEL/RESCHEDULE still only mutate local demo state — see the
+  // TODO(hub-write) markers on those handlers below (blocked on secretarIA,
+  // not a frontend gap).
+  useEffect(() => {
+    if (!hubReady || !session) return;
+    reloadWeek();
+  }, [hubReady, session, reloadWeek]);
+
   // ---------------------------------------------------------------------------
   // flash — shows a toast then auto-dismisses after 3.4 s
   // ---------------------------------------------------------------------------
@@ -286,8 +331,10 @@ export default function AgendaPage() {
     toastRef.current = setTimeout(() => setToast(null), 3400);
   }, []);
 
-  // Combined list used by all three calendar views
-  const items = useMemo(() => [...appts, ...blocks], [appts, blocks]);
+  // Combined list used by all three calendar views. When the hub is ready and
+  // a fetch has succeeded, real events REPLACE the seeded demo appointments
+  // (blocks stay local — the hub has no read model for them exposed here yet).
+  const items = useMemo(() => [...(hubAppts ?? appts), ...blocks], [hubAppts, appts, blocks]);
 
   // Keep the drawer in sync when the underlying appointment is mutated
   const liveSelected = selected
@@ -307,8 +354,42 @@ export default function AgendaPage() {
     );
   };
 
-  /** Persist a newly created appointment and optionally show a WhatsApp flash. */
-  const createAppt = (data: Omit<Appt, "id">, message: string | null) => {
+  /**
+   * Persist a newly created appointment.
+   * When hubReady, this creates a REAL Google Calendar event via
+   * POST /tenants/me/calendar/appointments and refetches the week instead of
+   * fabricating a local row. The hub endpoint does not send a WhatsApp
+   * message, so the success flash never claims one was sent (unlike the
+   * demo-local path below, which still simulates that copy).
+   */
+  const createAppt = async (data: Omit<Appt, "id">, message: string | null) => {
+    if (hubReady && session) {
+      const { startIso, endIso } = slotToIsoRange(data.day, data.start, data.dur);
+      const summary = [data.type, data.patient].filter(Boolean).join(" — ") || "Consulta";
+      try {
+        await createAppointment(session, {
+          start: startIso,
+          end: endIso,
+          summary,
+          description: data.notes || undefined,
+          phone: data.phone || null,
+        });
+        setModal(null);
+        await reloadWeek();
+        flash("Consulta criada na agenda.", "check");
+      } catch (e) {
+        console.error("secretaria hub: failed to create appointment", e);
+        const notice =
+          e instanceof HubApiError && e.status === 422
+            ? "Conecte o Google Calendar na Configuração para criar consultas reais."
+            : "Não foi possível criar na agenda real. Tente novamente.";
+        flash(notice, "xCircle");
+        // Keep the modal open on failure — do not fake a local success row.
+      }
+      return;
+    }
+
+    // Demo-local path (no hub): fabricate a local row, unchanged behaviour.
     const a: Appt = { ...data, id: "a" + Date.now(), notes: data.notes ?? "" };
     setAppts((p) => [...p, a]);
     setModal(null);
@@ -335,6 +416,10 @@ export default function AgendaPage() {
     slot: { day: number; start: number },
     _message: string
   ) => {
+    // TODO(hub-write): blocked on secretarIA — GET /tenants/me/calendar/events
+    // (CalendarEventRead) carries no appointment UUID, and no hub endpoint
+    // maps google_event_id -> Appointment.id; POST /appointments/{id}/reschedule
+    // needs that id. Wire once the read model exposes it.
     setAppts((p) =>
       p.map((a) =>
         a.id === appt.id ? { ...a, ...slot, status: "agendado" } : a
@@ -350,6 +435,10 @@ export default function AgendaPage() {
 
   /** Cancel an appointment and notify the patient via WhatsApp. */
   const doCancel = (appt: Appt, _reason: string, _message: string) => {
+    // TODO(hub-write): blocked on secretarIA — GET /tenants/me/calendar/events
+    // (CalendarEventRead) carries no appointment UUID, and no hub endpoint
+    // maps google_event_id -> Appointment.id; POST /appointments/{id}/cancel
+    // needs that id. Wire once the read model exposes it.
     setAppts((p) =>
       p.map((a) => (a.id === appt.id ? { ...a, status: "cancelado" } : a))
     );
@@ -361,13 +450,43 @@ export default function AgendaPage() {
     );
   };
 
-  /** Add a new time block to the calendar. */
-  const createBlock = (data: {
+  /**
+   * Add a new time block to the calendar.
+   * When hubReady, this blocks the slot for real via
+   * POST /tenants/me/calendar/blocks and refetches the week; the block then
+   * shows up as a generic hub event (see hub-mapping.ts's fidelity note)
+   * rather than a local "bloqueio" row.
+   */
+  const createBlock = async (data: {
     day: number;
     start: number;
     dur: number;
     reason: string;
   }) => {
+    if (hubReady && session) {
+      const { startIso, endIso } = slotToIsoRange(data.day, data.start, data.dur);
+      try {
+        await createHubBlock(session, {
+          start: startIso,
+          end: endIso,
+          summary: data.reason,
+        });
+        setModal(null);
+        await reloadWeek();
+        flash(`Horário bloqueado: ${data.reason}.`, "ban");
+      } catch (e) {
+        console.error("secretaria hub: failed to create block", e);
+        const notice =
+          e instanceof HubApiError && e.status === 422
+            ? "Conecte o Google Calendar na Configuração para bloquear horários reais."
+            : "Não foi possível bloquear na agenda real. Tente novamente.";
+        flash(notice, "xCircle");
+        // Keep the modal open on failure — do not fake a local success row.
+      }
+      return;
+    }
+
+    // Demo-local path (no hub): fabricate a local row, unchanged behaviour.
     setBlocks((p) => [
       ...p,
       { ...data, id: "b" + Date.now(), status: "bloqueio" },
@@ -403,6 +522,27 @@ export default function AgendaPage() {
       }}
     >
       <Header theme={theme} onToggleTheme={onToggleTheme} />
+
+      {/* demo-mode / not-entitled notice — hidden once the real hub is active */}
+      <HubNotice session={session} notEntitled={notEntitled} ready={hubCheckReady} />
+
+      {/* non-blocking fallback notice when a real fetch fails after hubReady */}
+      {hubFetchFailed && (
+        <div
+          role="status"
+          style={{
+            margin: "0 26px 12px",
+            padding: "9px 14px",
+            borderRadius: 10,
+            background: "var(--st-pending-bg, #fff6e5)",
+            border: "1px solid var(--st-pending-bd, #f2d98a)",
+            color: "var(--st-pending-ink, #9a6b00)",
+            fontSize: 12.5,
+          }}
+        >
+          Não foi possível carregar a agenda real — exibindo demonstração.
+        </div>
+      )}
 
       <main
         style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}

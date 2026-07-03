@@ -3,6 +3,11 @@
 // Collects the clinic name, specialty, about blurb, structured address, phone,
 // accepted insurances, convênio-collection preference, and tone-of-voice rules
 // for the WhatsApp assistant.
+// Only clinicName round-trips to secretarIA (as read-only TenantConfigRead.
+// clinic_name — never sent back on save). Every other field here is
+// demo-only: TenantConfigUpdate (secretarIA schemas/config.py) has no
+// specialty/about/address/phone/insurances/tone fields — see the per-field
+// comments on ClinicCtx in lib/types.ts.
 
 import { Field, TextInput, TextArea } from "../../_shared/ui";
 import { Section } from "./Section";

@@ -13,6 +13,8 @@ import type { MutableRefObject } from "react";
 import { Icon, Btn } from "../_shared/ui";
 import { Header } from "../_shared/Header";
 import type { Theme } from "../_shared/Header";
+import { HubNotice } from "../_shared/HubNotice";
+import { useSecretariaHub } from "../_shared/useSecretariaHub";
 
 import { SideNav } from "./components/SideNav";
 import { CToast } from "./components/CToast";
@@ -22,6 +24,17 @@ import { AvailabilitySection } from "./components/AvailabilitySection";
 import { GoogleSection } from "./components/GoogleSection";
 
 import type { ClinicCtx, Service, DayConfig, Prefs, GcalState } from "./lib/types";
+import {
+  applyWireBusinessHours,
+  applyWireAppointmentTypes,
+  buildConfigUpdatePayload,
+} from "./lib/hub-mapping";
+import {
+  getTenantConfig,
+  updateTenantConfig,
+  startCalendarOauth,
+  disconnectCalendar,
+} from "@/lib/secretaria-hub";
 
 // ---------------------------------------------------------------------------
 // Weekday seed — used to initialise the days state
@@ -105,6 +118,11 @@ export default function ConfiguracaoPage() {
   };
 
   // --- Section 01: clinic context ---
+  // Only clinicName is hub-backed (read-only hydrate from TenantConfigRead;
+  // never sent on save). specialty/about/address*/phone/insurances/
+  // collectInsurance/tone are demo-only — see the per-field comments on
+  // ClinicCtx in lib/types.ts and buildConfigUpdatePayload below, which
+  // intentionally omits them from the PUT body.
   const [ctx, setCtx] = useState<ClinicCtx>({
     clinicName: "Consultório Dr. Aurélio Lima",
     specialty: "Clínica geral",
@@ -159,11 +177,46 @@ export default function ConfiguracaoPage() {
     }))
   );
 
+  // defaultDur round-trips (appointment_duration_min). gap/lead are
+  // demo-only: TenantConfigUpdate has no inter-appointment-gap or
+  // minimum-lead-time field.
   const [prefs, setPrefs] = useState<Prefs>({ defaultDur: 50, gap: 10, lead: 2 });
   const setPrefK = (key: keyof Prefs, value: number) =>
     setPrefs(prev => ({ ...prev, [key]: value }));
 
+  // --- secretarIA hub: entitlement-gated real data path ---
+  const { session, ready: hubCheckReady, notEntitled, hubReady } = useSecretariaHub();
+
+  // Hydrate form state from the real tenant config once the hub is usable.
+  // Fields with no wire counterpart (address, tone, insurances, ...) simply
+  // keep their demo defaults — see hub-mapping.ts for the exact field map.
+  useEffect(() => {
+    if (!hubReady || !session) return;
+    getTenantConfig(session)
+      .then((cfg) => {
+        setCtx((prev) => ({ ...prev, clinicName: cfg.clinic_name || prev.clinicName }));
+        if (cfg.appointment_types.length > 0) {
+          setServices(applyWireAppointmentTypes(cfg.appointment_types));
+        }
+        setDays((prev) => applyWireBusinessHours(cfg.business_hours, prev));
+        setPrefs((prev) => ({
+          ...prev,
+          defaultDur: cfg.appointment_duration_min || prev.defaultDur,
+        }));
+        setGcal((prev) => ({ ...prev, connected: cfg.calendar_connected }));
+      })
+      .catch((e) => {
+        // Real config failed to load — keep the demo defaults so the page
+        // stays fully usable; this mirrors the agenda page's fallback rule.
+        console.error("secretaria hub: failed to load tenant config", e);
+      });
+  }, [hubReady, session]);
+
   // --- Section 04: Google Calendar ---
+  // connected round-trips (TenantConfigRead.calendar_connected, read-only).
+  // email/calendar/tz/twoWay are demo-only — TenantConfigUpdate carries only
+  // google_calendar_id (an id string, not a picker of named calendars/tz/
+  // two-way-sync prefs), and the account email isn't exposed by the hub at all.
   const [gcal, setGcal] = useState<GcalState>({
     connected: false,
     email: "",
@@ -171,6 +224,50 @@ export default function ConfiguracaoPage() {
     tz: "(GMT-03:00) Brasília",
     twoWay: true,
   });
+
+  // --- Save: writes to the real hub config when available, else local-only ---
+  // NOTE on the success flash below: it is honest for the fields that DO
+  // persist (business hours, services/appointment types, default duration —
+  // see buildConfigUpdatePayload), but a secretary who just edited the
+  // demo-only fields (address, phone, insurances, tone, specialty, about,
+  // gap/lead, gcal email/calendar/tz/twoWay) will see the same generic
+  // success copy even though those fields were silently not sent. Left as-is
+  // per the supported fields genuinely persisting; revisit if secretarIA
+  // grows those wire fields and this payload still omits them.
+  const handleSave = async () => {
+    if (hubReady && session) {
+      try {
+        await updateTenantConfig(
+          session,
+          buildConfigUpdatePayload(days, services, prefs.defaultDur),
+        );
+        flash("Configuração salva — a secretarIA já está atualizada.");
+      } catch (e) {
+        console.error("secretaria hub: failed to save tenant config", e);
+        flash("Não foi possível salvar agora. Tente novamente.");
+      }
+      return;
+    }
+    flash("Configuração salva — a secretarIA já está atualizada.");
+  };
+
+  // --- Google Calendar: real OAuth handoff when hubReady, else undefined
+  // (GoogleSection falls back to its local simulated connect/disconnect). ---
+  const handleGoogleConnect =
+    hubReady && session
+      ? async () => {
+          const url = await startCalendarOauth(session);
+          window.location.assign(url);
+        }
+      : undefined;
+
+  const handleGoogleDisconnect =
+    hubReady && session
+      ? async () => {
+          await disconnectCalendar(session);
+          setGcal((g) => ({ ...g, connected: false, email: "", calendar: "" }));
+        }
+      : undefined;
 
   // ---------------------------------------------------------------------------
   // Render
@@ -183,6 +280,9 @@ export default function ConfiguracaoPage() {
       background: "var(--page)",
     }}>
       <Header theme={theme} onToggleTheme={onToggleTheme} />
+
+      {/* demo-mode / not-entitled notice — hidden once the real hub is active */}
+      <HubNotice session={session} notEntitled={notEntitled} ready={hubCheckReady} />
 
       {/* scrollable content area — scrollspy fires on this element */}
       <div
@@ -231,7 +331,12 @@ export default function ConfiguracaoPage() {
                 prefs={prefs}
                 setPref={setPrefK}
               />
-              <GoogleSection gcal={gcal} setGcal={setGcal} />
+              <GoogleSection
+                gcal={gcal}
+                setGcal={setGcal}
+                onConnect={handleGoogleConnect}
+                onDisconnect={handleGoogleDisconnect}
+              />
             </div>
           </div>
         </div>
@@ -263,11 +368,7 @@ export default function ConfiguracaoPage() {
         <Btn variant="ghost" onClick={() => flash("Alterações descartadas.")}>
           Descartar
         </Btn>
-        <Btn
-          variant="primary"
-          icon="check"
-          onClick={() => flash("Configuração salva — a secretarIA já está atualizada.")}
-        >
+        <Btn variant="primary" icon="check" onClick={handleSave}>
           Salvar configuração
         </Btn>
       </div>

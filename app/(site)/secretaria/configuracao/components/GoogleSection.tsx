@@ -3,7 +3,9 @@
 // Shows an OAuth connect card when disconnected, and a connected state card
 // when gcal.connected is true. Includes two-way sync toggle and manual
 // credential entry (advanced, inside a <details> element).
-// The connect action is simulated with a 1.4s delay matching the source design.
+// When `onConnect`/`onDisconnect` are provided (hubReady in the parent page),
+// they drive the real secretarIA hub OAuth handoff instead of the local
+// simulated flow (1.4s delay, matching the original design demo).
 
 import { useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
@@ -17,16 +19,36 @@ import type { GcalState } from "../lib/types";
 type GoogleSectionProps = {
   gcal: GcalState;
   setGcal: Dispatch<SetStateAction<GcalState>>;
+  // Real hub handoff (see lib/secretaria-hub.ts). undefined => demo mode.
+  onConnect?: () => Promise<void>;
+  onDisconnect?: () => Promise<void>;
 };
 
 // Section 04 — Google Calendar OAuth connect/disconnect + settings when connected.
-export function GoogleSection({ gcal, setGcal }: GoogleSectionProps) {
-  // Local loading state for the simulated OAuth flow
+export function GoogleSection({ gcal, setGcal, onConnect, onDisconnect }: GoogleSectionProps) {
+  // Local loading state for the connect flow (real or simulated)
   const [connecting, setConnecting] = useState(false);
+  // Inline error shown when the real hub OAuth handoff fails
+  const [oauthError, setOauthError] = useState<string | null>(null);
 
-  const connect = () => {
+  const connect = async () => {
+    setOauthError(null);
+    if (onConnect) {
+      setConnecting(true);
+      try {
+        // On success this navigates the browser away to Google's consent
+        // screen — the pending state below only matters on failure.
+        await onConnect();
+      } catch (e) {
+        console.error("secretaria hub: failed to start Google OAuth", e);
+        setOauthError("Não foi possível iniciar a conexão com o Google agora. Tente novamente.");
+      } finally {
+        setConnecting(false);
+      }
+      return;
+    }
+    // --- demo mode: simulate OAuth round-trip (1.4 s delay mirrors the source) ---
     setConnecting(true);
-    // Simulate OAuth round-trip (1.4 s delay mirrors the source)
     setTimeout(() => {
       setConnecting(false);
       setGcal(g => ({
@@ -38,8 +60,19 @@ export function GoogleSection({ gcal, setGcal }: GoogleSectionProps) {
     }, 1400);
   };
 
-  const disconnect = () =>
+  const disconnect = async () => {
+    setOauthError(null);
+    if (onDisconnect) {
+      try {
+        await onDisconnect();
+      } catch (e) {
+        console.error("secretaria hub: failed to disconnect Google Calendar", e);
+        setOauthError("Não foi possível desconectar agora. Tente novamente.");
+      }
+      return;
+    }
     setGcal(g => ({ ...g, connected: false, email: "", calendar: "" }));
+  };
 
   return (
     <Section
@@ -78,6 +111,13 @@ export function GoogleSection({ gcal, setGcal }: GoogleSectionProps) {
               {connecting ? "Autorizando…" : "Conectar com Google"}
             </Btn>
           </div>
+
+          {/* inline error — only surfaces when the real hub OAuth handoff fails */}
+          {oauthError && (
+            <p role="alert" style={{ fontSize: 12.5, color: "var(--st-miss-ink, #c0392b)", margin: 0 }}>
+              {oauthError}
+            </p>
+          )}
 
           {/* OAuth privacy notice */}
           <div style={{
@@ -153,6 +193,13 @@ export function GoogleSection({ gcal, setGcal }: GoogleSectionProps) {
             </div>
             <Btn variant="outline" size="sm" onClick={disconnect}>Desconectar</Btn>
           </div>
+
+          {/* inline error — only surfaces when the real hub disconnect fails */}
+          {oauthError && (
+            <p role="alert" style={{ fontSize: 12.5, color: "var(--st-miss-ink, #c0392b)", margin: 0 }}>
+              {oauthError}
+            </p>
+          )}
 
           {/* calendar + timezone selects */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
