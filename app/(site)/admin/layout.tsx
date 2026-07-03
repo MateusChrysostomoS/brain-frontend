@@ -15,7 +15,7 @@ import { useState } from "react";
 import { BrandIcon } from "../_components/BrandIcon";
 import { PortalShell, type PortalNavItem } from "../_components/PortalShell";
 import { clearSession, usePortalGuard } from "../_components/usePortalGuard";
-import { enterDoctorMode, ManageApiError } from "@/lib/manage-api";
+import { enterDoctorMode, logout, ManageApiError } from "@/lib/manage-api";
 
 // Admin sidebar nav (RBAC task 3B): Dashboard · Tenants · Usuários · Demo Requests · Inbound.
 const ADMIN_NAV: PortalNavItem[] = [
@@ -47,8 +47,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [switching, setSwitching] = useState(false);
   const [switchError, setSwitchError] = useState<string | null>(null);
 
-  function logout() {
-    clearSession();
+  // "Sair": logout() clears the local session synchronously before it awaits the
+  // network revoke, so navigating immediately (without awaiting) is safe.
+  function handleLogout() {
+    void logout();
     router.push("/login");
   }
 
@@ -114,7 +116,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       portalLabel="Admin"
       userLabel={session.email}
       nav={ADMIN_NAV}
-      onLogout={logout}
+      onLogout={handleLogout}
       headerActions={doctorModeButton}
       banner={errorBanner}
     >

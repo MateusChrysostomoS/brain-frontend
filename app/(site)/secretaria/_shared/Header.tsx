@@ -6,9 +6,11 @@
 
 import { useState } from "react";
 import type { CSSProperties } from "react";
+import { useRouter } from "next/navigation";
 import { Avatar, Btn, Icon, IconBtn } from "./ui";
 import type { IconName } from "./ui";
 import { CLINIC, CURRENT_USER } from "./data";
+import { signOut } from "@/lib/sign-out";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -84,6 +86,7 @@ export function Header({
   theme: Theme;
   onToggleTheme: () => void;
 }) {
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
 
   // First name only for compact display in the trigger button
@@ -172,8 +175,15 @@ export function Header({
           title={theme === "dark" ? "Tema claro" : "Tema escuro"}
         />
 
-        {/* sign-out */}
-        <Btn variant="outline" size="sm" style={{ borderRadius: 12, padding: "9px 18px" }}>
+        {/* sign-out — same behavior as the admin/doctor/"/app" Sair buttons:
+            best-effort refresh-token revocation, local session cleared first,
+            then /login. Harmless when there is no session (demo mode). */}
+        <Btn
+          variant="outline"
+          size="sm"
+          style={{ borderRadius: 12, padding: "9px 18px" }}
+          onClick={() => signOut((path) => router.push(path))}
+        >
           Sair
         </Btn>
       </div>

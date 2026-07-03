@@ -16,6 +16,7 @@ import {
   getEntitlements,
   getPrecheckSsoToken,
   getSession,
+  logout,
   ManageApiError,
   type Entitlements,
   type Session,
@@ -558,10 +559,16 @@ export default function AppPage() {
               {avatarInitial}
             </span>
             <span className="uname">{clinicLabel}</span>
+            <Link className="btn btn--ghost btn--sm" href="/app/billing">
+              Assinatura
+            </Link>
             <Link
               className="btn btn--outline btn--sm"
               href="/login"
-              onClick={() => clearSession()}
+              // Best-effort server-side refresh-token revocation; the local
+              // session is cleared unconditionally inside logout() first, so
+              // this can never leave the user "stuck logged in".
+              onClick={() => void logout()}
             >
               Sair
             </Link>

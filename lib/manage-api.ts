@@ -3,9 +3,14 @@
 // (NEXT_PUBLIC_MANAGE_API_BASE_URL); no hardcoded domain. See brain-api/CONTRACTS.md.
 //
 // Endpoints consumed here:
-//   POST /auth/token     -> { access_token, token_type }      (login)
+//   POST /auth/token     -> { access_token, refresh_token, expires_in } (login)
+//   POST /auth/refresh   -> new token pair (rotate-on-use)    (internal, via manageFetch)
+//   POST /auth/logout    -> revoke the refresh token          (logout)
 //   GET  /auth/me        -> identity (user + tenant)          (getMe)
 //   GET  /entitlements   -> resolved product access + plan    (getEntitlements)
+//   POST /billing/checkout -> Stripe Checkout URL             (createCheckoutSession)
+//   POST /billing/portal   -> Stripe Billing Portal URL       (createPortalSession)
+//   POST /doctor/secretaria/hub-token -> secretarIA hub token (getSecretariaHubToken)
 //   POST /demo-requests  -> lead-capture confirmation         (submitDemoRequest)
 
 // ---------------------------------------------------------------------------
@@ -23,15 +28,27 @@ export type Session = {
   // Decoded from the JWT `role` claim at login — drives post-login portal routing
   // (admin -> /admin/dashboard, tenant_owner|tenant_staff -> /doctor/dashboard).
   role: string;
+  // Opaque revocable refresh token (CONTRACTS §2.1a). Optional: sessions stored
+  // before this field existed — and the impersonated "Modo médico" doctor session,
+  // which deliberately has no refresh leg — simply can't auto-refresh.
+  refreshToken?: string;
 };
 
 // Portal-facing entitlement shape consumed by the /app dashboard shell. Mapped
-// from the richer brain-api response (see getEntitlements).
+// from the richer brain-api response (see getEntitlements). The first four fields
+// are the original contract (unchanged consumers keep working); status/addons/
+// limits are additive — the catalog round formalized them as FULL keysets
+// (every add-on id -> bool, every limit key -> int), so UI gating can read them
+// directly instead of waiting for a backend 403.
 export type Entitlements = {
   precheck: boolean;
   secretaria: boolean;
-  plan: string; // "brain-completo" | "precheck" | "secretaria" | "free"
+  plan: string; // catalog plan id (legacy rows may carry an alias like "brain-completo")
   clinicName: string;
+  status: string; // "active" | "trialing" | "past_due" | "canceled" | "inactive"
+  secretariaTier: string | null; // "ferro" | "bronze_1" | "bronze_2" | null
+  addons: Record<string, boolean>;
+  limits: Record<string, number>;
 };
 
 export type MeResponse = {
@@ -127,12 +144,12 @@ export class ManageApiError extends Error {
   }
 }
 
-async function manageFetch<T>(
+async function rawManageFetch(
   path: string,
   opts: RequestInit = {},
   token?: string,
-): Promise<T> {
-  const res = await fetch(MANAGE_API_BASE + path, {
+): Promise<Response> {
+  return fetch(MANAGE_API_BASE + path, {
     ...opts,
     headers: {
       "Content-Type": "application/json",
@@ -140,6 +157,9 @@ async function manageFetch<T>(
       ...(opts.headers || {}),
     },
   });
+}
+
+async function parseManageResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     // FastAPI uses { detail: string } (or a list for 422). Surface a string.
@@ -147,7 +167,89 @@ async function manageFetch<T>(
       typeof body?.detail === "string" ? body.detail : res.statusText;
     throw new ManageApiError(res.status, detail);
   }
+  // 204 (e.g. /auth/logout) has no body.
+  if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
+}
+
+// --- Transparent refresh-on-401 (CONTRACTS §2.1a) -------------------------
+//
+// When an authenticated call 401s with the CURRENT stored session's access token
+// and that session has a refresh token, rotate the pair once (single-flight so
+// concurrent 401s share one /auth/refresh call) and retry the original request
+// exactly once with the new access token. A second 401 propagates — never loop.
+// A rejected refresh (revoked/reused/expired) clears the session and routes to
+// /login; a NETWORK failure on refresh just lets the original 401 surface
+// (transient outage shouldn't force a logout — callers already bounce on 401).
+
+let refreshInFlight: Promise<Session | null> | null = null;
+
+function redirectToLogin(): void {
+  if (typeof window !== "undefined") window.location.assign("/login");
+}
+
+async function doRefresh(current: Session): Promise<Session | null> {
+  let res: Response;
+  try {
+    res = await rawManageFetch("/auth/refresh", {
+      method: "POST",
+      body: JSON.stringify({ refresh_token: current.refreshToken }),
+    });
+  } catch {
+    return null; // network blip — don't destroy the session
+  }
+  if (!res.ok) {
+    // Rotate-on-use rejection (revoked, reused, expired, 429): the revocable leg
+    // is dead. Clear locally and send the user to log in again.
+    clearSession();
+    redirectToLogin();
+    return null;
+  }
+  const data = (await res.json()) as TokenResponse;
+  const session: Session = {
+    ...current,
+    token: data.access_token,
+    refreshToken: data.refresh_token ?? current.refreshToken,
+  };
+  saveSession(session);
+  return session;
+}
+
+function refreshCurrentSession(current: Session): Promise<Session | null> {
+  if (!refreshInFlight) {
+    refreshInFlight = doRefresh(current).finally(() => {
+      refreshInFlight = null;
+    });
+  }
+  return refreshInFlight;
+}
+
+// Token-LIFECYCLE endpoints must never trigger a transparent refresh (a failing
+// refresh retrying itself would loop). Plain authenticated reads like /auth/me
+// are NOT excluded — they benefit from refresh like any other endpoint.
+const NO_REFRESH_PATHS = new Set(["/auth/token", "/auth/refresh", "/auth/logout"]);
+
+async function manageFetch<T>(
+  path: string,
+  opts: RequestInit = {},
+  token?: string,
+): Promise<T> {
+  const res = await rawManageFetch(path, opts, token);
+  if (res.status === 401 && token && !NO_REFRESH_PATHS.has(path)) {
+    // Only refresh for the STORED session's own token — a stale/impersonated/
+    // foreign token isn't ours to rotate (the "Modo médico" doctor session has
+    // no refreshToken and correctly falls through to the plain 401).
+    const current = getSession();
+    if (current && current.token === token && current.refreshToken) {
+      const refreshed = await refreshCurrentSession(current);
+      if (refreshed) {
+        return parseManageResponse<T>(
+          await rawManageFetch(path, opts, refreshed.token),
+        );
+      }
+    }
+  }
+  return parseManageResponse<T>(res);
 }
 
 // Decode (without verifying) a JWT payload to read the tenant_id claim. The
@@ -169,10 +271,18 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
 // API
 // ---------------------------------------------------------------------------
 
-type TokenResponse = { access_token: string; token_type: string };
+// §2.1: refresh_token (opaque, revocable) + expires_in (access TTL, seconds) are
+// additive fields on the same TokenResponse shape /auth/refresh also returns.
+type TokenResponse = {
+  access_token: string;
+  token_type: string;
+  refresh_token?: string;
+  expires_in?: number;
+};
 
 // MANAGE-API CALL SITE #1 — unified login. POST /auth/token { email, password }.
-// Stores and returns the Session.
+// Stores and returns the Session (access + refresh pair; access is 30 min, the
+// refresh flow in manageFetch keeps the session alive past it).
 export async function login(email: string, password: string): Promise<Session> {
   const data = await manageFetch<TokenResponse>("/auth/token", {
     method: "POST",
@@ -182,9 +292,45 @@ export async function login(email: string, password: string): Promise<Session> {
   const tenantId =
     typeof claims?.tenant_id === "string" ? (claims.tenant_id as string) : "";
   const role = typeof claims?.role === "string" ? (claims.role as string) : "";
-  const session: Session = { token: data.access_token, tenantId, email, role };
+  const session: Session = {
+    token: data.access_token,
+    tenantId,
+    email,
+    role,
+    refreshToken: data.refresh_token,
+  };
   saveSession(session);
   return session;
+}
+
+// MANAGE-API CALL SITE #5 — explicit logout. POST /auth/logout { refresh_token }
+// (always 204 server-side — no token-existence oracle). Best-effort: the LOCAL
+// session is cleared unconditionally and first, so a network failure can never
+// leave the user "stuck logged in". Also revokes the stashed admin session's
+// refresh token when logging out from inside "Modo médico" — otherwise that
+// (more privileged) revocable leg would silently outlive the logout.
+export async function logout(): Promise<void> {
+  const tokens: string[] = [];
+  if (typeof window !== "undefined") {
+    const current = getSession();
+    if (current?.refreshToken) tokens.push(current.refreshToken);
+    try {
+      const stash = sessionStorage.getItem(ADMIN_STASH_KEY);
+      const admin = stash ? (JSON.parse(stash) as Session) : null;
+      if (admin?.refreshToken) tokens.push(admin.refreshToken);
+    } catch {
+      // unreadable stash — nothing to revoke
+    }
+  }
+  clearSession();
+  await Promise.all(
+    tokens.map((refresh_token) =>
+      rawManageFetch("/auth/logout", {
+        method: "POST",
+        body: JSON.stringify({ refresh_token }),
+      }).catch(() => undefined),
+    ),
+  );
 }
 
 // GET /auth/me — authenticated identity (no secrets). Optional helper.
@@ -197,11 +343,27 @@ export type EntitlementResponse = {
   clinic_name: string;
   products: { precheck: boolean; secretaria: boolean };
   plan: string;
+  secretaria_tier?: string | null;
   status: string;
   addons: Record<string, unknown>;
   limits: Record<string, unknown>;
   usage: Record<string, unknown>;
 };
+
+// Coerce the wire keysets defensively (the catalog guarantees full boolean/int
+// keysets, but the UI should never crash on a stale row shape).
+function coerceAddons(raw: Record<string, unknown>): Record<string, boolean> {
+  const out: Record<string, boolean> = {};
+  for (const [k, v] of Object.entries(raw || {})) out[k] = v === true;
+  return out;
+}
+
+function coerceLimits(raw: Record<string, unknown>): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const [k, v] of Object.entries(raw || {}))
+    out[k] = typeof v === "number" && Number.isFinite(v) ? v : 0;
+  return out;
+}
 
 // MANAGE-API CALL SITE #2 — dashboard shell boot(). GET /entitlements (Bearer).
 // Maps the brain-api response onto the portal-facing Entitlements shape.
@@ -216,6 +378,10 @@ export async function getEntitlements(session: Session): Promise<Entitlements> {
     secretaria: data.products.secretaria,
     plan: data.plan,
     clinicName: data.clinic_name,
+    status: data.status,
+    secretariaTier: data.secretaria_tier ?? null,
+    addons: coerceAddons(data.addons),
+    limits: coerceLimits(data.limits),
   };
 }
 
@@ -227,6 +393,69 @@ export async function submitDemoRequest(
     method: "POST",
     body: JSON.stringify(payload),
   });
+}
+
+// ---------------------------------------------------------------------------
+// Billing — Stripe checkout + portal (CONTRACTS §13)
+//
+// IDS ONLY, never prices/features: the brain-api catalog (services/catalog.py,
+// CONTRACTS §3.2) is the single commercial source of truth and validates every
+// selection server-side (422 on anything unknown/unassignable). These unions just
+// give call sites type safety over the same ids.
+// ---------------------------------------------------------------------------
+
+// Assignable catalog plan ids (§3.2; secretaria_bronze_2 is a reserved slot and
+// "free" is not purchasable — both rejected by the backend with 422).
+export type CatalogPlanId =
+  | "precheck"
+  | "secretaria_ferro"
+  | "secretaria_bronze_1"
+  | "complete_clinic_combo";
+
+// The formalized add-on keyset (§3.2).
+export type CatalogAddonId =
+  | "reactivation_pack"
+  | "verified_identity"
+  | "multi_professional"
+  | "multi_unit"
+  | "ehr"
+  | "pix_whatsapp"
+  | "analytics_bi"
+  | "human_backup_24_7";
+
+// MANAGE-API CALL SITE #6 — Stripe Checkout. POST /billing/checkout (tenant JWT)
+// with { plan, addons? } (catalog ids only). Returns the Stripe-hosted Checkout URL
+// for a full-page redirect. Throws ManageApiError: 422 unknown/unassignable plan or
+// addon, 503 `billing_not_configured` / `price_not_configured:<id>`, 502 Stripe
+// failure. Plan-implied addons are silently dropped server-side (a combo already
+// charges for them) — sending them is not an error.
+export async function createCheckoutSession(
+  session: Session,
+  plan: CatalogPlanId | string,
+  addons?: (CatalogAddonId | string)[],
+): Promise<string> {
+  const data = await manageFetch<{ url: string }>(
+    "/billing/checkout",
+    {
+      method: "POST",
+      body: JSON.stringify({ plan, ...(addons?.length ? { addons } : {}) }),
+    },
+    session.token,
+  );
+  return data.url;
+}
+
+// MANAGE-API CALL SITE #7 — Stripe Billing Portal. POST /billing/portal (tenant
+// JWT). Returns the portal URL for a full-page redirect. Throws ManageApiError:
+// 409 `no_billing_account` (tenant never checked out — route them to checkout
+// instead), 503/502 as above.
+export async function createPortalSession(session: Session): Promise<string> {
+  const data = await manageFetch<{ url: string }>(
+    "/billing/portal",
+    { method: "POST" },
+    session.token,
+  );
+  return data.url;
 }
 
 // Result of the PreCheck SSO handoff: a PreCheck-compatible token + its lifetime (s).
@@ -247,6 +476,27 @@ export async function getPrecheckSsoToken(
     expires_in: number;
   }>("/sso/precheck/token", { method: "POST" }, session.token);
   return { token: data.token, expiresIn: data.expires_in };
+}
+
+// Result of the secretarIA hub handoff: a purpose-scoped hub token + lifetime (s).
+export type SecretariaHubToken = { hubToken: string; expiresIn: number };
+
+// MANAGE-API CALL SITE #8 — secretarIA doctor-hub handoff. POST
+// /doctor/secretaria/hub-token (Bearer brain JWT). Same shape as the PreCheck SSO
+// handoff (#3): brain-api verifies the tenant's secretarIA entitlement LIVE and
+// mints a short-lived purpose-scoped token (scope="secretaria_hub", CONTRACTS
+// §12.2) that secretarIA's hub introspects back against brain-api. It is NOT a
+// user JWT and NOT refreshable via /auth/refresh — on expiry, mint again (see
+// lib/secretaria-hub.ts). Throws ManageApiError 403 `secretaria_not_entitled`.
+export async function getSecretariaHubToken(
+  session: Session,
+): Promise<SecretariaHubToken> {
+  const data = await manageFetch<{
+    hub_token: string;
+    token_type: string;
+    expires_in: number;
+  }>("/doctor/secretaria/hub-token", { method: "POST" }, session.token);
+  return { hubToken: data.hub_token, expiresIn: data.expires_in };
 }
 
 // ---------------------------------------------------------------------------

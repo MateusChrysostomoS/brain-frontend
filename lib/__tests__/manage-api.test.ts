@@ -1,0 +1,424 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { Session } from "../manage-api";
+
+// ---------------------------------------------------------------------------
+// Test harness: manage-api.ts guards session-persistence paths on
+// `typeof window === "undefined"`, so every test needs a fake `window` +
+// `sessionStorage` installed BEFORE the module is imported. The module also
+// keeps a module-level single-flight variable (`refreshInFlight`), so each
+// test gets a fresh module instance via vi.resetModules() + dynamic import.
+// ---------------------------------------------------------------------------
+
+type ManageApiModule = typeof import("../manage-api");
+
+let api: ManageApiModule;
+let fetchMock: ReturnType<typeof vi.fn>;
+
+function makeSessionStorage() {
+  const store = new Map<string, string>();
+  return {
+    getItem: (key: string) => (store.has(key) ? store.get(key)! : null),
+    setItem: (key: string, value: string) => {
+      store.set(key, value);
+    },
+    removeItem: (key: string) => {
+      store.delete(key);
+    },
+    clear: () => store.clear(),
+    key: (i: number) => Array.from(store.keys())[i] ?? null,
+    get length() {
+      return store.size;
+    },
+  };
+}
+
+beforeEach(async () => {
+  vi.resetModules();
+
+  const sessionStorageMock = makeSessionStorage();
+  (globalThis as any).sessionStorage = sessionStorageMock;
+  (globalThis as any).window = {
+    sessionStorage: sessionStorageMock,
+    location: { assign: vi.fn() },
+  };
+  (globalThis as any).atob = (b64: string) =>
+    Buffer.from(b64, "base64").toString("binary");
+
+  fetchMock = vi.fn();
+  (globalThis as any).fetch = fetchMock;
+
+  api = await import("../manage-api");
+});
+
+// --- helpers ---------------------------------------------------------------
+
+function mockResponse(status: number, body: unknown, statusText = ""): Response {
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    statusText,
+    json: async () => body,
+  } as unknown as Response;
+}
+
+function b64url(raw: string): string {
+  return Buffer.from(raw)
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+
+function makeJwt(payload: Record<string, unknown>): string {
+  const header = b64url(JSON.stringify({ alg: "none", typ: "JWT" }));
+  const body = b64url(JSON.stringify(payload));
+  return `${header}.${body}.signature`;
+}
+
+function makeSession(overrides: Partial<Session> = {}): Session {
+  return {
+    token: "old",
+    tenantId: "t1",
+    email: "doc@clinic.com",
+    role: "tenant_owner",
+    refreshToken: "r1",
+    ...overrides,
+  };
+}
+
+function entitlementBody() {
+  return {
+    tenant_id: "t1",
+    clinic_name: "Clinic",
+    products: { precheck: true, secretaria: false },
+    plan: "precheck",
+    secretaria_tier: null,
+    status: "active",
+    addons: {},
+    limits: {},
+    usage: {},
+  };
+}
+
+async function expectManageError(
+  promise: Promise<unknown>,
+  status: number,
+  message?: string,
+) {
+  let threw = false;
+  try {
+    await promise;
+  } catch (err) {
+    threw = true;
+    expect(err).toBeInstanceOf(api.ManageApiError);
+    expect((err as InstanceType<ManageApiModule["ManageApiError"]>).status).toBe(
+      status,
+    );
+    if (message !== undefined) {
+      expect((err as Error).message).toBe(message);
+    }
+  }
+  expect(threw).toBe(true);
+}
+
+// ---------------------------------------------------------------------------
+// refresh-and-retry (via getEntitlements — GET /entitlements does NOT start
+// with "/auth/", so it is eligible for the transparent-refresh guard; getMe
+// is NOT, see "surprises" in the final report)
+// ---------------------------------------------------------------------------
+
+describe("manageFetch refresh-and-retry", () => {
+  it("1. happy retry: 401 -> refresh 200 -> retried call 200; session updated", async () => {
+    const session = makeSession({ token: "old", refreshToken: "r1" });
+    api.saveSession(session);
+
+    fetchMock
+      .mockResolvedValueOnce(mockResponse(401, { detail: "token_expired" }))
+      .mockResolvedValueOnce(
+        mockResponse(200, {
+          access_token: "new-jwt",
+          token_type: "bearer",
+          refresh_token: "r2",
+          expires_in: 1800,
+        }),
+      )
+      .mockResolvedValueOnce(mockResponse(200, entitlementBody()));
+
+    const result = await api.getEntitlements(session);
+
+    expect(result.plan).toBe("precheck");
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+
+    const call1 = fetchMock.mock.calls[0];
+    expect(call1[0]).toBe("/entitlements");
+    expect(call1[1].headers.Authorization).toBe("Bearer old");
+
+    const call2 = fetchMock.mock.calls[1];
+    expect(call2[0]).toBe("/auth/refresh");
+    expect(call2[1].method).toBe("POST");
+    expect(JSON.parse(call2[1].body)).toEqual({ refresh_token: "r1" });
+
+    const call3 = fetchMock.mock.calls[2];
+    expect(call3[0]).toBe("/entitlements");
+    expect(call3[1].headers.Authorization).toBe("Bearer new-jwt");
+
+    const stored = JSON.parse(sessionStorage.getItem(api.SESSION_KEY)!);
+    expect(stored.token).toBe("new-jwt");
+    expect(stored.refreshToken).toBe("r2");
+  });
+
+  it("2. refresh rejection: 401 -> refresh 401 -> clears session, redirects to /login", async () => {
+    const session = makeSession({ token: "old", refreshToken: "r1" });
+    api.saveSession(session);
+
+    fetchMock
+      .mockResolvedValueOnce(mockResponse(401, { detail: "token_expired" }))
+      .mockResolvedValueOnce(mockResponse(401, { detail: "refresh_token_revoked" }));
+
+    await expectManageError(api.getEntitlements(session), 401);
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(sessionStorage.getItem(api.SESSION_KEY)).toBeNull();
+    expect(sessionStorage.getItem(api.IMPERSONATION_KEY)).toBeNull();
+    expect((window as any).location.assign).toHaveBeenCalledWith("/login");
+  });
+
+  it("3. retry-once: 401 -> refresh 200 -> retried call 401 again -> rejects, no second refresh", async () => {
+    const session = makeSession({ token: "old", refreshToken: "r1" });
+    api.saveSession(session);
+
+    fetchMock
+      .mockResolvedValueOnce(mockResponse(401, { detail: "token_expired" }))
+      .mockResolvedValueOnce(
+        mockResponse(200, {
+          access_token: "new-jwt",
+          token_type: "bearer",
+          refresh_token: "r2",
+          expires_in: 1800,
+        }),
+      )
+      .mockResolvedValueOnce(mockResponse(401, { detail: "token_expired" }));
+
+    await expectManageError(api.getEntitlements(session), 401);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
+  it("4. no refresh token -> no refresh attempt", async () => {
+    const session = makeSession({ token: "old", refreshToken: undefined });
+    api.saveSession(session);
+
+    fetchMock.mockResolvedValueOnce(mockResponse(401, { detail: "token_expired" }));
+
+    await expectManageError(api.getEntitlements(session), 401);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("5. single-flight: two concurrent 401s share one /auth/refresh call", async () => {
+    const session = makeSession({ token: "old", refreshToken: "r1" });
+    api.saveSession(session);
+
+    let resolveRefresh!: (res: Response) => void;
+    const deferredRefresh = new Promise<Response>((resolve) => {
+      resolveRefresh = resolve;
+    });
+
+    fetchMock.mockImplementation(async (url: string, opts: any) => {
+      const auth = opts?.headers?.Authorization;
+      if (url === "/entitlements") {
+        if (auth === "Bearer old") return mockResponse(401, { detail: "token_expired" });
+        if (auth === "Bearer new-jwt") return mockResponse(200, entitlementBody());
+        throw new Error("unexpected auth header: " + auth);
+      }
+      if (url === "/auth/refresh") return deferredRefresh;
+      throw new Error("unexpected url: " + url);
+    });
+
+    const p1 = api.getEntitlements(session);
+    const p2 = api.getEntitlements(session);
+
+    resolveRefresh(
+      mockResponse(200, {
+        access_token: "new-jwt",
+        token_type: "bearer",
+        refresh_token: "r2",
+        expires_in: 1800,
+      }),
+    );
+
+    await Promise.all([p1, p2]);
+
+    const refreshCalls = fetchMock.mock.calls.filter(
+      (c: any[]) => c[0] === "/auth/refresh",
+    );
+    expect(refreshCalls).toHaveLength(1);
+
+    const retriedCalls = fetchMock.mock.calls.filter(
+      (c: any[]) => c[0] === "/entitlements" && c[1]?.headers?.Authorization === "Bearer new-jwt",
+    );
+    expect(retriedCalls).toHaveLength(2);
+  });
+
+  it("6. token mismatch guard: passed session token != current stored token -> no refresh", async () => {
+    const oldSession = makeSession({ token: "old", refreshToken: "r1" });
+    api.saveSession(oldSession);
+    // A different session was saved afterwards (e.g. another tab/flow refreshed
+    // or replaced it) — the stored session's token no longer matches oldSession.
+    const newSession = makeSession({ token: "different-token", refreshToken: "r2" });
+    api.saveSession(newSession);
+
+    fetchMock.mockResolvedValueOnce(mockResponse(401, { detail: "token_expired" }));
+
+    await expectManageError(api.getEntitlements(oldSession), 401);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// login / logout
+// ---------------------------------------------------------------------------
+
+describe("login / logout", () => {
+  it("7. login stores refreshToken and decodes tenant_id/role from the JWT", async () => {
+    const jwt = makeJwt({ tenant_id: "tenant-1", role: "tenant_owner", sub: "user-1" });
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(200, {
+        access_token: jwt,
+        token_type: "bearer",
+        refresh_token: "rtok-1",
+        expires_in: 1800,
+      }),
+    );
+
+    const session = await api.login("doc@clinic.com", "hunter2");
+
+    expect(session.token).toBe(jwt);
+    expect(session.refreshToken).toBe("rtok-1");
+    expect(session.tenantId).toBe("tenant-1");
+    expect(session.role).toBe("tenant_owner");
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const call = fetchMock.mock.calls[0];
+    expect(call[0]).toBe("/auth/token");
+    expect(JSON.parse(call[1].body)).toEqual({
+      email: "doc@clinic.com",
+      password: "hunter2",
+    });
+
+    const stored = JSON.parse(sessionStorage.getItem(api.SESSION_KEY)!);
+    expect(stored.refreshToken).toBe("rtok-1");
+  });
+
+  it("8. logout clears session synchronously and best-effort revokes even on network failure", async () => {
+    const session = makeSession({ token: "old", refreshToken: "r1" });
+    api.saveSession(session);
+
+    fetchMock.mockRejectedValueOnce(new Error("network down"));
+
+    const logoutPromise = api.logout();
+
+    // Session must be cleared IMMEDIATELY — before the network call settles.
+    expect(sessionStorage.getItem(api.SESSION_KEY)).toBeNull();
+
+    await expect(logoutPromise).resolves.toBeUndefined();
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const call = fetchMock.mock.calls[0];
+    expect(call[0]).toBe("/auth/logout");
+    expect(JSON.parse(call[1].body)).toEqual({ refresh_token: "r1" });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// billing
+// ---------------------------------------------------------------------------
+
+describe("billing", () => {
+  it("9. createCheckoutSession success resolves to the Stripe url", async () => {
+    const session = makeSession({ token: "tok1" });
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(200, { url: "https://checkout.stripe.com/xyz" }),
+    );
+
+    const url = await api.createCheckoutSession(session, "precheck", [
+      "reactivation_pack",
+    ]);
+
+    expect(url).toBe("https://checkout.stripe.com/xyz");
+    const call = fetchMock.mock.calls[0];
+    expect(call[0]).toBe("/billing/checkout");
+    expect(call[1].method).toBe("POST");
+    expect(JSON.parse(call[1].body)).toEqual({
+      plan: "precheck",
+      addons: ["reactivation_pack"],
+    });
+    expect(call[1].headers.Authorization).toBe("Bearer tok1");
+  });
+
+  it("10. checkout 503 billing_not_configured -> ManageApiError 503", async () => {
+    const session = makeSession({ token: "tok1" });
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(503, { detail: "billing_not_configured" }),
+    );
+
+    await expectManageError(
+      api.createCheckoutSession(session, "precheck"),
+      503,
+      "billing_not_configured",
+    );
+  });
+
+  it("11. checkout 422 -> ManageApiError 422", async () => {
+    const session = makeSession({ token: "tok1" });
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(
+        422,
+        { detail: [{ loc: ["body", "plan"], msg: "invalid", type: "value_error" }] },
+        "Unprocessable Entity",
+      ),
+    );
+
+    await expectManageError(api.createCheckoutSession(session, "not-a-plan"), 422);
+  });
+
+  it("12. createPortalSession 409 no_billing_account -> ManageApiError 409", async () => {
+    const session = makeSession({ token: "tok1" });
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(409, { detail: "no_billing_account" }),
+    );
+
+    await expectManageError(
+      api.createPortalSession(session),
+      409,
+      "no_billing_account",
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// secretarIA hub token
+// ---------------------------------------------------------------------------
+
+describe("getSecretariaHubToken", () => {
+  it("13a. maps { hub_token, expires_in } -> { hubToken, expiresIn }", async () => {
+    const session = makeSession({ token: "tok1" });
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(200, { hub_token: "hub-abc", token_type: "bearer", expires_in: 600 }),
+    );
+
+    const result = await api.getSecretariaHubToken(session);
+    expect(result).toEqual({ hubToken: "hub-abc", expiresIn: 600 });
+  });
+
+  it("13b. 403 secretaria_not_entitled -> ManageApiError 403", async () => {
+    const session = makeSession({ token: "tok1" });
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(403, { detail: "secretaria_not_entitled" }),
+    );
+
+    await expectManageError(
+      api.getSecretariaHubToken(session),
+      403,
+      "secretaria_not_entitled",
+    );
+  });
+});
