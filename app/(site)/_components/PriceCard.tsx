@@ -1,6 +1,7 @@
 // PriceCard — a single pricing tier card matching the .price-card markup in brain.html.
 // Featured cards get the brand border + tinted background; CTA button style differs too.
 
+import type { ReactNode } from "react";
 import { BrandIcon } from "./BrandIcon";
 
 export type PriceCardProps = {
@@ -14,6 +15,10 @@ export type PriceCardProps = {
   ctaHref: string;
   featured?: boolean;
   flag?: string;
+  // Optional interactive CTA (e.g. PlanCheckoutCta) that replaces the static
+  // anchor below when provided. Keeps PriceCard itself non-interactive — the
+  // caller supplies the client component, this stays a pure server component.
+  cta?: ReactNode;
 };
 
 // Pure server component — no interactivity needed.
@@ -45,16 +50,20 @@ export function PriceCard(p: PriceCardProps) {
         ))}
       </ul>
 
-      {/* CTA: primary for featured, outline otherwise — as per the design */}
-      <a
-        className={
-          "btn btn--block" +
-          (p.featured ? " btn--primary" : " btn--outline")
-        }
-        href={p.ctaHref}
-      >
-        {p.ctaLabel}
-      </a>
+      {/* CTA: primary for featured, outline otherwise — as per the design.
+          When `cta` is supplied (an interactive checkout button), it replaces
+          this static anchor entirely; the anchor path stays intact otherwise. */}
+      {p.cta ?? (
+        <a
+          className={
+            "btn btn--block" +
+            (p.featured ? " btn--primary" : " btn--outline")
+          }
+          href={p.ctaHref}
+        >
+          {p.ctaLabel}
+        </a>
+      )}
     </div>
   );
 }

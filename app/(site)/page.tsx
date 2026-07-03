@@ -9,6 +9,7 @@ import { BrandHeader } from "./_components/BrandHeader";
 import { BrandFooter } from "./_components/BrandFooter";
 import { BrandIcon } from "./_components/BrandIcon";
 import { PriceCard } from "./_components/PriceCard";
+import { PlanCheckoutCta } from "./_components/PlanCheckoutCta";
 import { Faq } from "./_components/Faq";
 import { ContactForm } from "./_components/ContactForm";
 import { Reveal } from "./_components/Reveal";
@@ -341,6 +342,14 @@ export default function BrainHomePage() {
                 ]}
                 ctaLabel="Falar com a Brain"
                 ctaHref="#contato"
+                cta={
+                  <PlanCheckoutCta
+                    plan="precheck"
+                    label="Contratar PreCheck"
+                    secondaryHref="#contato"
+                    secondaryLabel="Falar com a Brain"
+                  />
+                }
               />
             </Reveal>
 
@@ -362,6 +371,15 @@ export default function BrainHomePage() {
                 ctaHref="#contato"
                 featured
                 flag="Melhor valor"
+                cta={
+                  <PlanCheckoutCta
+                    plan="complete_clinic_combo"
+                    label="Contratar Brain Completo"
+                    featured
+                    secondaryHref="#contato"
+                    secondaryLabel="Agendar demonstração"
+                  />
+                }
               />
             </Reveal>
 
@@ -381,6 +399,14 @@ export default function BrainHomePage() {
                 ]}
                 ctaLabel="Falar com a Brain"
                 ctaHref="#contato"
+                cta={
+                  <PlanCheckoutCta
+                    plan="secretaria_bronze_1"
+                    label="Contratar secretarIA"
+                    secondaryHref="#contato"
+                    secondaryLabel="Falar com a Brain"
+                  />
+                }
               />
             </Reveal>
           </div>

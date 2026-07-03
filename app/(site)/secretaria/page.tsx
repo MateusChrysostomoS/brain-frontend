@@ -9,6 +9,7 @@ import { BrandFooter } from "../_components/BrandFooter";
 import { BrandIcon } from "../_components/BrandIcon";
 import { Phone, type WaStep } from "../_components/Phone";
 import { PriceCard } from "../_components/PriceCard";
+import { PlanCheckoutCta } from "../_components/PlanCheckoutCta";
 import { Faq, type FaqItem } from "../_components/Faq";
 import { ContactForm } from "../_components/ContactForm";
 import { Reveal } from "../_components/Reveal";
@@ -535,6 +536,14 @@ export default function SecretariaPage() {
                 ]}
                 ctaLabel="Falar com a Brain"
                 ctaHref="#contato"
+                cta={
+                  <PlanCheckoutCta
+                    plan="secretaria_ferro"
+                    label="Contratar Individual"
+                    secondaryHref="#contato"
+                    secondaryLabel="Falar com a Brain"
+                  />
+                }
               />
             </Reveal>
             <Reveal delay={1}>
@@ -554,6 +563,15 @@ export default function SecretariaPage() {
                 ctaHref="#contato"
                 featured
                 flag="Mais comum"
+                cta={
+                  <PlanCheckoutCta
+                    plan="secretaria_bronze_1"
+                    label="Contratar Clínica"
+                    featured
+                    secondaryHref="#contato"
+                    secondaryLabel="Agendar demonstração"
+                  />
+                }
               />
             </Reveal>
             <Reveal delay={2}>

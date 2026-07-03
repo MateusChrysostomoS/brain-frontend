@@ -1,0 +1,101 @@
+/* =====================================================================
+   /app/billing — page-local styles layered on top of ../dashboard-shell.css
+   (which supplies .panel, .panel-head, .badge, .dash-header, etc.) and the
+   global brand-ds.css tokens. Route-scoped like its sibling.
+   ===================================================================== */
+
+/* Key/value rows for clinic name, plan, status. */
+.sub-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 0 6px;
+  border-bottom: 1px solid var(--line);
+}
+.sub-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.sub-summary-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-faint);
+}
+.sub-summary-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* A section within the panel (add-ons, limits, actions). */
+.sub-block {
+  margin-top: 26px;
+}
+.sub-block-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+  margin-bottom: 12px;
+}
+
+/* Neutral badge tone — dashboard-shell.css only defines wait/done/amber/teal;
+   "canceled"/"inactive" needs a muted, non-alarming pill. */
+.badge--neutral {
+  background: var(--surface-2);
+  color: var(--ink-soft);
+  border: 1px solid var(--line);
+}
+.badge--neutral .d {
+  background: var(--ink-faint);
+}
+
+/* Compact stat tiles for plan limits. */
+.limit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 12px;
+}
+.limit-item {
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  text-align: center;
+}
+.limit-value {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--ink);
+}
+.limit-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-faint);
+  margin-top: 4px;
+}
+
+/* Inline alert under the "Gerenciar assinatura" button — mirrors the ssoError
+   pattern used on /app (role="alert", small red copy). */
+.portal-alert {
+  margin-top: 10px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--danger, #c0392b);
+}
+
+/* Mirrors an arrow icon so it points left for the "Voltar ao painel" link. */
+.flip-h {
+  transform: scaleX(-1);
+}
+
+@media (max-width: 720px) {
+  .sub-summary-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
