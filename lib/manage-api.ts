@@ -12,6 +12,10 @@
 //   POST /billing/portal   -> Stripe Billing Portal URL       (createPortalSession)
 //   POST /doctor/secretaria/hub-token -> secretarIA hub token (getSecretariaHubToken)
 //   POST /demo-requests  -> lead-capture confirmation         (submitDemoRequest)
+//   POST /public/signup-intents          -> pending signup intent    (createSignupIntent)
+//   POST /public/checkout-sessions       -> Stripe Checkout URL      (createPublicCheckoutSession)
+//   GET  /public/onboarding-status       -> async webhook activation (getOnboardingStatus)
+//   POST /auth/exchange-onboarding-token -> real session, one-time   (exchangeOnboardingToken)
 
 // ---------------------------------------------------------------------------
 // Types
@@ -393,6 +397,104 @@ export async function submitDemoRequest(
     method: "POST",
     body: JSON.stringify(payload),
   });
+}
+
+// ---------------------------------------------------------------------------
+// Self-service cold signup (public, unauthenticated) — Stripe-test-mode
+// validation pass. A visitor with no Brain account buys a plan straight from
+// the marketing site: create a pending signup intent, start a Stripe Checkout
+// session for it, poll for the async webhook activation, then exchange the
+// one-time onboarding token for a real session. See docs on the
+// /checkout/sucesso page for the polling contract.
+// ---------------------------------------------------------------------------
+
+export type SignupIntentPayload = {
+  name: string;
+  clinic_name: string;
+  email: string;
+  whatsapp_phone: string;
+  catalog_ids: string[];
+  // Honeypot: always sent empty by real visitors (the field is visually
+  // hidden in the form). A filled value marks the submission as spam server-side.
+  website?: string;
+};
+
+export type SignupIntentResult = { intent_id: string };
+
+// POST /public/signup-intents — public lead+plan capture that seeds a pending
+// Stripe Checkout. Throws ManageApiError: 409 `email_already_registered`
+// (route the visitor to /login instead) or 422 (bad catalog_ids selection).
+export async function createSignupIntent(
+  payload: SignupIntentPayload,
+): Promise<SignupIntentResult> {
+  return manageFetch<SignupIntentResult>("/public/signup-intents", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export type PublicCheckoutSessionResult = { checkout_url: string };
+
+// POST /public/checkout-sessions — mints the Stripe Checkout URL for a pending
+// signup intent. Throws ManageApiError: 503 `price_not_configured:<id>` (no
+// Stripe price configured for the selected catalog id), 502 (Stripe error), or
+// 409 (the intent is no longer pending).
+export async function createPublicCheckoutSession(
+  intentId: string,
+): Promise<PublicCheckoutSessionResult> {
+  return manageFetch<PublicCheckoutSessionResult>("/public/checkout-sessions", {
+    method: "POST",
+    body: JSON.stringify({ intent_id: intentId }),
+  });
+}
+
+export type OnboardingStatus = {
+  status: "pending" | "ready" | "failed";
+  products: { secretaria: boolean; precheck: boolean } | null;
+  // Rotates on EVERY poll — callers must always act on the token from the
+  // latest response, never one cached from an earlier poll. Comes back null
+  // once it has already been exchanged (single use) or before the tenant is
+  // ready.
+  onboarding_token: string | null;
+};
+
+// GET /public/onboarding-status?session_id=<stripe checkout session id> —
+// polled by /checkout/sucesso while the Stripe webhook provisions the tenant
+// asynchronously. Never assume "ready" on the first call.
+export async function getOnboardingStatus(
+  sessionId: string,
+): Promise<OnboardingStatus> {
+  return manageFetch<OnboardingStatus>(
+    `/public/onboarding-status?session_id=${encodeURIComponent(sessionId)}`,
+  );
+}
+
+// POST /auth/exchange-onboarding-token — trades the one-time onboarding token
+// (from the LATEST getOnboardingStatus poll) for a real session, built the
+// same way login() builds one (decoded JWT claims + refresh token). Does NOT
+// call saveSession() — the caller decides when to persist it, after its own
+// routing decision. Throws ManageApiError 401 `invalid_onboarding_token`.
+export async function exchangeOnboardingToken(token: string): Promise<Session> {
+  const data = await manageFetch<TokenResponse>(
+    "/auth/exchange-onboarding-token",
+    {
+      method: "POST",
+      body: JSON.stringify({ token }),
+    },
+  );
+  const claims = decodeJwtPayload(data.access_token);
+  const tenantId =
+    typeof claims?.tenant_id === "string" ? (claims.tenant_id as string) : "";
+  const role = typeof claims?.role === "string" ? (claims.role as string) : "";
+  const email =
+    typeof claims?.email === "string" ? (claims.email as string) : "";
+  return {
+    token: data.access_token,
+    tenantId,
+    email,
+    role,
+    refreshToken: data.refresh_token,
+  };
 }
 
 // ---------------------------------------------------------------------------

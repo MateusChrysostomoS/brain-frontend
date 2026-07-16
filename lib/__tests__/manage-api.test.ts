@@ -422,3 +422,154 @@ describe("getSecretariaHubToken", () => {
     );
   });
 });
+
+// ---------------------------------------------------------------------------
+// Self-service cold signup (public, unauthenticated) — CONTRACTS §14
+// ---------------------------------------------------------------------------
+
+describe("createSignupIntent", () => {
+  it("14a. posts the payload unauthenticated and resolves intent_id", async () => {
+    fetchMock.mockResolvedValueOnce(mockResponse(201, { intent_id: "intent-1" }));
+
+    const result = await api.createSignupIntent({
+      name: "Dr. Aurélio Lima",
+      clinic_name: "Consultório Aurélio",
+      email: "aurelio@clinica.com.br",
+      whatsapp_phone: "+5511999998888",
+      catalog_ids: ["precheck"],
+      website: "",
+    });
+
+    expect(result).toEqual({ intent_id: "intent-1" });
+    const call = fetchMock.mock.calls[0];
+    expect(call[0]).toBe("/public/signup-intents");
+    expect(call[1].method).toBe("POST");
+    expect(call[1].headers.Authorization).toBeUndefined();
+    expect(JSON.parse(call[1].body)).toEqual({
+      name: "Dr. Aurélio Lima",
+      clinic_name: "Consultório Aurélio",
+      email: "aurelio@clinica.com.br",
+      whatsapp_phone: "+5511999998888",
+      catalog_ids: ["precheck"],
+      website: "",
+    });
+  });
+
+  it("14b. 409 email_already_registered -> ManageApiError 409", async () => {
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(409, { detail: "email_already_registered" }),
+    );
+
+    await expectManageError(
+      api.createSignupIntent({
+        name: "n",
+        clinic_name: "c",
+        email: "e@x.com",
+        whatsapp_phone: "+551199999999",
+        catalog_ids: ["precheck"],
+      }),
+      409,
+      "email_already_registered",
+    );
+  });
+});
+
+describe("createPublicCheckoutSession", () => {
+  it("15a. posts { intent_id } and resolves the checkout url", async () => {
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(200, { checkout_url: "https://checkout.stripe.com/abc" }),
+    );
+
+    const result = await api.createPublicCheckoutSession("intent-1");
+
+    expect(result).toEqual({ checkout_url: "https://checkout.stripe.com/abc" });
+    const call = fetchMock.mock.calls[0];
+    expect(call[0]).toBe("/public/checkout-sessions");
+    expect(JSON.parse(call[1].body)).toEqual({ intent_id: "intent-1" });
+  });
+
+  it("15b. 503 price_not_configured:<id> -> ManageApiError 503", async () => {
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(503, { detail: "price_not_configured:precheck" }),
+    );
+
+    await expectManageError(
+      api.createPublicCheckoutSession("intent-1"),
+      503,
+      "price_not_configured:precheck",
+    );
+  });
+});
+
+describe("getOnboardingStatus", () => {
+  it("16a. builds the query string and passes through the (rotating) response", async () => {
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(200, {
+        status: "ready",
+        products: { secretaria: true, precheck: false },
+        onboarding_token: "onb-tok-1",
+      }),
+    );
+
+    const result = await api.getOnboardingStatus("cs_test_123");
+
+    expect(result).toEqual({
+      status: "ready",
+      products: { secretaria: true, precheck: false },
+      onboarding_token: "onb-tok-1",
+    });
+    const call = fetchMock.mock.calls[0];
+    expect(call[0]).toBe("/public/onboarding-status?session_id=cs_test_123");
+  });
+
+  it("16b. pending status with null token", async () => {
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(200, { status: "pending", products: null, onboarding_token: null }),
+    );
+
+    const result = await api.getOnboardingStatus("cs_test_123");
+    expect(result.status).toBe("pending");
+    expect(result.onboarding_token).toBeNull();
+  });
+});
+
+describe("exchangeOnboardingToken", () => {
+  it("17a. decodes tenant_id/role from the JWT, does NOT call saveSession", async () => {
+    const jwt = makeJwt({ tenant_id: "tenant-9", role: "tenant_owner", email: "new@clinic.com" });
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(200, {
+        access_token: jwt,
+        token_type: "bearer",
+        refresh_token: "rtok-9",
+        expires_in: 1800,
+      }),
+    );
+
+    const session = await api.exchangeOnboardingToken("onb-tok-1");
+
+    expect(session.token).toBe(jwt);
+    expect(session.refreshToken).toBe("rtok-9");
+    expect(session.tenantId).toBe("tenant-9");
+    expect(session.role).toBe("tenant_owner");
+    expect(session.email).toBe("new@clinic.com");
+
+    const call = fetchMock.mock.calls[0];
+    expect(call[0]).toBe("/auth/exchange-onboarding-token");
+    expect(JSON.parse(call[1].body)).toEqual({ token: "onb-tok-1" });
+
+    // Unlike login(), this must NOT persist the session — the caller decides.
+    expect(sessionStorage.getItem(api.SESSION_KEY)).toBeNull();
+  });
+
+  it("17b. 401 invalid_onboarding_token -> ManageApiError 401", async () => {
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(401, { detail: "invalid_onboarding_token" }),
+    );
+
+    await expectManageError(
+      api.exchangeOnboardingToken("bad-token"),
+      401,
+      "invalid_onboarding_token",
+    );
+  });
+});

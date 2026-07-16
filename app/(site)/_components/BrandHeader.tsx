@@ -92,6 +92,10 @@ export function BrandHeader({
             Entrar
           </Link>
 
+          <a href="#planos" className="btn btn--outline btn--sm hide-sm">
+            Assinar Agora
+          </a>
+
           <a href="#contato" className="btn btn--primary btn--sm">
             Agendar demo
           </a>
@@ -125,7 +129,10 @@ export function BrandHeader({
               </Link>
             )
           )}
-          {/* Entrar appears in mobile nav, hidden in desktop actions via .hide-sm */}
+          {/* Entrar / Assinar Agora appear in mobile nav, hidden in desktop actions via .hide-sm */}
+          <a href="#planos" onClick={closeNav}>
+            Assinar Agora
+          </a>
           <Link href="/login" onClick={closeNav}>
             Entrar
           </Link>

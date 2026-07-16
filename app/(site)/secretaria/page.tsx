@@ -539,6 +539,7 @@ export default function SecretariaPage() {
                 cta={
                   <PlanCheckoutCta
                     plan="secretaria_ferro"
+                    catalogIds={["secretaria_ferro"]}
                     label="Contratar Individual"
                     secondaryHref="#contato"
                     secondaryLabel="Falar com a Brain"
@@ -566,6 +567,7 @@ export default function SecretariaPage() {
                 cta={
                   <PlanCheckoutCta
                     plan="secretaria_bronze_1"
+                    catalogIds={["secretaria_bronze_1"]}
                     label="Contratar Clínica"
                     featured
                     secondaryHref="#contato"

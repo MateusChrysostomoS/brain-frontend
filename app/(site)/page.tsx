@@ -13,6 +13,7 @@ import { PlanCheckoutCta } from "./_components/PlanCheckoutCta";
 import { Faq } from "./_components/Faq";
 import { ContactForm } from "./_components/ContactForm";
 import { Reveal } from "./_components/Reveal";
+import { PRICING } from "./_lib/pricing";
 
 // ---------------------------------------------------------------------------
 // Metadata — ported from <title> and <meta name="description"> in brain.html
@@ -95,9 +96,9 @@ export default function BrainHomePage() {
               agenda. Mais contexto para o médico, menos atrito para todos.
             </p>
             <div className="hero-cta">
-              <a className="btn btn--primary btn--lg" href="#produtos">
+              <a className="btn btn--primary btn--lg" href="#planos">
                 <BrandIcon name="arrowR" />
-                Conhecer os produtos
+                Começar Agora
               </a>
               <a className="btn btn--outline btn--lg" href="#contato">
                 Agendar demonstração
@@ -314,26 +315,19 @@ export default function BrainHomePage() {
               </h2>
               <p className="lead mt-s" style={{ marginInline: "auto" }}>
                 Cada produto pode ser contratado sozinho, e o pacote Brain
-                Completo junta os dois com vantagem. Os valores abaixo são
-                exemplos.
-              </p>
-              {/* Placeholder price warning — must remain visible until real prices are set */}
-              <p className="price-note center mt-s">
-                ⚠︎ Valores de exemplo — substituir pelos preços reais antes de
-                publicar.
+                Completo junta os dois com vantagem.
               </p>
             </Reveal>
           </div>
 
           <div className="price-grid">
-            {/* PLACEHOLDER-PRICE: plano-precheck */}
+            {/* PreCheck plan — self-service checkout wired for anonymous visitors */}
             <Reveal>
               <PriceCard
-                name="Plano PreCheck"
-                tagline="Pré-consulta no WhatsApp"
-                amount="R$ —"
-                unit="/mês · valor de exemplo"
-                note="a partir de · editar"
+                name={PRICING.precheck.name}
+                tagline={PRICING.precheck.tagline}
+                amount={PRICING.precheck.amount}
+                unit={PRICING.precheck.unit}
                 features={[
                   "Anamnese guiada por IA",
                   "Resumo estruturado + alertas",
@@ -345,6 +339,7 @@ export default function BrainHomePage() {
                 cta={
                   <PlanCheckoutCta
                     plan="precheck"
+                    catalogIds={PRICING.precheck.catalogIds ?? []}
                     label="Contratar PreCheck"
                     secondaryHref="#contato"
                     secondaryLabel="Falar com a Brain"
@@ -353,44 +348,34 @@ export default function BrainHomePage() {
               />
             </Reveal>
 
-            {/* PLACEHOLDER-PRICE: plano-brain-completo (featured) */}
+            {/* Brain Completo (featured) — plain sum of the two plans; no Stripe
+                Price configured yet, so the CTA stays consultant-only. */}
             <Reveal delay={1}>
               <PriceCard
-                name="Brain Completo"
-                tagline="PreCheck + secretarIA, juntos"
-                amount="R$ —"
-                unit="/mês · valor de exemplo"
-                note="a partir de · editar"
+                name={PRICING.combo.name}
+                tagline={PRICING.combo.tagline}
+                amount={PRICING.combo.amount}
+                unit={PRICING.combo.unit}
                 features={[
                   "Tudo do PreCheck",
                   "Tudo da secretarIA",
                   "Os dois produtos integrados",
                   "Implantação assistida",
                 ]}
-                ctaLabel="Agendar demonstração"
+                ctaLabel="Falar com Consultor"
                 ctaHref="#contato"
                 featured
                 flag="Melhor valor"
-                cta={
-                  <PlanCheckoutCta
-                    plan="complete_clinic_combo"
-                    label="Contratar Brain Completo"
-                    featured
-                    secondaryHref="#contato"
-                    secondaryLabel="Agendar demonstração"
-                  />
-                }
               />
             </Reveal>
 
-            {/* PLACEHOLDER-PRICE: plano-secretaria */}
+            {/* secretarIA plan — self-service checkout wired for anonymous visitors */}
             <Reveal delay={2}>
               <PriceCard
-                name="Plano secretarIA"
-                tagline="Secretária com IA no WhatsApp"
-                amount="R$ —"
-                unit="/mês · valor de exemplo"
-                note="a partir de · editar"
+                name={PRICING.secretaria.name}
+                tagline={PRICING.secretaria.tagline}
+                amount={PRICING.secretaria.amount}
+                unit={PRICING.secretaria.unit}
                 features={[
                   "Respostas com o seu contexto",
                   "Agendar, cancelar e remarcar",
@@ -402,6 +387,7 @@ export default function BrainHomePage() {
                 cta={
                   <PlanCheckoutCta
                     plan="secretaria_bronze_1"
+                    catalogIds={PRICING.secretaria.catalogIds ?? []}
                     label="Contratar secretarIA"
                     secondaryHref="#contato"
                     secondaryLabel="Falar com a Brain"
@@ -714,6 +700,11 @@ export default function BrainHomePage() {
 
           {/* Right: controlled form (client component) */}
           <Reveal delay={1}>
+            {/* Makes self-service an "and", not a replacement, for the demo form below. */}
+            <p className="muted mt-s" style={{ fontSize: 13.5 }}>
+              Prefere começar agora? Assine em poucos minutos em vez de esperar
+              uma conversa — veja os <a href="#planos">planos</a>.
+            </p>
             <ContactForm variant="brain" />
           </Reveal>
         </div>

@@ -18,20 +18,27 @@ type ModalProps = {
 export function Modal({ open, title, onClose, children, footer }: ModalProps) {
   const cardRef = useRef<HTMLDivElement>(null);
 
-  // Lock scroll + wire Esc while open; restore on close/unmount.
+  // Latest-ref for onClose so the effect below depends ONLY on `open`: if it
+  // re-ran on every new onClose identity (parents often pass inline callbacks),
+  // the focus() call would yank focus away from form fields mid-typing.
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  // Lock scroll + wire Esc while open; restore on close/unmount. Focuses the
+  // card exactly once per open, not on every parent re-render.
   useEffect(() => {
     if (!open) return;
     cardRef.current?.focus();
     document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
     };
     document.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = "";
       document.removeEventListener("keydown", onKey);
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 
