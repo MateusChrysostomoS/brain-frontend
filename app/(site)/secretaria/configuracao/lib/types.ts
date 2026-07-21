@@ -47,7 +47,24 @@ export type Messages = {
 };
 
 // ---------------------------------------------------------------------------
-// Section 03 — Professionals
+// Section 03 — Post-consult (message sent + knowledge used to answer questions)
+// ---------------------------------------------------------------------------
+
+// Two NEW tenant-level wire fields, siblings of greeting_message/persona_notes
+// (see Messages above) — kept as their own type because the two jobs are easy
+// to conflate:
+export type PostConsult = {
+  // A ready-made message the secretary SENDS to the patient right after their
+  // consult, as written — not improvised by the AI.
+  postConsultMessage: string;
+  // Reference knowledge the AI CONSULTS to answer the patient's questions
+  // after the consult (recovery care, return-visit timing, how exam results
+  // are delivered) — never sent verbatim.
+  postConsultKnowledge: string;
+};
+
+// ---------------------------------------------------------------------------
+// Section 04 — Professionals
 // ---------------------------------------------------------------------------
 
 // The selected professional's own profile fields — REMOVED from ClinicCtx
@@ -66,7 +83,7 @@ export const EMPTY_PROFESSIONAL_PROFILE: ProfessionalProfile = {
 };
 
 // ---------------------------------------------------------------------------
-// Section 04 — Services (appointment types) — now edited per-professional
+// Section 05 — Services (appointment types) — now edited per-professional
 // ---------------------------------------------------------------------------
 
 // A single pre-visit instruction for an appointment type — e.g. fasting,
@@ -88,7 +105,7 @@ export type Service = {
 };
 
 // ---------------------------------------------------------------------------
-// Section 05 — Availability — now edited per-professional
+// Section 06 — Availability — now edited per-professional
 // ---------------------------------------------------------------------------
 
 export type TimeRange = {
@@ -110,7 +127,7 @@ export type Prefs = {
 };
 
 // ---------------------------------------------------------------------------
-// Section 06 — Google Calendar (tenant-level; unchanged single-professional path)
+// Section 07 — Google Calendar (tenant-level; unchanged single-professional path)
 // ---------------------------------------------------------------------------
 
 export type GcalState = {

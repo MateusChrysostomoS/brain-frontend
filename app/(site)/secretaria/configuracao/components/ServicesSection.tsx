@@ -1,5 +1,5 @@
 "use client";
-// ServicesSection — Section 04 "Serviços oferecidos" (appointment types).
+// ServicesSection — Section 05 "Serviços oferecidos" (appointment types).
 // Manages the list of types SecretarIA can book; each one is a ServiceCard
 // that also holds its pre-visit requirements. Composition only — the per-card
 // editing logic lives in ServiceCard.
@@ -21,7 +21,7 @@ type ServicesSectionProps = {
   professionalName?: string;
 };
 
-// Renders the appointment-type cards with add/remove controls inside Section 04.
+// Renders the appointment-type cards with add/remove controls inside Section 05.
 export function ServicesSection({ services, setServices, professionalName }: ServicesSectionProps) {
   const update = (i: number, s: Service) =>
     setServices(prev => prev.map((x, j) => (j === i ? s : x)));
@@ -39,7 +39,7 @@ export function ServicesSection({ services, setServices, professionalName }: Ser
   return (
     <Section
       id="srv"
-      num="04"
+      num="05"
       icon="doc"
       title={"Serviços oferecidos" + (professionalName ? " · " + professionalName : "")}
       desc="Os tipos de atendimento que a secretarIA pode agendar. A duração define o tamanho do horário, e as orientações de pré-consulta são enviadas ao paciente ao marcar cada tipo."

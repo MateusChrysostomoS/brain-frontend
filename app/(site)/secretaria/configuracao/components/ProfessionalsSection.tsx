@@ -1,5 +1,5 @@
 "use client";
-// ProfessionalsSection — Section 03 "Profissionais" (Feature C3). Owner view:
+// ProfessionalsSection — Section 04 "Profissionais" (Feature C3). Owner view:
 // self-bind prompt, a selector for which professional Services/Availability
 // edit below, that professional's specialty/about/context fields, the roster
 // (completeness chips + per-row Calendar connect), and "Convidar profissional".
@@ -90,7 +90,7 @@ export function ProfessionalsSection({
   return (
     <Section
       id="prof"
-      num="03"
+      num="04"
       icon="users"
       title="Profissionais"
       desc={

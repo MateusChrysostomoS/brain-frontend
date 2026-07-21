@@ -1,6 +1,6 @@
 "use client";
 // SideNav — sticky left navigation for the config page.
-// Renders four section jump-links; highlights the active one via scrollspy.
+// Renders seven section jump-links; highlights the active one via scrollspy.
 // The `active` id is tracked by onScroll in the parent (ConfiguracaoPage).
 
 import { Icon } from "../../_shared/ui";
@@ -12,16 +12,18 @@ type NavItem = {
   icon: IconName;
 };
 
-// The six config sections (Onboarding & Multi-Professional pass added
+// The seven config sections (Onboarding & Multi-Professional pass added
 // Mensagens + Profissionais, and moved Services/Availability to be
-// professional-scoped — see page.tsx).
+// professional-scoped; Pós-consulta was added right after Mensagens —
+// see page.tsx).
 const NAV: NavItem[] = [
-  { id: "ctx",  label: "Contexto da clínica", icon: "note"     },
-  { id: "msg",  label: "Mensagens",           icon: "send"     },
-  { id: "prof", label: "Profissionais",       icon: "users"    },
-  { id: "srv",  label: "Serviços oferecidos",  icon: "doc"      },
-  { id: "disp", label: "Dias e horários",      icon: "clock"    },
-  { id: "gcal", label: "Google Calendar",      icon: "calendar" },
+  { id: "ctx",  label: "Contexto da clínica", icon: "note"        },
+  { id: "msg",  label: "Mensagens",           icon: "send"        },
+  { id: "pos",  label: "Pós-consulta",        icon: "checkCircle" },
+  { id: "prof", label: "Profissionais",       icon: "users"       },
+  { id: "srv",  label: "Serviços oferecidos",  icon: "doc"         },
+  { id: "disp", label: "Dias e horários",      icon: "clock"       },
+  { id: "gcal", label: "Google Calendar",      icon: "calendar"    },
 ];
 
 type SideNavProps = {

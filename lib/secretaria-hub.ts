@@ -180,6 +180,13 @@ export type TenantConfigWire = {
   returning_greeting_message: string | null;
   greeting_buttons: string[];
   persona_notes: string | null;
+  // Ready-made message the secretary sends/uses right after a patient's
+  // consult (send automation comes later; today it is stored + surfaced).
+  post_consult_message: string | null;
+  // Reference knowledge the AI consults to ANSWER patient questions after a
+  // consult (recovery care, when to book the return visit, how exam results
+  // are delivered) — not sent verbatim.
+  post_consult_knowledge: string | null;
   language: string;
   timezone: string;
   google_calendar_id: string;
@@ -205,6 +212,8 @@ export type TenantConfigUpdatePayload = Partial<{
   returning_greeting_message: string | null;
   greeting_buttons: string[];
   persona_notes: string | null;
+  post_consult_message: string | null;
+  post_consult_knowledge: string | null;
   language: string;
   timezone: string;
   google_calendar_id: string;

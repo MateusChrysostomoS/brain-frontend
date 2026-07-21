@@ -17,6 +17,7 @@ import type {
   ClinicCtx,
   DayConfig,
   Messages,
+  PostConsult,
   ProfessionalProfile,
   Service,
   TimeRange,
@@ -186,6 +187,20 @@ export function applyWireMessages(cfg: TenantConfigWire): Messages {
 }
 
 // ---------------------------------------------------------------------------
+// Post-consult (new "Pós-consulta" section) — two NEW tenant-level wire
+// fields, siblings of greeting_message/persona_notes; see PostConsult in
+// lib/types.ts for why the two jobs (sent message vs. answer knowledge) are
+// kept apart.
+// ---------------------------------------------------------------------------
+
+export function applyWirePostConsult(cfg: TenantConfigWire): PostConsult {
+  return {
+    postConsultMessage: cfg.post_consult_message ?? "",
+    postConsultKnowledge: cfg.post_consult_knowledge ?? "",
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Professional profile (specialty/about/context_doctor_message) — moved out
 // of ClinicCtx and onto the per-professional config PUT.
 // ---------------------------------------------------------------------------
@@ -203,14 +218,16 @@ export function applyWireProfessionalProfile(p: ProfessionalWire): ProfessionalP
 // ---------------------------------------------------------------------------
 
 // Builds the PUT /tenants/me/config payload — TENANT-level fields only:
-// Mensagens (greeting/persona/language), address/insurances/collect_insurance
-// (Feature 1/3), and appointment_duration_min (the one scheduling preference
-// that stayed tenant-level; business_hours/appointment_types moved to the
-// per-professional PUT below). `gap`/`lead` (Prefs) have no wire counterpart
-// at all and are NOT sent — see the comment on Prefs in lib/types.ts.
+// Mensagens (greeting/persona/language), Pós-consulta (post_consult_message/
+// post_consult_knowledge), address/insurances/collect_insurance (Feature 1/3),
+// and appointment_duration_min (the one scheduling preference that stayed
+// tenant-level; business_hours/appointment_types moved to the per-professional
+// PUT below). `gap`/`lead` (Prefs) have no wire counterpart at all and are NOT
+// sent — see the comment on Prefs in lib/types.ts.
 export function buildConfigUpdatePayload(
   ctx: ClinicCtx,
   messages: Messages,
+  postConsult: PostConsult,
   defaultDurationMin: number,
 ): TenantConfigUpdatePayload {
   return {
@@ -223,6 +240,8 @@ export function buildConfigUpdatePayload(
     greeting_buttons: messages.greetingButtons,
     persona_notes: messages.personaNotes || null,
     language: messages.language,
+    post_consult_message: postConsult.postConsultMessage || null,
+    post_consult_knowledge: postConsult.postConsultKnowledge || null,
   };
 }
 
