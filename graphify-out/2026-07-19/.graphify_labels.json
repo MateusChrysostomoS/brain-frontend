@@ -58,8 +58,13 @@
   "56": "vitest.config.ts",
   "57": "ProfessionalsSection.tsx",
   "58": "WizardShell.tsx",
+  "59": "FacebookPageStep.tsx",
   "60": "page.tsx",
+  "61": "page.tsx",
   "62": "ServiceCard.tsx",
+  "63": "Header.tsx",
+  "64": "SummaryStep.tsx",
+  "65": "meta-embedded-signup.ts",
   "66": "DashHeader.tsx",
   "67": "ConfirmDeleteModal.tsx",
   "68": "page.tsx"

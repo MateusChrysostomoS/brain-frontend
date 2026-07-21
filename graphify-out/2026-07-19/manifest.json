@@ -195,8 +195,8 @@
     "semantic_hash": ""
   },
   "app/(site)/_components/PlanCheckoutCta.tsx": {
-    "mtime": 1784503518.3209963,
-    "ast_hash": "d53606b8e141a05bdd154e8fe4d40b85",
+    "mtime": 1784499421.8333015,
+    "ast_hash": "34f91ecaf9eff544dff9f837090c0e86",
     "semantic_hash": ""
   },
   "app/(site)/_components/PortalShell.tsx": {
@@ -525,8 +525,8 @@
     "semantic_hash": ""
   },
   "lib/__tests__/manage-api.test.ts": {
-    "mtime": 1784503550.1556554,
-    "ast_hash": "e8c76c6754eab5527bdc60076a9ca7ad",
+    "mtime": 1784499444.459846,
+    "ast_hash": "05cb0d0f45df92d2c72fedc52c8d4572",
     "semantic_hash": ""
   },
   "lib/__tests__/sign-out.test.ts": {
@@ -555,8 +555,8 @@
     "semantic_hash": ""
   },
   "lib/manage-api.ts": {
-    "mtime": 1784503486.939793,
-    "ast_hash": "4f7e032dd0cf13d2415056aba29e0c68",
+    "mtime": 1784499368.20758,
+    "ast_hash": "1c38b7600c6dc0da18ab32107514d708",
     "semantic_hash": ""
   },
   "lib/pageSize.ts": {
@@ -630,8 +630,8 @@
     "semantic_hash": ""
   },
   "app/(site)/_components/CheckoutTrialNotice.tsx": {
-    "mtime": 1784503504.8308334,
-    "ast_hash": "fd2e416f00656f46fe82160a8b3342bc",
+    "mtime": 1784499385.3928788,
+    "ast_hash": "9e10d2821e68f7a61ecb018ea4bb9d00",
     "semantic_hash": ""
   },
   "app/(site)/_components/OnboardingBanner.tsx": {
@@ -700,8 +700,8 @@
     "semantic_hash": ""
   },
   "app/(site)/cadastro/_components/SummaryStep.tsx": {
-    "mtime": 1784503530.5822268,
-    "ast_hash": "189c626db25578b29f7064b808175286",
+    "mtime": 1784499412.6412444,
+    "ast_hash": "8dad08c901d3f59a3b8ac9842d958a33",
     "semantic_hash": ""
   },
   "app/(site)/cadastro/_components/WhatsappUsageStep.tsx": {
@@ -755,8 +755,8 @@
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/components/ProfessionalsSection.tsx": {
-    "mtime": 1784502604.4695194,
-    "ast_hash": "d357f700701bf7641e7673f972c91be7",
+    "mtime": 1784358459.5664132,
+    "ast_hash": "1546a6bf4c9e5a340c38ce543e8e09bd",
     "semantic_hash": ""
   },
   "docs/VERIFICATION_onboarding.md": {
