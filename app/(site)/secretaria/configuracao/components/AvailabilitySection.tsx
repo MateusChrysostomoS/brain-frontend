@@ -1,8 +1,13 @@
 "use client";
-// AvailabilitySection — Section 03 "Dias e horários de atendimento".
+// AvailabilitySection — Section 05 "Dias e horários de atendimento".
 // Shows a DayRow per weekday (toggle + time-range pickers) plus three
 // scheduling preference selects: defaultDur, gap, and lead time.
 // DayRow is an internal sub-component not used elsewhere.
+//
+// Onboarding & Multi-Professional pass: `days` now belongs to the SELECTED
+// professional (business_hours), while `defaultDur` (appointment_duration_min)
+// stays tenant-level — see buildConfigUpdatePayload/buildProfessionalConfigPayload
+// in lib/hub-mapping.ts.
 
 import { HelpTip, Field } from "../../_shared/ui";
 import { Section } from "./Section";
@@ -158,19 +163,20 @@ type AvailabilitySectionProps = {
   setDays: Dispatch<SetStateAction<DayConfig[]>>;
   prefs: Prefs;
   setPref: (key: keyof Prefs, value: number) => void;
+  professionalName?: string;
 };
 
-// Section 03 — weekly schedule grid + scheduling preferences row.
-export function AvailabilitySection({ days, setDays, prefs, setPref }: AvailabilitySectionProps) {
+// Section 05 — weekly schedule grid + scheduling preferences row.
+export function AvailabilitySection({ days, setDays, prefs, setPref, professionalName }: AvailabilitySectionProps) {
   const updateDay = (i: number, d: DayConfig) =>
     setDays(prev => prev.map((x, j) => (j === i ? d : x)));
 
   return (
     <Section
       id="disp"
-      num="03"
+      num="05"
       icon="clock"
-      title="Dias e horários de atendimento"
+      title={"Dias e horários de atendimento" + (professionalName ? " · " + professionalName : "")}
       desc="Quando o médico atende. A secretarIA só oferece horários dentro dessas faixas e sincroniza com o Google Calendar para evitar conflitos."
     >
       <div style={{ display: "flex", flexDirection: "column" }}>

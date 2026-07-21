@@ -1,0 +1,143 @@
+/* =====================================================================
+   /cadastro — self-service signup wizard (Feature 0). Route-scoped,
+   layered on ../brand-ds.css tokens/classes only (no new design system).
+   ===================================================================== */
+
+.cad-main {
+  min-height: calc(100vh - 84px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px 20px 72px;
+}
+
+.cad-card {
+  max-width: 620px;
+  width: 100%;
+}
+
+.cad-progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ink-faint);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cad-progress-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+  margin-bottom: 30px;
+}
+
+.cad-progress-fill {
+  height: 100%;
+  background: var(--brand);
+  border-radius: 999px;
+  transition: width 0.3s var(--ease);
+}
+
+.cad-step-title {
+  font-family: var(--font-serif);
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+
+.cad-step-desc {
+  font-size: 14.5px;
+  color: var(--ink-soft);
+  line-height: 1.55;
+  margin-bottom: 24px;
+  max-width: 56ch;
+}
+
+.cad-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 30px;
+}
+
+.cad-actions .btn {
+  flex: 1;
+}
+
+/* Guided instructional screens (dedicated number, page creation). */
+.cad-guide-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 6px 0 22px;
+}
+
+.cad-guide-item {
+  display: flex;
+  gap: 13px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+.cad-guide-num {
+  width: 26px;
+  height: 26px;
+  border-radius: 99px;
+  background: var(--brand-tint);
+  color: var(--brand-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12.5px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* Inline expanding notice under a radio group (manual-action explainer,
+   how-to-check guidance) — informational, never blocks continuing. */
+.cad-inline-note {
+  margin-top: 16px;
+}
+
+/* Read-only summary rows on the last step. */
+.cad-summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+}
+
+.cad-summary-row:last-child {
+  border-bottom: none;
+}
+
+.cad-summary-label {
+  color: var(--ink-faint);
+  flex-shrink: 0;
+}
+
+.cad-summary-value {
+  color: var(--ink);
+  font-weight: 600;
+  text-align: right;
+}
+
+@media (max-width: 560px) {
+  .cad-actions {
+    flex-direction: column-reverse;
+  }
+}

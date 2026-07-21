@@ -8,38 +8,65 @@
 
 export type ClinicCtx = {
   clinicName: string;
-  // demo-only: TenantConfigUpdate (secretarIA schemas/config.py) has no
-  // 'specialty' field — this never round-trips to the backend.
-  specialty: string;
-  // demo-only: no 'about'/persona field on TenantConfigUpdate. Do NOT fold
-  // this into persona_notes implicitly — that field exists but is unrelated
-  // UI (greeting/persona copy), not wired to this page at all.
-  about: string;
-  // Structured clinic address — intended for SecretarIA to read it out
-  // ("onde fica?") and include it in booking confirmations, but this is
-  // ASPIRATIONAL: TenantConfigUpdate (secretarIA schemas/config.py) has no
-  // address fields at all (no address_line/complement/neighborhood/city/
-  // state/postal_code). demo-only until secretarIA adds them.
+  // Structured clinic address — fed to the agent for "onde fica?" replies and
+  // booking confirmations. REAL as of the Onboarding & Multi-Professional
+  // contract (secretaria TenantConfigWire.address) — wired via hub-mapping.ts.
   addressLine: string;       // street + number, e.g. "Av. Paulista, 1000"
   addressComplement: string; // suite/floor, e.g. "Sala 302" (optional)
   neighborhood: string;      // bairro
   city: string;
   state: string;             // UF, e.g. "SP"
   postalCode: string;        // CEP
-  // demo-only: TenantConfigUpdate has no clinic 'phone' field.
+  // demo-only: TenantConfigUpdate still has no clinic 'phone' field.
   phone: string;
-  // demo-only: TenantConfigUpdate has no 'insurances' field.
-  insurances: string;        // accepted plans the clinic works with (comma-separated)
+  // Accepted health-insurance plan names, comma-separated in the UI. REAL —
+  // wired to TenantConfigWire.insurances (string[] on the wire).
+  insurances: string;
   // When on, SecretarIA asks the patient whether they have a convênio (health
   // plan) during booking and which one — patient PII, minimized per LGPD.
-  // demo-only: no corresponding TenantConfigUpdate flag either.
+  // REAL — wired to TenantConfigWire.collect_insurance.
   collectInsurance: boolean;
-  // demo-only: TenantConfigUpdate has no 'tone' field.
-  tone: string;
 };
 
 // ---------------------------------------------------------------------------
-// Section 02 — Services (appointment types)
+// Section 02 — Messages (greeting/persona copy the bot uses)
+// ---------------------------------------------------------------------------
+
+// Every field here already existed on secretarIA's wire (TenantConfigWire) —
+// this section is the first UI for them, not a new backend surface.
+export type Messages = {
+  greetingMessage: string;
+  returningGreetingMessage: string;
+  // Short quick-reply labels shown as WhatsApp buttons — capped at 3.
+  greetingButtons: string[];
+  // Free-text tone/behavior rules — this REPLACES the old demo-only
+  // ClinicCtx.tone field (that never round-tripped); persona_notes is a real
+  // wire field, so it now carries the same "how should the bot talk" intent.
+  personaNotes: string;
+  language: string;
+};
+
+// ---------------------------------------------------------------------------
+// Section 03 — Professionals
+// ---------------------------------------------------------------------------
+
+// The selected professional's own profile fields — REMOVED from ClinicCtx
+// (clinic-level specialty/about) in favor of per-professional (contract §10:
+// secretaria `professionals` gained specialty/about/context_doctor_message).
+export type ProfessionalProfile = {
+  specialty: string;
+  about: string;
+  contextDoctorMessage: string;
+};
+
+export const EMPTY_PROFESSIONAL_PROFILE: ProfessionalProfile = {
+  specialty: "",
+  about: "",
+  contextDoctorMessage: "",
+};
+
+// ---------------------------------------------------------------------------
+// Section 04 — Services (appointment types) — now edited per-professional
 // ---------------------------------------------------------------------------
 
 // A single pre-visit instruction for an appointment type — e.g. fasting,
@@ -61,7 +88,7 @@ export type Service = {
 };
 
 // ---------------------------------------------------------------------------
-// Section 03 — Availability
+// Section 05 — Availability — now edited per-professional
 // ---------------------------------------------------------------------------
 
 export type TimeRange = {
@@ -77,13 +104,13 @@ export type DayConfig = {
 };
 
 export type Prefs = {
-  defaultDur: number; // minutes
-  gap: number;        // minutes between appointments
-  lead: number;       // hours of minimum advance notice
+  defaultDur: number; // minutes — stays TENANT-level (appointment_duration_min)
+  gap: number;        // minutes between appointments (demo-only)
+  lead: number;       // hours of minimum advance notice (demo-only)
 };
 
 // ---------------------------------------------------------------------------
-// Section 04 — Google Calendar
+// Section 06 — Google Calendar (tenant-level; unchanged single-professional path)
 // ---------------------------------------------------------------------------
 
 export type GcalState = {

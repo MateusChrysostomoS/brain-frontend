@@ -12,6 +12,7 @@
 //   POST /billing/portal   -> Stripe Billing Portal URL       (createPortalSession)
 //   POST /doctor/secretaria/hub-token -> secretarIA hub token (getSecretariaHubToken)
 //   POST /demo-requests  -> lead-capture confirmation         (submitDemoRequest)
+//   GET  /public/checkout-config         -> trial length, in days    (getCheckoutTrialDays)
 //   POST /public/signup-intents          -> pending signup intent    (createSignupIntent)
 //   POST /public/checkout-sessions       -> Stripe Checkout URL      (createPublicCheckoutSession)
 //   GET  /public/onboarding-status       -> async webhook activation (getOnboardingStatus)
@@ -36,6 +37,11 @@ export type Session = {
   // before this field existed — and the impersonated "Modo médico" doctor session,
   // which deliberately has no refresh leg — simply can't auto-refresh.
   refreshToken?: string;
+  // Decoded from the JWT `professional_id` claim (Onboarding & Multi-Professional
+  // contract §6) — set when this user is bound to a specific secretarIA
+  // professional (a tenant_staff invitee, or an owner who self-bound). null/absent
+  // means "not bound to a professional" (e.g. an owner who only administers).
+  professionalId?: string | null;
 };
 
 // Portal-facing entitlement shape consumed by the /app dashboard shell. Mapped
@@ -56,7 +62,14 @@ export type Entitlements = {
 };
 
 export type MeResponse = {
-  user: { id: string; email: string; name: string; role: string };
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+    // Onboarding & Multi-Professional contract §6 — mirrors the JWT claim.
+    professional_id: string | null;
+  };
   tenant: { id: string; clinic_name: string } | null;
 };
 
@@ -210,10 +223,15 @@ async function doRefresh(current: Session): Promise<Session | null> {
     return null;
   }
   const data = (await res.json()) as TokenResponse;
+  // Re-decode professional_id from the FRESH token rather than carrying over
+  // `current`'s — an owner can self-bind (or a staff invite can be re-issued)
+  // mid-session, and the next refresh is the first chance to pick that up.
+  const claims = decodeJwtPayload(data.access_token);
   const session: Session = {
     ...current,
     token: data.access_token,
     refreshToken: data.refresh_token ?? current.refreshToken,
+    professionalId: readProfessionalIdClaim(claims),
   };
   saveSession(session);
   return session;
@@ -302,9 +320,21 @@ export async function login(email: string, password: string): Promise<Session> {
     email,
     role,
     refreshToken: data.refresh_token,
+    professionalId: readProfessionalIdClaim(claims),
   };
   saveSession(session);
   return session;
+}
+
+// Reads the optional `professional_id` claim (string UUID or absent/null) from
+// decoded JWT claims. Shared by every function that builds a Session from a
+// freshly minted access token.
+function readProfessionalIdClaim(
+  claims: Record<string, unknown> | null,
+): string | null {
+  return typeof claims?.professional_id === "string"
+    ? (claims.professional_id as string)
+    : null;
 }
 
 // MANAGE-API CALL SITE #5 — explicit logout. POST /auth/logout { refresh_token }
@@ -408,6 +438,48 @@ export async function submitDemoRequest(
 // /checkout/sucesso page for the polling contract.
 // ---------------------------------------------------------------------------
 
+// GET /public/checkout-config — unauthenticated config read backing the
+// pre-checkout trial disclosure (CheckoutTrialNotice component). The deployed
+// STRIPE_TRIAL_PERIOD_DAYS value lives ONLY on brain-api; this is the single
+// place the frontend learns it, so the disclosure copy can never hardcode a
+// number that drifts from the real Stripe trial length.
+export type CheckoutConfig = {
+  trial_period_days: number;
+};
+
+// Resolves the trial length in days, or null on ANY failure (network error,
+// non-200 status, or a malformed/missing field). Never throws — callers
+// render a number-free fallback disclosure instead of breaking the funnel.
+export async function getCheckoutTrialDays(): Promise<number | null> {
+  try {
+    const data = await manageFetch<CheckoutConfig>("/public/checkout-config");
+    return typeof data.trial_period_days === "number" &&
+      Number.isFinite(data.trial_period_days)
+      ? data.trial_period_days
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+// Onboarding intake — collected by the /cadastro wizard (Feature 0) so brain-api
+// can seed a sensible initial onboarding_state/blocker_reason for the tenant
+// (services/onboarding.py::provision_tenant_from_intent, contract §8). Optional
+// end-to-end: omitting it keeps the old behavior (state starts at `aquecimento`,
+// blocker null).
+export type SignupIntakeWhatsappUsage =
+  | "business_7d_plus"
+  | "business_recent"
+  | "none";
+export type SignupIntakePriorApi = "yes" | "no" | "unknown";
+export type SignupIntakeFbPage = "yes_admin" | "yes_unknown_admin" | "no";
+
+export type SignupIntake = {
+  whatsapp_usage: SignupIntakeWhatsappUsage;
+  prior_api: SignupIntakePriorApi;
+  fb_page: SignupIntakeFbPage;
+};
+
 export type SignupIntentPayload = {
   name: string;
   clinic_name: string;
@@ -417,6 +489,7 @@ export type SignupIntentPayload = {
   // Honeypot: always sent empty by real visitors (the field is visually
   // hidden in the form). A filled value marks the submission as spam server-side.
   website?: string;
+  intake?: SignupIntake;
 };
 
 export type SignupIntentResult = { intent_id: string };
@@ -494,7 +567,51 @@ export async function exchangeOnboardingToken(token: string): Promise<Session> {
     email,
     role,
     refreshToken: data.refresh_token,
+    professionalId: readProfessionalIdClaim(claims),
   };
+}
+
+// POST /auth/exchange-invite-token — trades a professional-invite token (from
+// the `{FRONTEND_BASE_URL}/convite?token=...` link emailed by
+// POST /doctor/professionals/invites) for a real session, built the same way
+// exchangeOnboardingToken builds one. The invitee has no password yet — the
+// caller is expected to follow up with setPassword() before treating the
+// session as durable. Does NOT call saveSession(); the caller decides when.
+// Throws ManageApiError 401 for an invalid/expired/already-used token.
+export async function exchangeInviteToken(token: string): Promise<Session> {
+  const data = await manageFetch<TokenResponse>("/auth/exchange-invite-token", {
+    method: "POST",
+    body: JSON.stringify({ token }),
+  });
+  const claims = decodeJwtPayload(data.access_token);
+  const tenantId =
+    typeof claims?.tenant_id === "string" ? (claims.tenant_id as string) : "";
+  const role = typeof claims?.role === "string" ? (claims.role as string) : "";
+  const email =
+    typeof claims?.email === "string" ? (claims.email as string) : "";
+  return {
+    token: data.access_token,
+    tenantId,
+    email,
+    role,
+    refreshToken: data.refresh_token,
+    professionalId: readProfessionalIdClaim(claims),
+  };
+}
+
+// POST /auth/set-password — sets the real password for a session minted via
+// exchangeInviteToken (or any other one-time-token exchange). Bearer-authenticated
+// with the session just obtained from the exchange, so the invitee never has to
+// log in with a temporary password. Used by the /convite accept flow (Feature D).
+export async function setPassword(
+  session: Session,
+  password: string,
+): Promise<void> {
+  await manageFetch<void>(
+    "/auth/set-password",
+    { method: "POST", body: JSON.stringify({ password }) },
+    session.token,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -524,6 +641,20 @@ export type CatalogAddonId =
   | "pix_whatsapp"
   | "analytics_bi"
   | "human_backup_24_7";
+
+// True when the given catalog ids include a plan that enables the secretarIA
+// product — i.e. one that requires WhatsApp Coexistence approval on the
+// clinic's number before Stripe billing can start. Mirrors brain-api's
+// catalog semantics (services/catalog.py): every "secretaria*" plan id and
+// the combo enable secretarIA; a PreCheck-only purchase does not.
+// brain-api's trial-cancellation-on-no-approval behavior is scoped the same
+// way, so the pre-checkout disclosure (CheckoutTrialNotice) uses this to
+// decide whether it applies to a given purchase at all.
+export function catalogRequiresWhatsappCoexistence(catalogIds: string[]): boolean {
+  return catalogIds.some(
+    (id) => id === "complete_clinic_combo" || id.startsWith("secretaria"),
+  );
+}
 
 // MANAGE-API CALL SITE #6 — Stripe Checkout. POST /billing/checkout (tenant JWT)
 // with { plan, addons? } (catalog ids only). Returns the Stripe-hosted Checkout URL
@@ -981,6 +1112,208 @@ export function getAnamnesis(
   return manageFetch<AnamnesisDetail>(
     `/doctor/anamneses/${id}`,
     {},
+    session.token,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Doctor onboarding API (role=tenant_owner|tenant_staff) — Onboarding &
+// Multi-Professional contract §7. Drives the /app/onboarding eligibility
+// screen (Feature 2) and the compact banner on /secretaria/configuracao.
+// ---------------------------------------------------------------------------
+
+export type OnboardingState =
+  | "pending"
+  | "aquecimento"
+  | "aguardando_elegibilidade"
+  | "aguardando_acao_manual"
+  | "conectado"
+  | "ativo";
+
+export type OnboardingBlockerReason =
+  | "atividade_insuficiente"
+  | "numero_em_outro_bsp"
+  | "sem_acesso_admin_waba"
+  | "sem_pagina_facebook"
+  | "outro";
+
+export type OnboardingConfigStatus =
+  | "incompleta"
+  | "configurado_aguardando_numero"
+  | "completa";
+
+export type OnboardingLastAttempt = {
+  attempt_id: string;
+  result: "pass" | "fail";
+  blocker_reason: OnboardingBlockerReason | null;
+  error_code: string | null;
+  created_at: string;
+};
+
+export type EmbeddedSignupConfig = {
+  configured: boolean;
+  app_id: string | null;
+  config_id: string | null;
+};
+
+export type DoctorOnboarding = {
+  onboarding_state: OnboardingState;
+  blocker_reason: OnboardingBlockerReason | null;
+  config_status: OnboardingConfigStatus;
+  connected: boolean;
+  mode_resolved: boolean;
+  secretaria_provisioned: boolean;
+  next_retry_at: string | null;
+  retry_paused: boolean;
+  config_reminder_paused: boolean;
+  last_attempt: OnboardingLastAttempt | null;
+  embedded_signup: EmbeddedSignupConfig;
+};
+
+// GET /doctor/onboarding — current onboarding state + Embedded Signup config.
+// Side effects on the backend are fail-soft (lazy provisioning retry, config
+// pull, ativo-transition check) — this call is safe to poll/refetch freely.
+export function getDoctorOnboarding(session: Session): Promise<DoctorOnboarding> {
+  return manageFetch<DoctorOnboarding>("/doctor/onboarding", {}, session.token);
+}
+
+export type OnboardingAttemptPayload = {
+  attempt_id: string; // client-generated via crypto.randomUUID() — idempotency key
+  result: "pass" | "fail";
+  code?: string | null;
+  phone_number_id?: string | null;
+  waba_id?: string | null;
+  error_code?: string | null;
+};
+
+export type OnboardingAttemptResult = {
+  attempt_id: string;
+  replayed: boolean;
+  onboarding_state: OnboardingState;
+  blocker_reason: OnboardingBlockerReason | null;
+};
+
+// POST /doctor/onboarding/attempts — reports the outcome of one "Tentar ativar
+// agora" Embedded Signup round-trip (Meta JS SDK FB.login response). Idempotent
+// on attempt_id: a replayed attempt_id returns the same result without a second
+// state transition, so a flaky network retry can never double-apply.
+export function postOnboardingAttempt(
+  session: Session,
+  payload: OnboardingAttemptPayload,
+): Promise<OnboardingAttemptResult> {
+  return manageFetch<OnboardingAttemptResult>(
+    "/doctor/onboarding/attempts",
+    { method: "POST", body: JSON.stringify(payload) },
+    session.token,
+  );
+}
+
+// POST /doctor/onboarding/resolve-blocker — the "Já resolvi" button for manual-
+// action blockers (numero_em_outro_bsp / sem_acesso_admin_waba /
+// sem_pagina_facebook / outro). Re-enters `aquecimento` and clears blocker_reason.
+export function resolveOnboardingBlocker(
+  session: Session,
+): Promise<Pick<DoctorOnboarding, "onboarding_state" | "blocker_reason">> {
+  return manageFetch<Pick<DoctorOnboarding, "onboarding_state" | "blocker_reason">>(
+    "/doctor/onboarding/resolve-blocker",
+    { method: "POST" },
+    session.token,
+  );
+}
+
+export type OnboardingPausePayload = {
+  retries?: boolean | null;
+  config_reminders?: boolean | null;
+};
+
+// POST /doctor/onboarding/pause — owner-only kill switches for the retry-nudge
+// and config-reminder email crons (`true` = paused). Omitted fields are left
+// unchanged server-side. Callers should refetch getDoctorOnboarding() after
+// this to pick up the authoritative retry_paused/config_reminder_paused state.
+export function pauseOnboarding(
+  session: Session,
+  payload: OnboardingPausePayload,
+): Promise<unknown> {
+  return manageFetch<unknown>(
+    "/doctor/onboarding/pause",
+    { method: "POST", body: JSON.stringify(payload) },
+    session.token,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Doctor professionals API (role=tenant_owner|tenant_staff) — Onboarding &
+// Multi-Professional contract §7. Backs the "Profissionais" section on
+// /secretaria/configuracao (Feature C3).
+// ---------------------------------------------------------------------------
+
+// One professional as seen from brain-api's proxy of secretaria's config-status
+// (contract §4.3) plus its own user linkage (email/invite state).
+export type DoctorProfessional = {
+  id: string;
+  name: string;
+  is_active: boolean;
+  has_calendar: boolean;
+  has_hours: boolean;
+  has_services: boolean;
+  complete: boolean;
+  linked_user_email: string | null;
+  invite_pending: boolean;
+};
+
+export function getDoctorProfessionals(
+  session: Session,
+): Promise<DoctorProfessional[]> {
+  return manageFetch<DoctorProfessional[]>("/doctor/professionals", {}, session.token);
+}
+
+export type ProfessionalInvitePayload = {
+  name: string;
+  email: string;
+  specialty?: string | null;
+};
+
+export type ProfessionalInviteResult = {
+  // Copyable link the owner shares with the invitee: {FRONTEND_BASE_URL}/convite?token=...
+  invite_link: string;
+};
+
+// POST /doctor/professionals/invites — owner-only. Creates the secretaria
+// professional row, a tenant_staff User bound to it, and emails
+// `professional_invite` (fail-soft) with the same link this returns. Throws
+// ManageApiError 409 `email_already_registered`.
+export function createProfessionalInvite(
+  session: Session,
+  payload: ProfessionalInvitePayload,
+): Promise<ProfessionalInviteResult> {
+  return manageFetch<ProfessionalInviteResult>(
+    "/doctor/professionals/invites",
+    { method: "POST", body: JSON.stringify(payload) },
+    session.token,
+  );
+}
+
+export type SelfProfessionalPayload = {
+  name?: string | null;
+  specialty?: string | null;
+};
+
+export type SelfProfessionalResult = {
+  professional_id: string;
+};
+
+// POST /doctor/professionals/self — owner-only. Answers "Você também atende
+// pacientes, ou só administra a clínica?" by creating/attaching a professional
+// named after the owner (or the clinic) and binding it to the OWNER's own user
+// row. The caller should re-fetch the session's /auth/me (or re-login) to pick
+// up the new professional_id claim — this endpoint does not mint a new token.
+export function createSelfProfessional(
+  session: Session,
+  payload: SelfProfessionalPayload,
+): Promise<SelfProfessionalResult> {
+  return manageFetch<SelfProfessionalResult>(
+    "/doctor/professionals/self",
+    { method: "POST", body: JSON.stringify(payload) },
     session.token,
   );
 }

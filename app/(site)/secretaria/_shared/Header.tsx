@@ -3,14 +3,29 @@
 // Ported from _design-source/header.jsx.
 // Renders: Logo wordmark | spacer | user dropdown | theme toggle | Sair button.
 // The parent owns `theme` state and passes `onToggleTheme` down.
+//
+// De-demo (Feature F): when a real brain session exists, shows the logged-in
+// user's real name/role (GET /auth/me) and the real clinic name — from the
+// optional `clinicName` prop when the caller already has it (e.g. Configuração
+// already loaded the hub tenant config), else from auth/me's own tenant.
+// CURRENT_USER/CLINIC demo constants are the fallback ONLY while logged out
+// (or before the auth/me fetch settles), so the showcase keeps working.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, Btn, Icon, IconBtn } from "./ui";
 import type { IconName } from "./ui";
 import { CLINIC, CURRENT_USER } from "./data";
 import { signOut } from "@/lib/sign-out";
+import { getMe, getSession, type MeResponse } from "@/lib/manage-api";
+
+// Short PT-BR labels for the roles that can reach this product header.
+const ROLE_LABEL: Record<string, string> = {
+  tenant_owner: "Proprietário(a)",
+  tenant_staff: "Equipe",
+  admin: "Administrador",
+};
 
 // ---------------------------------------------------------------------------
 // Types
@@ -82,18 +97,47 @@ function MenuItem({ icon, label }: { icon: IconName; label: string }) {
 export function Header({
   theme,
   onToggleTheme,
+  clinicName,
 }: {
   theme: Theme;
   onToggleTheme: () => void;
+  // Optional override for the clinic name — pass the hub tenant config's
+  // clinic_name once the caller has it loaded (see Configuração page.tsx).
+  // Falls back to auth/me's tenant, then to the CLINIC demo constant.
+  clinicName?: string;
 }) {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // Real identity (Feature F) — fetched once from GET /auth/me when a session
+  // exists. Stays null while logged out, so every render below falls back to
+  // the demo constants (CURRENT_USER/CLINIC) — the showcase keeps working.
+  const [me, setMe] = useState<MeResponse | null>(null);
+  useEffect(() => {
+    const session = getSession();
+    if (!session) return;
+    let cancelled = false;
+    getMe(session)
+      .then((data) => {
+        if (!cancelled) setMe(data);
+      })
+      .catch(() => {
+        // Expired/invalid session — HubNotice-style pages already surface a
+        // "faça login" notice; the header just keeps showing the demo name.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // First name only for compact display in the trigger button
-  const displayName = CURRENT_USER.name.split(" ")[0];
+  const fullName = me?.user.name || CURRENT_USER.name;
+  const displayName = fullName.split(" ")[0];
+  const roleLabel = me ? (ROLE_LABEL[me.user.role] ?? me.user.role) : CURRENT_USER.role;
 
   // Clinic name without the "Consultório " prefix for the compact subtitle
-  const clinicShort = CLINIC.name.replace("Consultório ", "");
+  const resolvedClinicName = clinicName || me?.tenant?.clinic_name || CLINIC.name;
+  const clinicShort = resolvedClinicName.replace("Consultório ", "");
 
   return (
     <header style={{
@@ -122,7 +166,7 @@ export function Header({
               border: "none", cursor: "pointer", transition: "background .15s",
             }}
           >
-            <Avatar name={CURRENT_USER.name} size={30} />
+            <Avatar name={fullName} size={30} />
             <span style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)" }}>
               {displayName}
             </span>
@@ -147,13 +191,13 @@ export function Header({
               }}>
                 {/* user identity row */}
                 <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "8px 10px 12px" }}>
-                  <Avatar name={CURRENT_USER.name} size={38} />
+                  <Avatar name={fullName} size={38} />
                   <div>
                     <div style={{ fontSize: 14.5, fontWeight: 700, color: "var(--ink)" }}>
-                      {CURRENT_USER.name}
+                      {fullName}
                     </div>
                     <div style={{ fontSize: 12.5, color: "var(--ink-faint)" }}>
-                      {CURRENT_USER.role} · {clinicShort}
+                      {roleLabel} · {clinicShort}
                     </div>
                   </div>
                 </div>

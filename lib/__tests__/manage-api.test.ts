@@ -395,6 +395,37 @@ describe("billing", () => {
 });
 
 // ---------------------------------------------------------------------------
+// catalogRequiresWhatsappCoexistence — truth table backing the pre-checkout
+// disclosure's PreCheck-only exclusion (CheckoutTrialNotice)
+// ---------------------------------------------------------------------------
+
+describe("catalogRequiresWhatsappCoexistence", () => {
+  it("PreCheck-only catalog -> false (no secretarIA, no Coexistence promise)", () => {
+    expect(api.catalogRequiresWhatsappCoexistence(["precheck"])).toBe(false);
+  });
+
+  it("any secretaria_* plan id -> true", () => {
+    expect(api.catalogRequiresWhatsappCoexistence(["secretaria_ferro"])).toBe(true);
+    expect(api.catalogRequiresWhatsappCoexistence(["secretaria_bronze_1"])).toBe(true);
+  });
+
+  it("complete_clinic_combo -> true", () => {
+    expect(api.catalogRequiresWhatsappCoexistence(["complete_clinic_combo"])).toBe(true);
+  });
+
+  it("mixed list matches if ANY id qualifies", () => {
+    expect(
+      api.catalogRequiresWhatsappCoexistence(["precheck", "secretaria_bronze_1"]),
+    ).toBe(true);
+  });
+
+  it("empty list or unrelated ids -> false", () => {
+    expect(api.catalogRequiresWhatsappCoexistence([])).toBe(false);
+    expect(api.catalogRequiresWhatsappCoexistence(["reactivation_pack"])).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // secretarIA hub token
 // ---------------------------------------------------------------------------
 
@@ -426,6 +457,43 @@ describe("getSecretariaHubToken", () => {
 // ---------------------------------------------------------------------------
 // Self-service cold signup (public, unauthenticated) — CONTRACTS §14
 // ---------------------------------------------------------------------------
+
+describe("getCheckoutTrialDays", () => {
+  it("18a. 200 with a valid trial_period_days resolves the number, unauthenticated", async () => {
+    fetchMock.mockResolvedValueOnce(mockResponse(200, { trial_period_days: 75 }));
+
+    const result = await api.getCheckoutTrialDays();
+
+    expect(result).toBe(75);
+    const call = fetchMock.mock.calls[0];
+    expect(call[0]).toBe("/public/checkout-config");
+    expect(call[1].headers.Authorization).toBeUndefined();
+  });
+
+  it("18b. non-200 response resolves null instead of throwing", async () => {
+    fetchMock.mockResolvedValueOnce(mockResponse(500, { detail: "server_error" }));
+
+    await expect(api.getCheckoutTrialDays()).resolves.toBeNull();
+  });
+
+  it("18c. malformed body (non-numeric trial_period_days) resolves null", async () => {
+    fetchMock.mockResolvedValueOnce(mockResponse(200, { trial_period_days: "75" }));
+
+    await expect(api.getCheckoutTrialDays()).resolves.toBeNull();
+  });
+
+  it("18d. network failure resolves null instead of rejecting", async () => {
+    fetchMock.mockRejectedValueOnce(new Error("network down"));
+
+    await expect(api.getCheckoutTrialDays()).resolves.toBeNull();
+  });
+
+  it("18e. trial_period_days === 0 resolves 0 (caller renders nothing, not a fetch failure)", async () => {
+    fetchMock.mockResolvedValueOnce(mockResponse(200, { trial_period_days: 0 }));
+
+    await expect(api.getCheckoutTrialDays()).resolves.toBe(0);
+  });
+});
 
 describe("createSignupIntent", () => {
   it("14a. posts the payload unauthenticated and resolves intent_id", async () => {

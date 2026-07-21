@@ -1,9 +1,8 @@
 "use client";
 // AddressFields — the structured clinic address block for Section 01.
-// demo-only: TenantConfigUpdate (secretarIA schemas/config.py) has no address
-// fields at all — none of the inputs below persist on save. Kept in the UI
-// (not removed) so the layout/copy is ready once secretarIA adds them; see
-// the per-field comments on ClinicCtx in lib/types.ts.
+// REAL as of the Onboarding & Multi-Professional contract (Feature 1):
+// TenantConfigWire.address round-trips these fields — see toWireAddress/
+// applyWireAddress in lib/hub-mapping.ts.
 
 import { Field, TextInput } from "../../_shared/ui";
 import type { ClinicCtx } from "../lib/types";
@@ -12,10 +11,12 @@ type AddressFieldsProps = {
   v: ClinicCtx;
   // Generic setter shared with ContextSection — type-safe per ClinicCtx key.
   set: <K extends keyof ClinicCtx>(key: K, value: ClinicCtx[K]) => void;
+  // Professional-scoped tenant_staff session (Feature E) — read-only for them.
+  readOnly?: boolean;
 };
 
 // Renders street/complement/neighborhood/city/state/postal-code inputs.
-export function AddressFields({ v, set }: AddressFieldsProps) {
+export function AddressFields({ v, set, readOnly }: AddressFieldsProps) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       {/* group label — mirrors the Field label styling used elsewhere */}
@@ -35,6 +36,7 @@ export function AddressFields({ v, set }: AddressFieldsProps) {
             value={v.addressLine}
             onChange={e => set("addressLine", e.target.value)}
             placeholder="Av. Paulista, 1000"
+            disabled={readOnly}
           />
         </Field>
         <Field label="Complemento">
@@ -42,6 +44,7 @@ export function AddressFields({ v, set }: AddressFieldsProps) {
             value={v.addressComplement}
             onChange={e => set("addressComplement", e.target.value)}
             placeholder="Sala 302, bloco B (opcional)"
+            disabled={readOnly}
           />
         </Field>
       </div>
@@ -53,6 +56,7 @@ export function AddressFields({ v, set }: AddressFieldsProps) {
             value={v.neighborhood}
             onChange={e => set("neighborhood", e.target.value)}
             placeholder="Bela Vista"
+            disabled={readOnly}
           />
         </Field>
         <Field label="Cidade">
@@ -60,6 +64,7 @@ export function AddressFields({ v, set }: AddressFieldsProps) {
             value={v.city}
             onChange={e => set("city", e.target.value)}
             placeholder="São Paulo"
+            disabled={readOnly}
           />
         </Field>
       </div>
@@ -72,6 +77,7 @@ export function AddressFields({ v, set }: AddressFieldsProps) {
             onChange={e => set("state", e.target.value)}
             placeholder="SP"
             maxLength={2}
+            disabled={readOnly}
           />
         </Field>
         <Field label="CEP">
@@ -79,6 +85,7 @@ export function AddressFields({ v, set }: AddressFieldsProps) {
             value={v.postalCode}
             onChange={e => set("postalCode", e.target.value)}
             placeholder="01310-100"
+            disabled={readOnly}
           />
         </Field>
       </div>

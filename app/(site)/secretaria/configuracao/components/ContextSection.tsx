@@ -1,15 +1,15 @@
 "use client";
 // ContextSection — Section 01 "Contexto da clínica".
-// Collects the clinic name, specialty, about blurb, structured address, phone,
-// accepted insurances, convênio-collection preference, and tone-of-voice rules
-// for the WhatsApp assistant.
-// Only clinicName round-trips to secretarIA (as read-only TenantConfigRead.
-// clinic_name — never sent back on save). Every other field here is
-// demo-only: TenantConfigUpdate (secretarIA schemas/config.py) has no
-// specialty/about/address/phone/insurances/tone fields — see the per-field
-// comments on ClinicCtx in lib/types.ts.
+// Collects the clinic name, structured address, phone, accepted insurances,
+// and the convênio-collection preference. clinicName is read-only
+// (TenantConfigRead.clinic_name, never sent back on save); address/insurances/
+// collectInsurance are REAL wire fields (Onboarding & Multi-Professional
+// contract §10) as of this pass. `phone` stays demo-only — secretarIA still
+// has no clinic-phone wire field. Specialty/about/tone-of-voice moved out:
+// specialty/about are now per-professional (see ProfessionalsSection),
+// tone-of-voice is now the real `persona_notes` field in MessagesSection.
 
-import { Field, TextInput, TextArea } from "../../_shared/ui";
+import { Field, TextInput } from "../../_shared/ui";
 import { Section } from "./Section";
 import { AddressFields } from "./AddressFields";
 import { ToggleRow } from "./ToggleRow";
@@ -19,10 +19,13 @@ type ContextSectionProps = {
   v: ClinicCtx;
   // Generic setter — keeps each key bound to its own value type (string/boolean).
   set: <K extends keyof ClinicCtx>(key: K, value: ClinicCtx[K]) => void;
+  // True for a professional-scoped tenant_staff session (Feature E) — clinic-
+  // level info is read-only for them, editable only by the owner.
+  readOnly?: boolean;
 };
 
 // Renders all context fields inside a Section card with HelpTip annotations.
-export function ContextSection({ v, set }: ContextSectionProps) {
+export function ContextSection({ v, set, readOnly }: ContextSectionProps) {
   return (
     <Section
       id="ctx"
@@ -32,45 +35,27 @@ export function ContextSection({ v, set }: ContextSectionProps) {
       desc="É a base de tudo. A secretarIA usa essas informações para responder pacientes no WhatsApp com o tom e os dados certos."
     >
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-        {/* row 1: clinic name + specialty */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-          <Field
-            label="Nome da clínica / consultório"
-            tip="Nome que a secretarIA usa ao se apresentar e em mensagens — ex.: “Consultório Dr. Aurélio Lima”."
-          >
-            <TextInput
-              value={v.clinicName}
-              onChange={e => set("clinicName", e.target.value)}
-              placeholder="Consultório Dr. Aurélio Lima"
-            />
-          </Field>
-          <Field
-            label="Especialidade principal"
-            tip="Ajuda o bot a entender o tipo de atendimento e a triar dúvidas comuns da especialidade."
-          >
-            <TextInput
-              value={v.specialty}
-              onChange={e => set("specialty", e.target.value)}
-              placeholder="Clínica geral, Cardiologia…"
-            />
-          </Field>
-        </div>
+        {readOnly && (
+          <div className="alert-line alert-line--amber" style={{ marginBottom: -4 }}>
+            <span className="dot dot--amber" />
+            Somente o proprietário da clínica pode editar essas informações.
+          </div>
+        )}
 
-        {/* about textarea */}
         <Field
-          label="Sobre a clínica (contexto para o bot)"
-          tip="Descreva em poucas linhas o que é a clínica, público atendido e diferenciais. Quanto mais contexto, mais natural e correta fica a resposta da secretarIA."
+          label="Nome da clínica / consultório"
+          tip="Nome que a secretarIA usa ao se apresentar e em mensagens — ex.: “Consultório Dr. Aurélio Lima”."
         >
-          <TextArea
-            value={v.about}
-            onChange={e => set("about", e.target.value)}
-            rows={4}
-            placeholder="Ex.: Clínica de clínica geral focada em atendimento humanizado a adultos e idosos, atende particular e os convênios listados abaixo. Localizada na região central, com estacionamento próprio…"
+          <TextInput
+            value={v.clinicName}
+            onChange={e => set("clinicName", e.target.value)}
+            placeholder="Consultório Dr. Aurélio Lima"
+            disabled={readOnly}
           />
         </Field>
 
         {/* structured clinic address */}
-        <AddressFields v={v} set={set} />
+        <AddressFields v={v} set={set} readOnly={readOnly} />
 
         {/* row: WhatsApp + accepted insurances */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: 16 }}>
@@ -82,6 +67,7 @@ export function ContextSection({ v, set }: ContextSectionProps) {
               value={v.phone}
               onChange={e => set("phone", e.target.value)}
               placeholder="+55 11 99999-9999"
+              disabled={readOnly}
             />
           </Field>
           <Field
@@ -92,6 +78,7 @@ export function ContextSection({ v, set }: ContextSectionProps) {
               value={v.insurances}
               onChange={e => set("insurances", e.target.value)}
               placeholder="Unimed, Bradesco Saúde… (ou vazio para só particular)"
+              disabled={readOnly}
             />
           </Field>
         </div>
@@ -102,20 +89,8 @@ export function ContextSection({ v, set }: ContextSectionProps) {
           onChange={value => set("collectInsurance", value)}
           title="Coletar convênio do paciente"
           desc="Quando ativo, a secretarIA pergunta no agendamento se o paciente tem convênio e qual. Ative apenas se for usar essa informação."
+          disabled={readOnly}
         />
-
-        {/* tone of voice */}
-        <Field
-          label="Tom de voz e regras do atendimento"
-          tip="Como a secretarIA deve falar e o que NÃO pode fazer. Ex.: tratar por “você”, não dar diagnóstico, encaminhar urgências ao pronto-socorro."
-        >
-          <TextArea
-            value={v.tone}
-            onChange={e => set("tone", e.target.value)}
-            rows={3}
-            placeholder="Ex.: Tom cordial e próximo, tratando o paciente por “você”. Nunca dar diagnóstico nem orientação clínica. Em caso de urgência, orientar a procurar o pronto-socorro mais próximo."
-          />
-        </Field>
       </div>
     </Section>
   );

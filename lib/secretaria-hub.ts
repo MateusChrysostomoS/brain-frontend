@@ -162,6 +162,17 @@ export type AppointmentTypeWire = {
   long_description: string | null;
 };
 
+// Structured clinic address (Onboarding & Multi-Professional contract §10).
+// Every field optional — the clinic may fill in only what it knows.
+export type AddressWire = {
+  line?: string | null;
+  complement?: string | null;
+  neighborhood?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postal_code?: string | null;
+};
+
 // GET/PUT /tenants/me/config response (schemas/config.py::TenantConfigRead).
 export type TenantConfigWire = {
   clinic_name: string;
@@ -179,6 +190,12 @@ export type TenantConfigWire = {
   is_active: boolean;
   // True when a Google Calendar refresh token is stored for this tenant.
   calendar_connected: boolean;
+  // Structured clinic address (Feature 1) — null when never filled in.
+  address: AddressWire | null;
+  // Accepted health-insurance plan names (Feature 3).
+  insurances: string[] | null;
+  // When true, secretarIA asks the patient about their convênio during booking.
+  collect_insurance: boolean;
 };
 
 // PUT /tenants/me/config body (schemas/config.py::TenantConfigUpdate) — every
@@ -196,6 +213,9 @@ export type TenantConfigUpdatePayload = Partial<{
   appointment_types: AppointmentTypeWire[];
   initial_flows: Record<string, unknown>;
   is_active: boolean;
+  address: AddressWire | null;
+  insurances: string[] | null;
+  collect_insurance: boolean;
 }>;
 
 // GET /tenants/me/calendar/events item (schemas/calendar.py::CalendarEventRead).
@@ -355,6 +375,96 @@ export function disconnectCalendar(
   return hubFetch<{ status: string; is_active: boolean }>(
     session,
     "/tenants/me/calendar/disconnect",
+    { method: "POST" },
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Professionals (Onboarding & Multi-Professional contract §10) — per-professional
+// config/calendar, consumed by the Configuração page's "Profissionais" section
+// and the per-professional Services/Availability/Google forms (Feature C3/C4).
+// ---------------------------------------------------------------------------
+
+// GET /tenants/me/professionals item — mirrors what the hub round-trips for
+// PUT .../config, plus its own calendar-connected flag. Completeness booleans
+// mirror the internal config-status shape (contract §4.3); kept optional here
+// since the hub list endpoint's exact completeness fields aren't in the
+// contract's wire-shape detail — code defensively against their absence.
+export type ProfessionalWire = {
+  id: string;
+  name: string;
+  is_active: boolean;
+  specialty: string | null;
+  about: string | null;
+  context_doctor_message: string | null;
+  business_hours: Record<string, TimeWindowWire[]>;
+  appointment_types: AppointmentTypeWire[];
+  google_calendar_id: string | null;
+  calendar_connected: boolean;
+  has_calendar?: boolean;
+  has_hours?: boolean;
+  has_services?: boolean;
+  complete?: boolean;
+};
+
+// GET /tenants/me/professionals — list with per-professional completeness/
+// calendar status, used to populate the Profissionais section and the
+// professional selector chip row above Services/Availability.
+export function getProfessionals(session: Session): Promise<ProfessionalWire[]> {
+  return hubFetch<ProfessionalWire[]>(session, "/tenants/me/professionals");
+}
+
+// PUT /tenants/me/professionals/{id}/config body — every field optional,
+// partial update (mirrors TenantConfigUpdatePayload's exclude_unset semantics).
+export type ProfessionalConfigUpdatePayload = Partial<{
+  business_hours: Record<string, TimeWindowWire[]>;
+  appointment_types: AppointmentTypeWire[];
+  specialty: string | null;
+  about: string | null;
+  context_doctor_message: string | null;
+  google_calendar_id: string | null;
+}>;
+
+// PUT /tenants/me/professionals/{id}/config — saves one professional's hours,
+// services, specialty/about/context, and calendar id. Professional-scoped
+// requests are validated server-side to belong to the caller's tenant.
+export function updateProfessionalConfig(
+  session: Session,
+  professionalId: string,
+  patch: ProfessionalConfigUpdatePayload,
+): Promise<ProfessionalWire> {
+  return hubFetch<ProfessionalWire>(
+    session,
+    `/tenants/me/professionals/${professionalId}/config`,
+    { method: "PUT", body: JSON.stringify(patch) },
+  );
+}
+
+// GET /tenants/me/professionals/{id}/calendar/oauth/start — Google consent URL
+// scoped to one professional (the OAuth `state` signs tenant_id AND
+// professional_id so the callback routes the refresh token to
+// professional_credentials instead of the tenant-level row).
+export async function startProfessionalCalendarOauth(
+  session: Session,
+  professionalId: string,
+): Promise<string> {
+  const data = await hubFetch<{ authorization_url: string }>(
+    session,
+    `/tenants/me/professionals/${professionalId}/calendar/oauth/start`,
+  );
+  return data.authorization_url;
+}
+
+// POST /tenants/me/professionals/{id}/calendar/disconnect — forgets that
+// professional's Calendar refresh token only (tenant-level connection, if any,
+// is untouched).
+export function disconnectProfessionalCalendar(
+  session: Session,
+  professionalId: string,
+): Promise<{ status: string }> {
+  return hubFetch<{ status: string }>(
+    session,
+    `/tenants/me/professionals/${professionalId}/calendar/disconnect`,
     { method: "POST" },
   );
 }

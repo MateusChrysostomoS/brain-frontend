@@ -12,10 +12,11 @@ type CSelectProps = {
   onChange: (e: ChangeEvent<HTMLSelectElement>) => void;
   children: ReactNode;
   style?: CSSProperties;
+  disabled?: boolean;
 };
 
 // Wraps a native select with the shared inputStyle and a chevron indicator.
-export function CSelect({ value, onChange, children, style }: CSelectProps) {
+export function CSelect({ value, onChange, children, style, disabled }: CSelectProps) {
   const [focused, setFocused] = useState(false);
 
   return (
@@ -25,11 +26,13 @@ export function CSelect({ value, onChange, children, style }: CSelectProps) {
         onChange={onChange}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
+        disabled={disabled}
         style={{
           ...inputStyle,
           appearance: "none",
           paddingRight: 34,
-          cursor: "pointer",
+          cursor: disabled ? "not-allowed" : "pointer",
+          opacity: disabled ? 0.6 : 1,
           borderColor: focused ? "var(--brand)" : "var(--line-strong)",
           ...style,
         }}

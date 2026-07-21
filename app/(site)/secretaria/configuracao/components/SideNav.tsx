@@ -12,9 +12,13 @@ type NavItem = {
   icon: IconName;
 };
 
-// The four config sections — mirrors the NAV array from config.jsx.
+// The six config sections (Onboarding & Multi-Professional pass added
+// Mensagens + Profissionais, and moved Services/Availability to be
+// professional-scoped — see page.tsx).
 const NAV: NavItem[] = [
   { id: "ctx",  label: "Contexto da clínica", icon: "note"     },
+  { id: "msg",  label: "Mensagens",           icon: "send"     },
+  { id: "prof", label: "Profissionais",       icon: "users"    },
   { id: "srv",  label: "Serviços oferecidos",  icon: "doc"      },
   { id: "disp", label: "Dias e horários",      icon: "clock"    },
   { id: "gcal", label: "Google Calendar",      icon: "calendar" },

@@ -11,18 +11,19 @@ type ToggleRowProps = {
   onChange: (value: boolean) => void;
   title: string;
   desc?: string;
+  disabled?: boolean;
 };
 
 // Renders a toggle + title/description block inside a tappable label row.
-export function ToggleRow({ on, onChange, title, desc }: ToggleRowProps) {
+export function ToggleRow({ on, onChange, title, desc, disabled }: ToggleRowProps) {
   return (
     <label style={{
       display: "flex", alignItems: "center", gap: 12,
       padding: "12px 14px", borderRadius: 12,
       background: "var(--surface-2)", border: "1px solid var(--line)",
-      cursor: "pointer",
+      cursor: disabled ? "not-allowed" : "pointer",
     }}>
-      <CToggle on={on} onChange={onChange} />
+      <CToggle on={on} onChange={onChange} disabled={disabled} />
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--ink)" }}>
           {title}

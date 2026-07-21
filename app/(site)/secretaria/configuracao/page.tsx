@@ -1,9 +1,17 @@
 "use client";
 // Configuração page — the full-viewport secretarIA chatbot configuration screen.
-// Owns all form state (ctx, services, days, prefs, gcal) and the scrollspy logic.
-// Composed of SideNav + four Section components; a sticky save bar sits at the bottom.
-// Theme is initialised from the existing [data-theme] attribute after mount to
-// avoid an SSR hydration mismatch.
+// Owns all form state (ctx, messages, professionals, services, days, prefs,
+// gcal) and the scrollspy logic. Composed of SideNav + six Section components;
+// a sticky save bar sits at the bottom. Theme is initialised from the existing
+// [data-theme] attribute after mount to avoid an SSR hydration mismatch.
+//
+// Onboarding & Multi-Professional pass: added Mensagens + Profissionais
+// sections; Services/Availability now edit the SELECTED professional instead
+// of a single tenant-wide list; Context dropped specialty/about (now
+// per-professional) and gained real address/insurances/collect_insurance.
+// Professional-scoped view (Feature E): a tenant_staff session locked to a
+// professional_id sees read-only clinic-level sections + only their own
+// professional's forms.
 
 import "../../product-tokens.css";
 import "../../app-shell.css";
@@ -14,30 +22,51 @@ import { Icon, Btn } from "../_shared/ui";
 import { Header } from "../_shared/Header";
 import type { Theme } from "../_shared/Header";
 import { HubNotice } from "../_shared/HubNotice";
+import { OnboardingBanner } from "../../_components/OnboardingBanner";
 import { useSecretariaHub } from "../_shared/useSecretariaHub";
+import { CLINIC } from "../_shared/data";
 
 import { SideNav } from "./components/SideNav";
 import { CToast } from "./components/CToast";
 import { ContextSection } from "./components/ContextSection";
+import { MessagesSection } from "./components/MessagesSection";
+import { ProfessionalsSection } from "./components/ProfessionalsSection";
 import { ServicesSection } from "./components/ServicesSection";
 import { AvailabilitySection } from "./components/AvailabilitySection";
 import { GoogleSection } from "./components/GoogleSection";
 
-import type { ClinicCtx, Service, DayConfig, Prefs, GcalState } from "./lib/types";
+import type {
+  ClinicCtx,
+  DayConfig,
+  GcalState,
+  Messages,
+  Prefs,
+  ProfessionalProfile,
+  Service,
+} from "./lib/types";
 import {
-  applyWireBusinessHours,
+  applyWireAddress,
   applyWireAppointmentTypes,
+  applyWireBusinessHours,
+  applyWireInsurances,
+  applyWireMessages,
+  applyWireProfessionalProfile,
   buildConfigUpdatePayload,
+  buildProfessionalConfigPayload,
 } from "./lib/hub-mapping";
 import {
-  getTenantConfig,
-  updateTenantConfig,
-  startCalendarOauth,
   disconnectCalendar,
+  getProfessionals,
+  getTenantConfig,
+  startCalendarOauth,
+  updateProfessionalConfig,
+  updateTenantConfig,
+  type ProfessionalWire,
 } from "@/lib/secretaria-hub";
+import { getDoctorProfessionals, type DoctorProfessional } from "@/lib/manage-api";
 
 // ---------------------------------------------------------------------------
-// Weekday seed — used to initialise the days state
+// Weekday seed — used to initialise/reset the days state
 // ---------------------------------------------------------------------------
 
 // [key, label] pairs in ISO week order (Mon → Sun)
@@ -51,8 +80,46 @@ const WD: [string, string][] = [
   ["dom", "Domingo"],
 ];
 
+// A fully-closed week — the base every professional's hydration starts from,
+// so switching between professionals never leaks one professional's ranges
+// onto another's blank days (see the per-professional hydration effect below).
+function closedWeek(): DayConfig[] {
+  return WD.map(([key, label]) => ({ key, label, on: false, ranges: [] }));
+}
+
+// Rich demo seed — used only for the logged-out/not-entitled showcase and as
+// the pre-hydration placeholder, so the page never looks empty before data loads.
+function demoWeek(): DayConfig[] {
+  return WD.map(([key, label], i) => ({
+    key,
+    label,
+    on: i < 5, // Mon–Fri open by default
+    ranges:
+      i < 5
+        ? [{ start: 8 * 60, end: 12 * 60 }, { start: 14 * 60, end: 18 * 60 }]
+        : [{ start: 9 * 60, end: 12 * 60 }],
+  }));
+}
+
+// Single demo roster row shown before real professionals load (keeps the new
+// Profissionais section from looking stuck-loading in demo/logged-out mode).
+const DEMO_PROFESSIONAL_ID = "demo";
+const DEMO_ROSTER: DoctorProfessional[] = [
+  {
+    id: DEMO_PROFESSIONAL_ID,
+    name: CLINIC.name,
+    is_active: true,
+    has_calendar: false,
+    has_hours: true,
+    has_services: true,
+    complete: false,
+    linked_user_email: null,
+    invite_pending: false,
+  },
+];
+
 // SideNav section ids — used for scrollspy
-const NAV_IDS = ["ctx", "srv", "disp", "gcal"] as const;
+const NAV_IDS = ["ctx", "msg", "prof", "srv", "disp", "gcal"] as const;
 type NavId = (typeof NAV_IDS)[number];
 
 // ---------------------------------------------------------------------------
@@ -118,16 +185,11 @@ export default function ConfiguracaoPage() {
   };
 
   // --- Section 01: clinic context ---
-  // Only clinicName is hub-backed (read-only hydrate from TenantConfigRead;
-  // never sent on save). specialty/about/address*/phone/insurances/
-  // collectInsurance/tone are demo-only — see the per-field comments on
-  // ClinicCtx in lib/types.ts and buildConfigUpdatePayload below, which
-  // intentionally omits them from the PUT body.
+  // clinicName is hub-backed (read-only hydrate from TenantConfigRead; never
+  // sent on save). address/insurances/collectInsurance are REAL wire fields.
+  // phone stays demo-only — secretarIA still has no clinic-phone wire field.
   const [ctx, setCtx] = useState<ClinicCtx>({
     clinicName: "Consultório Dr. Aurélio Lima",
-    specialty: "Clínica geral",
-    about: "",
-    // Structured address (Feature 1) — fed to the agent for "onde fica?" replies.
     addressLine: "",
     addressComplement: "",
     neighborhood: "",
@@ -136,15 +198,41 @@ export default function ConfiguracaoPage() {
     postalCode: "",
     phone: "+55 11 3000-0000",
     insurances: "Unimed, Bradesco Saúde, SulAmérica",
-    // Convênio collection (Feature 3) — on by default; clinic can opt out.
     collectInsurance: true,
-    tone: "",
   });
   // Generic setter — preserves each key's value type (string or boolean).
   const setCtxK = <K extends keyof ClinicCtx>(key: K, value: ClinicCtx[K]) =>
     setCtx(prev => ({ ...prev, [key]: value }));
 
-  // --- Section 02: services (appointment types) ---
+  // --- Section 02: messages (greeting/persona copy) — REAL wire fields, first UI ---
+  const [messages, setMessages] = useState<Messages>({
+    greetingMessage: "",
+    returningGreetingMessage: "",
+    greetingButtons: [],
+    personaNotes: "",
+    language: "pt-BR",
+  });
+  const setMessagesK = <K extends keyof Messages>(key: K, value: Messages[K]) =>
+    setMessages(prev => ({ ...prev, [key]: value }));
+
+  // --- Section 03: professionals ---
+  // `roster` (brain-api GET /doctor/professionals) drives the list UI
+  // (completeness/invite state); `hubProfessionalsById` (secretarIA hub GET
+  // /tenants/me/professionals) supplies the editable fields used to hydrate
+  // services/days/profile for whichever professional is selected.
+  const [roster, setRoster] = useState<DoctorProfessional[] | null>(DEMO_ROSTER);
+  const [rosterError, setRosterError] = useState(false);
+  const [hubProfessionalsById, setHubProfessionalsById] = useState<Record<string, ProfessionalWire>>({});
+  const [selectedProfessionalId, setSelectedProfessionalId] = useState<string | null>(DEMO_PROFESSIONAL_ID);
+  const [profile, setProfile] = useState<ProfessionalProfile>({
+    specialty: "Clínica geral",
+    about: "",
+    contextDoctorMessage: "",
+  });
+  const setProfileK = <K extends keyof ProfessionalProfile>(key: K, value: ProfessionalProfile[K]) =>
+    setProfile(prev => ({ ...prev, [key]: value }));
+
+  // --- Section 04: services (appointment types) — now per-professional ---
   // Each type carries an active flag and its pre-visit requirements (Feature 2).
   const [services, setServices] = useState<Service[]>([
     {
@@ -163,22 +251,11 @@ export default function ConfiguracaoPage() {
     { id: 3, name: "Teleconsulta", dur: 40, price: "R$ 350", active: true, requirements: [] },
   ]);
 
-  // --- Section 03: availability ---
-  const [days, setDays] = useState<DayConfig[]>(
-    WD.map(([key, label], i) => ({
-      key,
-      label,
-      on: i < 5, // Mon–Fri open by default
-      // Weekdays get two ranges (morning + afternoon); weekend gets one
-      ranges:
-        i < 5
-          ? [{ start: 8 * 60, end: 12 * 60 }, { start: 14 * 60, end: 18 * 60 }]
-          : [{ start: 9 * 60, end: 12 * 60 }],
-    }))
-  );
+  // --- Section 05: availability — now per-professional ---
+  const [days, setDays] = useState<DayConfig[]>(demoWeek());
 
-  // defaultDur round-trips (appointment_duration_min). gap/lead are
-  // demo-only: TenantConfigUpdate has no inter-appointment-gap or
+  // defaultDur round-trips (appointment_duration_min) and stays TENANT-level.
+  // gap/lead are demo-only: TenantConfigUpdate has no inter-appointment-gap or
   // minimum-lead-time field.
   const [prefs, setPrefs] = useState<Prefs>({ defaultDur: 50, gap: 10, lead: 2 });
   const setPrefK = (key: keyof Prefs, value: number) =>
@@ -187,18 +264,27 @@ export default function ConfiguracaoPage() {
   // --- secretarIA hub: entitlement-gated real data path ---
   const { session, ready: hubCheckReady, notEntitled, hubReady } = useSecretariaHub();
 
-  // Hydrate form state from the real tenant config once the hub is usable.
-  // Fields with no wire counterpart (address, tone, insurances, ...) simply
-  // keep their demo defaults — see hub-mapping.ts for the exact field map.
+  // Professional-scoped view (Feature E): tenant_staff is ALWAYS locked to
+  // their own professional_id. A self-bound owner keeps full admin access —
+  // only staff get the reduced view.
+  const lockedToOwnProfessional = session?.role === "tenant_staff" && !!session.professionalId;
+
+  // Hydrate tenant-level fields (clinicName/address/insurances/collectInsurance/
+  // messages/defaultDur/gcal.connected) from the real tenant config once the
+  // hub is usable. business_hours/appointment_types are NO LONGER read here —
+  // they're professional-scoped now (see the hydration effect below).
   useEffect(() => {
     if (!hubReady || !session) return;
     getTenantConfig(session)
       .then((cfg) => {
-        setCtx((prev) => ({ ...prev, clinicName: cfg.clinic_name || prev.clinicName }));
-        if (cfg.appointment_types.length > 0) {
-          setServices(applyWireAppointmentTypes(cfg.appointment_types));
-        }
-        setDays((prev) => applyWireBusinessHours(cfg.business_hours, prev));
+        setCtx((prev) => ({
+          ...prev,
+          clinicName: cfg.clinic_name || prev.clinicName,
+          ...applyWireAddress(cfg.address),
+          insurances: cfg.insurances ? applyWireInsurances(cfg.insurances) : prev.insurances,
+          collectInsurance: cfg.collect_insurance,
+        }));
+        setMessages(applyWireMessages(cfg));
         setPrefs((prev) => ({
           ...prev,
           defaultDur: cfg.appointment_duration_min || prev.defaultDur,
@@ -212,7 +298,54 @@ export default function ConfiguracaoPage() {
       });
   }, [hubReady, session]);
 
-  // --- Section 04: Google Calendar ---
+  // Loads the professionals roster (brain-api) + editable configs (hub).
+  // Re-run after any mutation (invite created, self-bind, calendar connect)
+  // via the components' onRosterChanged/onChanged callbacks.
+  const loadProfessionals = useCallback(() => {
+    if (!hubReady || !session) return;
+    getDoctorProfessionals(session)
+      .then((list) => {
+        setRoster(list);
+        setRosterError(false);
+        setSelectedProfessionalId((prev) => {
+          if (lockedToOwnProfessional && session.professionalId) return session.professionalId;
+          if (prev && list.some((p) => p.id === prev)) return prev;
+          return list[0]?.id ?? null; // single-professional tenants auto-select
+        });
+      })
+      .catch((e) => {
+        console.error("secretaria hub: failed to load professionals roster", e);
+        setRosterError(true);
+      });
+    getProfessionals(session)
+      .then((list) => {
+        setHubProfessionalsById(Object.fromEntries(list.map((p) => [p.id, p])));
+      })
+      .catch((e) => {
+        console.error("secretaria hub: failed to load professional configs", e);
+      });
+  }, [hubReady, session, lockedToOwnProfessional]);
+
+  useEffect(() => {
+    loadProfessionals();
+  }, [loadProfessionals]);
+
+  // Hydrates services/days/profile from whichever professional is currently
+  // selected. Always starts from a closed week + empty services (never from
+  // the previously-selected professional's local state), so switching
+  // professionals can never leak one professional's schedule onto another's.
+  useEffect(() => {
+    if (!selectedProfessionalId) return;
+    const p = hubProfessionalsById[selectedProfessionalId];
+    if (!p) return; // demo id, or hub list hasn't loaded yet — keep current (demo) values
+    setServices(
+      p.appointment_types.length > 0 ? applyWireAppointmentTypes(p.appointment_types) : [],
+    );
+    setDays(applyWireBusinessHours(p.business_hours, closedWeek()));
+    setProfile(applyWireProfessionalProfile(p));
+  }, [selectedProfessionalId, hubProfessionalsById]);
+
+  // --- Section 06: Google Calendar (tenant-level; unchanged single-professional path) ---
   // connected round-trips (TenantConfigRead.calendar_connected, read-only).
   // email/calendar/tz/twoWay are demo-only — TenantConfigUpdate carries only
   // google_calendar_id (an id string, not a picker of named calendars/tz/
@@ -226,21 +359,27 @@ export default function ConfiguracaoPage() {
   });
 
   // --- Save: writes to the real hub config when available, else local-only ---
-  // NOTE on the success flash below: it is honest for the fields that DO
-  // persist (business hours, services/appointment types, default duration —
-  // see buildConfigUpdatePayload), but a secretary who just edited the
-  // demo-only fields (address, phone, insurances, tone, specialty, about,
-  // gap/lead, gcal email/calendar/tz/twoWay) will see the same generic
-  // success copy even though those fields were silently not sent. Left as-is
-  // per the supported fields genuinely persisting; revisit if secretarIA
-  // grows those wire fields and this payload still omits them.
+  // Two PUTs when a professional is selected: tenant-level (Mensagens +
+  // address/insurances/collect_insurance/appointment_duration_min) and
+  // professional-level (hours/services/specialty/about/context). gap/lead and
+  // the gcal email/calendar/tz/twoWay fields have no wire counterpart and stay
+  // silently local-only, same as before.
   const handleSave = async () => {
     if (hubReady && session) {
       try {
         await updateTenantConfig(
           session,
-          buildConfigUpdatePayload(days, services, prefs.defaultDur),
+          buildConfigUpdatePayload(ctx, messages, prefs.defaultDur),
         );
+        if (selectedProfessionalId && selectedProfessionalId !== DEMO_PROFESSIONAL_ID) {
+          const saved = await updateProfessionalConfig(
+            session,
+            selectedProfessionalId,
+            buildProfessionalConfigPayload(days, services, profile),
+          );
+          setHubProfessionalsById((prev) => ({ ...prev, [selectedProfessionalId]: saved }));
+          loadProfessionals(); // refresh roster completeness chips (has_hours/has_services)
+        }
         flash("Configuração salva — a secretarIA já está atualizada.");
       } catch (e) {
         console.error("secretaria hub: failed to save tenant config", e);
@@ -269,6 +408,14 @@ export default function ConfiguracaoPage() {
         }
       : undefined;
 
+  // --- Derived: professional name shown alongside Services/Availability once
+  // there's more than one to disambiguate (single-professional tenants "look
+  // unchanged" per spec). ---
+  const selectedProfessionalName =
+    roster && roster.length > 1
+      ? roster.find((p) => p.id === selectedProfessionalId)?.name
+      : undefined;
+
   // ---------------------------------------------------------------------------
   // Render
   // ---------------------------------------------------------------------------
@@ -279,10 +426,13 @@ export default function ConfiguracaoPage() {
       display: "flex", flexDirection: "column",
       background: "var(--page)",
     }}>
-      <Header theme={theme} onToggleTheme={onToggleTheme} />
+      <Header theme={theme} onToggleTheme={onToggleTheme} clinicName={hubReady ? ctx.clinicName : undefined} />
 
       {/* demo-mode / not-entitled notice — hidden once the real hub is active */}
       <HubNotice session={session} notEntitled={notEntitled} ready={hubCheckReady} />
+
+      {/* WhatsApp activation status — hidden once onboarding_state === 'ativo' */}
+      <OnboardingBanner session={session} />
 
       {/* scrollable content area — scrollspy fires on this element */}
       <div
@@ -321,15 +471,33 @@ export default function ConfiguracaoPage() {
               </p>
             </div>
 
-            {/* four config sections stacked vertically */}
+            {/* six config sections stacked vertically */}
             <div style={{ display: "flex", flexDirection: "column", gap: 34 }}>
-              <ContextSection v={ctx} set={setCtxK} />
-              <ServicesSection services={services} setServices={setServices} />
+              <ContextSection v={ctx} set={setCtxK} readOnly={lockedToOwnProfessional} />
+              <MessagesSection v={messages} set={setMessagesK} readOnly={lockedToOwnProfessional} />
+              <ProfessionalsSection
+                session={session}
+                isOwner={session?.role === "tenant_owner"}
+                roster={roster}
+                rosterError={rosterError}
+                selectedId={selectedProfessionalId}
+                onSelect={setSelectedProfessionalId}
+                lockedToOwnProfessional={!!lockedToOwnProfessional}
+                profile={profile}
+                onProfileChange={setProfileK}
+                onRosterChanged={loadProfessionals}
+              />
+              <ServicesSection
+                services={services}
+                setServices={setServices}
+                professionalName={selectedProfessionalName}
+              />
               <AvailabilitySection
                 days={days}
                 setDays={setDays}
                 prefs={prefs}
                 setPref={setPrefK}
+                professionalName={selectedProfessionalName}
               />
               <GoogleSection
                 gcal={gcal}

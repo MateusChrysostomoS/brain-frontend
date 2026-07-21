@@ -6,14 +6,16 @@
 type CToggleProps = {
   on: boolean;
   onChange: (value: boolean) => void;
+  disabled?: boolean;
 };
 
 // Pill-style boolean toggle; calls onChange with the next boolean value.
-export function CToggle({ on, onChange }: CToggleProps) {
+export function CToggle({ on, onChange, disabled }: CToggleProps) {
   return (
     <button
       type="button"
       onClick={() => onChange(!on)}
+      disabled={disabled}
       style={{
         width: 44,
         height: 26,
@@ -25,7 +27,8 @@ export function CToggle({ on, onChange }: CToggleProps) {
         display: "flex",
         justifyContent: on ? "flex-end" : "flex-start",
         border: "none",
-        cursor: "pointer",
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.55 : 1,
       }}
       aria-checked={on}
       role="switch"

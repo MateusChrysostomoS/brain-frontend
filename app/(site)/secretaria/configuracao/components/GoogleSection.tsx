@@ -1,11 +1,16 @@
 "use client";
-// GoogleSection — Section 04 "Integração com o Google Calendar".
+// GoogleSection — Section 06 "Integração com o Google Calendar".
 // Shows an OAuth connect card when disconnected, and a connected state card
 // when gcal.connected is true. Includes two-way sync toggle and manual
 // credential entry (advanced, inside a <details> element).
 // When `onConnect`/`onDisconnect` are provided (hubReady in the parent page),
 // they drive the real secretarIA hub OAuth handoff instead of the local
 // simulated flow (1.4s delay, matching the original design demo).
+//
+// Onboarding & Multi-Professional pass: this stays the TENANT-level connect
+// (unchanged single-professional path, per spec) — multi-professional clinics
+// additionally get a per-professional "Conectar Google Calendar" button in
+// ProfessionalsSection (Section 03).
 
 import { useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
@@ -77,7 +82,7 @@ export function GoogleSection({ gcal, setGcal, onConnect, onDisconnect }: Google
   return (
     <Section
       id="gcal"
-      num="04"
+      num="06"
       icon="calendar"
       title="Integração com o Google Calendar"
       desc="Autorize o acesso para a secretarIA criar, mover e cancelar eventos na sua agenda do Google em tempo real — sem choque de horários."

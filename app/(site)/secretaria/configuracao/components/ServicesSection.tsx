@@ -1,8 +1,13 @@
 "use client";
-// ServicesSection — Section 02 "Serviços oferecidos" (appointment types).
+// ServicesSection — Section 04 "Serviços oferecidos" (appointment types).
 // Manages the list of types SecretarIA can book; each one is a ServiceCard
 // that also holds its pre-visit requirements. Composition only — the per-card
 // editing logic lives in ServiceCard.
+//
+// Onboarding & Multi-Professional pass: this now edits the SELECTED
+// professional's appointment_types (see page.tsx's professional selector in
+// ProfessionalsSection) rather than a single tenant-wide list — `professionalName`
+// is appended to the title as a reminder once there's more than one to confuse with.
 
 import { Icon } from "../../_shared/ui";
 import { Section } from "./Section";
@@ -13,10 +18,11 @@ import type { Dispatch, SetStateAction } from "react";
 type ServicesSectionProps = {
   services: Service[];
   setServices: Dispatch<SetStateAction<Service[]>>;
+  professionalName?: string;
 };
 
-// Renders the appointment-type cards with add/remove controls inside Section 02.
-export function ServicesSection({ services, setServices }: ServicesSectionProps) {
+// Renders the appointment-type cards with add/remove controls inside Section 04.
+export function ServicesSection({ services, setServices, professionalName }: ServicesSectionProps) {
   const update = (i: number, s: Service) =>
     setServices(prev => prev.map((x, j) => (j === i ? s : x)));
 
@@ -33,9 +39,9 @@ export function ServicesSection({ services, setServices }: ServicesSectionProps)
   return (
     <Section
       id="srv"
-      num="02"
+      num="04"
       icon="doc"
-      title="Serviços oferecidos"
+      title={"Serviços oferecidos" + (professionalName ? " · " + professionalName : "")}
       desc="Os tipos de atendimento que a secretarIA pode agendar. A duração define o tamanho do horário, e as orientações de pré-consulta são enviadas ao paciente ao marcar cada tipo."
     >
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>

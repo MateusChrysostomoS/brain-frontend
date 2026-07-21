@@ -334,6 +334,16 @@ img,svg{display:block}
 .radio-pill:hover{border-color:var(--brand)}
 .radio-pill input{position:absolute;opacity:0;pointer-events:none}
 .radio-pill.on{background:var(--brand-tint);color:var(--brand-ink);border-color:var(--brand)}
+/* Full-width variant for sentence-length options (e.g. the /cadastro wizard's
+   intake questions) — same tokens as .radio-pill, laid out as a stacked block
+   instead of an inline pill so long copy wraps instead of overflowing. */
+.radio-pill--block{display:flex;width:100%;white-space:normal;text-align:left;padding:14px 16px;border-radius:var(--r-lg)}
+.radio-pill--block .radio-pill-check{width:20px;height:20px;border-radius:99px;border:1.5px solid var(--line-strong);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .14s var(--ease)}
+.radio-pill--block.on .radio-pill-check{border-color:var(--brand);background:var(--brand)}
+.radio-pill--block .radio-pill-check svg{width:12px;height:12px;color:#fff;opacity:0;transition:opacity .1s}
+.radio-pill--block.on .radio-pill-check svg{opacity:1}
+.radio-pill--block .radio-pill-text{display:flex;flex-direction:column;gap:2px}
+.radio-pill--block .radio-pill-hint{font-size:12.5px;font-weight:500;color:var(--ink-faint)}
 
 /* ============ TECH STRIP ============ */
 .tech-strip{display:flex;flex-wrap:wrap;align-items:center;gap:14px 30px;justify-content:center}
