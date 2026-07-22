@@ -64,7 +64,43 @@ export type PostConsult = {
 };
 
 // ---------------------------------------------------------------------------
-// Section 04 — Professionals
+// Section 04 — Sinal via Pix (deposit policy to reduce no-shows)
+// ---------------------------------------------------------------------------
+
+// Deposit-via-Pix policy — charges a partial deposit when the appointment is
+// booked, via Asaas (the Brain-managed PSP). The backend only actually
+// charges while the "Sinal via Pix" add-on is active on the plan, but every
+// field below stays editable regardless, so the clinic can prepare the policy
+// ahead of activating the add-on.
+export type PixDeposit = {
+  enabled: boolean;
+  depositPercent: number;       // 1-100, % of the service price charged as deposit
+  refundWindowHours: number;    // >=0, hours before the appointment for a full refund
+  retentionPolicy: "total" | "partial";
+  partialRefundPercent: number; // 1-100, used only when retentionPolicy === "partial"
+  rescheduleLimit: number;      // >=0, reschedules allowed before the deposit is forfeited
+  // Whether the tenant has a live Asaas connection — READ-ONLY, derived by
+  // the backend. There is no key input anywhere in this form by design: the
+  // PSP credential is provisioned by the Brain team during onboarding and
+  // never passes through the doctor-facing UI. Never sent back on save.
+  asaasConnected: boolean;
+};
+
+// Defaults mirror the backend's TenantConfigWire defaults (schemas/config.py)
+// — used both to seed page.tsx's initial state and as the hydration fallback
+// in hub-mapping.ts's applyWirePixDeposit.
+export const DEFAULT_PIX_DEPOSIT: PixDeposit = {
+  enabled: false,
+  depositPercent: 30,
+  refundWindowHours: 24,
+  retentionPolicy: "total",
+  partialRefundPercent: 50,
+  rescheduleLimit: 2,
+  asaasConnected: false,
+};
+
+// ---------------------------------------------------------------------------
+// Section 05 — Professionals
 // ---------------------------------------------------------------------------
 
 // The selected professional's own profile fields — REMOVED from ClinicCtx
@@ -83,7 +119,7 @@ export const EMPTY_PROFESSIONAL_PROFILE: ProfessionalProfile = {
 };
 
 // ---------------------------------------------------------------------------
-// Section 05 — Services (appointment types) — now edited per-professional
+// Section 06 — Services (appointment types) — now edited per-professional
 // ---------------------------------------------------------------------------
 
 // A single pre-visit instruction for an appointment type — e.g. fasting,
@@ -105,7 +141,7 @@ export type Service = {
 };
 
 // ---------------------------------------------------------------------------
-// Section 06 — Availability — now edited per-professional
+// Section 07 — Availability — now edited per-professional
 // ---------------------------------------------------------------------------
 
 export type TimeRange = {
@@ -127,7 +163,7 @@ export type Prefs = {
 };
 
 // ---------------------------------------------------------------------------
-// Section 07 — Google Calendar (tenant-level; unchanged single-professional path)
+// Section 08 — Google Calendar (tenant-level; unchanged single-professional path)
 // ---------------------------------------------------------------------------
 
 export type GcalState = {

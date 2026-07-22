@@ -206,6 +206,20 @@ export type TenantConfigWire = {
   insurances: string[] | null;
   // When true, secretarIA asks the patient about their convênio during booking.
   collect_insurance: boolean;
+  // Pix deposit policy ("Sinal via Pix" section) — charges a partial deposit
+  // via Asaas when the appointment is booked. The backend only actually
+  // charges while the add-on is active on the plan; these fields stay
+  // readable/writable regardless, so the policy can be prepared in advance.
+  pix_deposit_enabled: boolean;
+  pix_deposit_percent: number;
+  pix_refund_window_hours: number;
+  pix_retention_policy: "total" | "partial";
+  pix_partial_refund_percent: number;
+  pix_reschedule_limit: number;
+  // Whether the tenant has a live Asaas (PSP) connection — READ-ONLY, derived
+  // by the backend. The Asaas API key itself is provisioned by the Brain team
+  // during onboarding and is never exposed to or editable from this form.
+  asaas_connected: boolean;
 };
 
 // PUT /tenants/me/config body (schemas/config.py::TenantConfigUpdate) — every
@@ -228,6 +242,14 @@ export type TenantConfigUpdatePayload = Partial<{
   address: AddressWire | null;
   insurances: string[] | null;
   collect_insurance: boolean;
+  pix_deposit_enabled: boolean;
+  pix_deposit_percent: number;
+  pix_refund_window_hours: number;
+  pix_retention_policy: "total" | "partial";
+  pix_partial_refund_percent: number;
+  pix_reschedule_limit: number;
+  // asaas_connected is READ-ONLY (TenantConfigWire only) — intentionally
+  // absent here; it can never be part of a PUT body.
 }>;
 
 // GET /tenants/me/calendar/events item (schemas/calendar.py::CalendarEventRead).

@@ -13,14 +13,16 @@ import type {
   TenantConfigWire,
   TimeWindowWire,
 } from "@/lib/secretaria-hub";
-import type {
-  ClinicCtx,
-  DayConfig,
-  Messages,
-  PostConsult,
-  ProfessionalProfile,
-  Service,
-  TimeRange,
+import {
+  DEFAULT_PIX_DEPOSIT,
+  type ClinicCtx,
+  type DayConfig,
+  type Messages,
+  type PixDeposit,
+  type PostConsult,
+  type ProfessionalProfile,
+  type Service,
+  type TimeRange,
 } from "./types";
 
 // Weekday key mapping: wire uses full English lowercase names, the local UI
@@ -203,6 +205,25 @@ export function applyWirePostConsult(cfg: TenantConfigWire): PostConsult {
 }
 
 // ---------------------------------------------------------------------------
+// Pix deposit policy (new "Sinal via Pix" section) — no-show reduction via a
+// partial deposit charged through Asaas. asaas_connected is READ-ONLY on the
+// wire (see TenantConfigWire) and is only ever hydrated here, never written
+// back — see buildConfigUpdatePayload below, which omits it on purpose.
+// ---------------------------------------------------------------------------
+
+export function applyWirePixDeposit(cfg: TenantConfigWire): PixDeposit {
+  return {
+    enabled: cfg.pix_deposit_enabled ?? DEFAULT_PIX_DEPOSIT.enabled,
+    depositPercent: cfg.pix_deposit_percent ?? DEFAULT_PIX_DEPOSIT.depositPercent,
+    refundWindowHours: cfg.pix_refund_window_hours ?? DEFAULT_PIX_DEPOSIT.refundWindowHours,
+    retentionPolicy: cfg.pix_retention_policy ?? DEFAULT_PIX_DEPOSIT.retentionPolicy,
+    partialRefundPercent: cfg.pix_partial_refund_percent ?? DEFAULT_PIX_DEPOSIT.partialRefundPercent,
+    rescheduleLimit: cfg.pix_reschedule_limit ?? DEFAULT_PIX_DEPOSIT.rescheduleLimit,
+    asaasConnected: cfg.asaas_connected ?? DEFAULT_PIX_DEPOSIT.asaasConnected,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Professional profile (specialty/about/context_doctor_message) — moved out
 // of ClinicCtx and onto the per-professional config PUT.
 // ---------------------------------------------------------------------------
@@ -221,8 +242,10 @@ export function applyWireProfessionalProfile(p: ProfessionalWire): ProfessionalP
 
 // Builds the PUT /tenants/me/config payload — TENANT-level fields only:
 // Mensagens (greeting/persona/language), Pós-consulta (post_consult_message/
-// post_consult_knowledge), address/insurances/collect_insurance (Feature 1/3),
-// and appointment_duration_min (the one scheduling preference that stayed
+// post_consult_knowledge), Sinal via Pix (pix_deposit_*/pix_refund_*/
+// pix_retention_policy/pix_reschedule_limit — asaas_connected excluded, it is
+// READ-ONLY), address/insurances/collect_insurance (Feature 1/3), and
+// appointment_duration_min (the one scheduling preference that stayed
 // tenant-level; business_hours/appointment_types moved to the per-professional
 // PUT below). `gap`/`lead` (Prefs) have no wire counterpart at all and are NOT
 // sent — see the comment on Prefs in lib/types.ts.
@@ -230,6 +253,7 @@ export function buildConfigUpdatePayload(
   ctx: ClinicCtx,
   messages: Messages,
   postConsult: PostConsult,
+  pixDeposit: PixDeposit,
   defaultDurationMin: number,
 ): TenantConfigUpdatePayload {
   return {
@@ -244,6 +268,12 @@ export function buildConfigUpdatePayload(
     language: messages.language,
     post_consult_message: postConsult.postConsultMessage || null,
     post_consult_knowledge: postConsult.postConsultKnowledge || null,
+    pix_deposit_enabled: pixDeposit.enabled,
+    pix_deposit_percent: pixDeposit.depositPercent,
+    pix_refund_window_hours: pixDeposit.refundWindowHours,
+    pix_retention_policy: pixDeposit.retentionPolicy,
+    pix_partial_refund_percent: pixDeposit.partialRefundPercent,
+    pix_reschedule_limit: pixDeposit.rescheduleLimit,
   };
 }
 

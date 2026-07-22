@@ -1,5 +1,5 @@
 "use client";
-// AvailabilitySection — Section 06 "Dias e horários de atendimento".
+// AvailabilitySection — Section 07 "Dias e horários de atendimento".
 // Shows a DayRow per weekday (toggle + time-range pickers) plus three
 // scheduling preference selects: defaultDur, gap, and lead time.
 // DayRow is an internal sub-component not used elsewhere.
@@ -166,7 +166,7 @@ type AvailabilitySectionProps = {
   professionalName?: string;
 };
 
-// Section 06 — weekly schedule grid + scheduling preferences row.
+// Section 07 — weekly schedule grid + scheduling preferences row.
 export function AvailabilitySection({ days, setDays, prefs, setPref, professionalName }: AvailabilitySectionProps) {
   const updateDay = (i: number, d: DayConfig) =>
     setDays(prev => prev.map((x, j) => (j === i ? d : x)));
@@ -174,7 +174,7 @@ export function AvailabilitySection({ days, setDays, prefs, setPref, professiona
   return (
     <Section
       id="disp"
-      num="06"
+      num="07"
       icon="clock"
       title={"Dias e horários de atendimento" + (professionalName ? " · " + professionalName : "")}
       desc="Quando o médico atende. A secretarIA só oferece horários dentro dessas faixas e sincroniza com o Google Calendar para evitar conflitos."

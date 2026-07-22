@@ -1,8 +1,8 @@
 "use client";
 // Configuração page — the full-viewport secretarIA chatbot configuration screen.
-// Owns all form state (ctx, messages, postConsult, professionals, services,
-// days, prefs, gcal) and the scrollspy logic. Composed of SideNav + seven
-// Section components; a sticky save bar sits at the bottom. Theme is
+// Owns all form state (ctx, messages, postConsult, pixDeposit, professionals,
+// services, days, prefs, gcal) and the scrollspy logic. Composed of SideNav +
+// eight Section components; a sticky save bar sits at the bottom. Theme is
 // initialised from the existing [data-theme] attribute after mount to avoid
 // an SSR hydration mismatch.
 //
@@ -32,20 +32,23 @@ import { CToast } from "./components/CToast";
 import { ContextSection } from "./components/ContextSection";
 import { MessagesSection } from "./components/MessagesSection";
 import { PostConsultSection } from "./components/PostConsultSection";
+import { PixSection } from "./components/PixSection";
 import { ProfessionalsSection } from "./components/ProfessionalsSection";
 import { ServicesSection } from "./components/ServicesSection";
 import { AvailabilitySection } from "./components/AvailabilitySection";
 import { GoogleSection } from "./components/GoogleSection";
 
-import type {
-  ClinicCtx,
-  DayConfig,
-  GcalState,
-  Messages,
-  PostConsult,
-  Prefs,
-  ProfessionalProfile,
-  Service,
+import {
+  DEFAULT_PIX_DEPOSIT,
+  type ClinicCtx,
+  type DayConfig,
+  type GcalState,
+  type Messages,
+  type PixDeposit,
+  type PostConsult,
+  type Prefs,
+  type ProfessionalProfile,
+  type Service,
 } from "./lib/types";
 import {
   applyWireAddress,
@@ -53,6 +56,7 @@ import {
   applyWireBusinessHours,
   applyWireInsurances,
   applyWireMessages,
+  applyWirePixDeposit,
   applyWirePostConsult,
   applyWireProfessionalProfile,
   buildConfigUpdatePayload,
@@ -123,7 +127,7 @@ const DEMO_ROSTER: DoctorProfessional[] = [
 ];
 
 // SideNav section ids — used for scrollspy
-const NAV_IDS = ["ctx", "msg", "pos", "prof", "srv", "disp", "gcal"] as const;
+const NAV_IDS = ["ctx", "msg", "pos", "pix", "prof", "srv", "disp", "gcal"] as const;
 type NavId = (typeof NAV_IDS)[number];
 
 // ---------------------------------------------------------------------------
@@ -229,7 +233,15 @@ export default function ConfiguracaoPage() {
   const setPostConsultK = <K extends keyof PostConsult>(key: K, value: PostConsult[K]) =>
     setPostConsult(prev => ({ ...prev, [key]: value }));
 
-  // --- Section 04: professionals ---
+  // --- Section 04: Sinal via Pix (deposit policy) — REAL wire fields
+  // (pix_deposit_*/pix_refund_window_hours/pix_retention_policy/
+  // pix_partial_refund_percent/pix_reschedule_limit); asaasConnected hydrates
+  // from asaas_connected but is READ-ONLY and never sent back on save ---
+  const [pixDeposit, setPixDeposit] = useState<PixDeposit>(DEFAULT_PIX_DEPOSIT);
+  const setPixDepositK = <K extends keyof PixDeposit>(key: K, value: PixDeposit[K]) =>
+    setPixDeposit(prev => ({ ...prev, [key]: value }));
+
+  // --- Section 05: professionals ---
   // `roster` (brain-api GET /doctor/professionals) drives the list UI
   // (completeness/invite state); `hubProfessionalsById` (secretarIA hub GET
   // /tenants/me/professionals) supplies the editable fields used to hydrate
@@ -246,7 +258,7 @@ export default function ConfiguracaoPage() {
   const setProfileK = <K extends keyof ProfessionalProfile>(key: K, value: ProfessionalProfile[K]) =>
     setProfile(prev => ({ ...prev, [key]: value }));
 
-  // --- Section 05: services (appointment types) — now per-professional ---
+  // --- Section 06: services (appointment types) — now per-professional ---
   // Each type carries an active flag and its pre-visit requirements (Feature 2).
   const [services, setServices] = useState<Service[]>([
     {
@@ -265,7 +277,7 @@ export default function ConfiguracaoPage() {
     { id: 3, name: "Teleconsulta", dur: 40, price: "R$ 350", active: true, requirements: [] },
   ]);
 
-  // --- Section 06: availability — now per-professional ---
+  // --- Section 07: availability — now per-professional ---
   const [days, setDays] = useState<DayConfig[]>(demoWeek());
 
   // defaultDur round-trips (appointment_duration_min) and stays TENANT-level.
@@ -284,9 +296,10 @@ export default function ConfiguracaoPage() {
   const lockedToOwnProfessional = session?.role === "tenant_staff" && !!session.professionalId;
 
   // Hydrate tenant-level fields (clinicName/address/insurances/collectInsurance/
-  // messages/postConsult/defaultDur/gcal.connected) from the real tenant config
-  // once the hub is usable. business_hours/appointment_types are NO LONGER read
-  // here — they're professional-scoped now (see the hydration effect below).
+  // messages/postConsult/pixDeposit/defaultDur/gcal.connected) from the real
+  // tenant config once the hub is usable. business_hours/appointment_types are
+  // NO LONGER read here — they're professional-scoped now (see the hydration
+  // effect below).
   useEffect(() => {
     if (!hubReady || !session) return;
     getTenantConfig(session)
@@ -300,6 +313,7 @@ export default function ConfiguracaoPage() {
         }));
         setMessages(applyWireMessages(cfg));
         setPostConsult(applyWirePostConsult(cfg));
+        setPixDeposit(applyWirePixDeposit(cfg));
         setPrefs((prev) => ({
           ...prev,
           defaultDur: cfg.appointment_duration_min || prev.defaultDur,
@@ -360,7 +374,7 @@ export default function ConfiguracaoPage() {
     setProfile(applyWireProfessionalProfile(p));
   }, [selectedProfessionalId, hubProfessionalsById]);
 
-  // --- Section 07: Google Calendar (tenant-level; unchanged single-professional path) ---
+  // --- Section 08: Google Calendar (tenant-level; unchanged single-professional path) ---
   // connected round-trips (TenantConfigRead.calendar_connected, read-only).
   // email/calendar/tz/twoWay are demo-only — TenantConfigUpdate carries only
   // google_calendar_id (an id string, not a picker of named calendars/tz/
@@ -375,16 +389,16 @@ export default function ConfiguracaoPage() {
 
   // --- Save: writes to the real hub config when available, else local-only ---
   // Two PUTs when a professional is selected: tenant-level (Mensagens +
-  // Pós-consulta + address/insurances/collect_insurance/appointment_duration_min)
-  // and professional-level (hours/services/specialty/about/context). gap/lead
-  // and the gcal email/calendar/tz/twoWay fields have no wire counterpart and
-  // stay silently local-only, same as before.
+  // Pós-consulta + Sinal via Pix + address/insurances/collect_insurance/
+  // appointment_duration_min) and professional-level (hours/services/
+  // specialty/about/context). gap/lead and the gcal email/calendar/tz/twoWay
+  // fields have no wire counterpart and stay silently local-only, same as before.
   const handleSave = async () => {
     if (hubReady && session) {
       try {
         await updateTenantConfig(
           session,
-          buildConfigUpdatePayload(ctx, messages, postConsult, prefs.defaultDur),
+          buildConfigUpdatePayload(ctx, messages, postConsult, pixDeposit, prefs.defaultDur),
         );
         if (selectedProfessionalId && selectedProfessionalId !== DEMO_PROFESSIONAL_ID) {
           const saved = await updateProfessionalConfig(
@@ -486,11 +500,12 @@ export default function ConfiguracaoPage() {
               </p>
             </div>
 
-            {/* seven config sections stacked vertically */}
+            {/* eight config sections stacked vertically */}
             <div style={{ display: "flex", flexDirection: "column", gap: 34 }}>
               <ContextSection v={ctx} set={setCtxK} readOnly={lockedToOwnProfessional} />
               <MessagesSection v={messages} set={setMessagesK} readOnly={lockedToOwnProfessional} />
               <PostConsultSection v={postConsult} set={setPostConsultK} readOnly={lockedToOwnProfessional} />
+              <PixSection v={pixDeposit} set={setPixDepositK} readOnly={lockedToOwnProfessional} />
               <ProfessionalsSection
                 session={session}
                 isOwner={session?.role === "tenant_owner"}
