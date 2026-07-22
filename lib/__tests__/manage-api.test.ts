@@ -723,3 +723,44 @@ describe("exchangeOnboardingToken", () => {
     );
   });
 });
+
+// ---------------------------------------------------------------------------
+// admin — tenant cascade delete
+// ---------------------------------------------------------------------------
+
+describe("adminDeleteTenant", () => {
+  it("18. DELETEs the tenant path with the admin bearer and returns the result", async () => {
+    const session = makeSession({ token: "admtok", role: "admin" });
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(200, {
+        tenant_id: "ten-9",
+        deleted: { users: 2, entitlements: 1, refresh_tokens: 3 },
+        secretaria: { status: "skipped_unconfigured" },
+      }),
+    );
+
+    const result = await api.adminDeleteTenant(session, "ten-9");
+
+    expect(result.tenant_id).toBe("ten-9");
+    expect(result.deleted.users).toBe(2);
+    expect(result.secretaria.status).toBe("skipped_unconfigured");
+
+    const call = fetchMock.mock.calls[0];
+    expect(call[0]).toBe("/admin/tenants/ten-9");
+    expect(call[1].method).toBe("DELETE");
+    expect(call[1].headers.Authorization).toBe("Bearer admtok");
+  });
+
+  it("18b. 404 unknown tenant -> ManageApiError 404", async () => {
+    const session = makeSession({ token: "admtok", role: "admin" });
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(404, { detail: "Tenant not found" }),
+    );
+
+    await expectManageError(
+      api.adminDeleteTenant(session, "missing"),
+      404,
+      "Tenant not found",
+    );
+  });
+});

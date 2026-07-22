@@ -1009,6 +1009,31 @@ export function adminGetTenant(
   );
 }
 
+// Result of DELETE /admin/tenants/{id}: brain-owned rows removed per table, plus the
+// cross-DB secretaria leg status (deleted | absent | kept_has_data |
+// skipped_unconfigured | failed). A non-"deleted" secretaria status never means the
+// brain deletion failed — that already committed. See brain-api schemas/admin.py.
+export type AdminTenantDeleteResult = {
+  tenant_id: string;
+  deleted: Record<string, number>;
+  secretaria: { status: string };
+};
+
+// DELETE /admin/tenants/{id} — IRREVERSIBLE. Deletes the clinic and everything brain-api
+// owns for it (users, entitlements, usage, PreCheck links, signup records, refresh
+// tokens; LGPD audit rows survive), then best-effort deletes its row in secretaria's DB.
+// Throws ManageApiError 404 if the tenant no longer exists.
+export function adminDeleteTenant(
+  session: Session,
+  tenantId: string,
+): Promise<AdminTenantDeleteResult> {
+  return manageFetch<AdminTenantDeleteResult>(
+    `/admin/tenants/${tenantId}`,
+    { method: "DELETE" },
+    session.token,
+  );
+}
+
 export function adminGetEntitlements(
   session: Session,
   tenantId: string,

@@ -32,6 +32,7 @@ export type IconName =
   | "phone"
   | "bell"
   | "heart"
+  | "trash"
   | "brain";
 
 // Path data copied verbatim from brand-site.js ICON map.
@@ -73,6 +74,8 @@ const PATHS: Record<IconName, string> = {
   bell: "M12 4a5 5 0 00-5 5v3l-2 3h14l-2-3V9a5 5 0 00-5-5zM10 19a2 2 0 004 0",
   heart:
     "M12 20s-7-4.4-9.2-8.6C1.1 8 2.5 5 5.5 5c1.8 0 3.1 1.1 3.9 2.2C10.4 6.1 11.7 5 13.5 5c3 0 4.4 3 2.7 6.4C18 15.6 12 20 12 20z",
+  trash:
+    "M4 7h16M10 11v6M14 11v6M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13",
   brain:
     "M9 4a2.5 2.5 0 00-2.5 2.5A2.5 2.5 0 005 9a2.5 2.5 0 00.5 4 2.5 2.5 0 002 3.5 2 2 0 002 2V4zM15 4a2.5 2.5 0 012.5 2.5A2.5 2.5 0 0119 9a2.5 2.5 0 01-.5 4 2.5 2.5 0 01-2 3.5 2 2 0 01-2 2V4z",
 };

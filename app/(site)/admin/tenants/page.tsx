@@ -11,6 +11,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
 
 import { BrandIcon } from "../../_components/BrandIcon";
+import { Modal } from "../../_components/Modal";
 import { ProductMark, StatusBadge, type BadgeTone } from "../../_components/StatusBadge";
 import {
   clearSession,
@@ -19,6 +20,7 @@ import {
   usePortalGuard,
 } from "../../_components/usePortalGuard";
 import {
+  adminDeleteTenant,
   adminGetTenant,
   adminListTenants,
   adminPatchEntitlements,
@@ -79,6 +81,10 @@ function TenantsTable({ session }: { session: Session }) {
   const router = useRouter();
   const [items, setItems] = useState<AdminTenant[] | null>(null);
   const [error, setError] = useState(false);
+  // The clinic pending a delete-confirmation (null = modal closed).
+  const [toDelete, setToDelete] = useState<AdminTenant | null>(null);
+  // Transient success line shown after a delete, e.g. "Clínica X excluída."
+  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -100,6 +106,13 @@ function TenantsTable({ session }: { session: Session }) {
     };
   }, [session, router]);
 
+  // Drop the deleted clinic from the table without a full refetch.
+  const handleDeleted = useCallback((deleted: AdminTenant) => {
+    setItems((prev) => (prev ? prev.filter((t) => t.id !== deleted.id) : prev));
+    setNotice(`Clínica "${deleted.clinic_name}" excluída.`);
+    setToDelete(null);
+  }, []);
+
   return (
     <>
       <header className="portal-page-head">
@@ -108,6 +121,13 @@ function TenantsTable({ session }: { session: Session }) {
           <p className="sub">Todas as clínicas (tenants) da plataforma.</p>
         </div>
       </header>
+
+      {notice && (
+        <div className="alert-line alert-line--green" style={{ marginBottom: 16 }}>
+          <BrandIcon name="checkCircle" />
+          {notice}
+        </div>
+      )}
 
       {error ? (
         <div className="portal-error">Não foi possível carregar as clínicas.</div>
@@ -132,6 +152,7 @@ function TenantsTable({ session }: { session: Session }) {
                 <th>secretarIA</th>
                 <th>Usuários</th>
                 <th>Criada em</th>
+                <th style={{ textAlign: "right" }}>Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -152,13 +173,127 @@ function TenantsTable({ session }: { session: Session }) {
                   </td>
                   <td className="cell-muted">{t.users_count}</td>
                   <td className="cell-muted">{formatDate(t.created_at)}</td>
+                  <td style={{ textAlign: "right" }}>
+                    <button
+                      type="button"
+                      className="btn--icon-danger"
+                      aria-label={`Excluir clínica ${t.clinic_name}`}
+                      title="Excluir clínica"
+                      onClick={(e) => {
+                        // Don't let the click bubble to the row's navigate handler.
+                        e.stopPropagation();
+                        setNotice(null);
+                        setToDelete(t);
+                      }}
+                    >
+                      <BrandIcon name="trash" />
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
+
+      <DeleteTenantModal
+        session={session}
+        tenant={toDelete}
+        onClose={() => setToDelete(null)}
+        onDeleted={handleDeleted}
+        onAuthError={() => {
+          clearSession();
+          router.replace("/login");
+        }}
+      />
     </>
+  );
+}
+
+// DeleteTenantModal — confirmation dialog for the irreversible cascade delete of one
+// clinic. Owns the in-flight/error state; calls back with the deleted tenant so the
+// table can drop the row. Rendered once by TenantsTable; `tenant` drives open state.
+function DeleteTenantModal({
+  session,
+  tenant,
+  onClose,
+  onDeleted,
+  onAuthError,
+}: {
+  session: Session;
+  tenant: AdminTenant | null;
+  onClose: () => void;
+  onDeleted: (t: AdminTenant) => void;
+  onAuthError: () => void;
+}) {
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Reset the error whenever a different clinic is targeted (or the modal closes).
+  useEffect(() => {
+    setError(null);
+  }, [tenant]);
+
+  async function handleConfirm() {
+    if (!tenant) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      await adminDeleteTenant(session, tenant.id);
+      onDeleted(tenant);
+    } catch (e) {
+      if (isSessionExpired(e)) {
+        onAuthError();
+        return;
+      }
+      setError(describeApiError(e));
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <Modal
+      open={tenant !== null}
+      title="Excluir clínica"
+      onClose={onClose}
+      footer={
+        <>
+          <button
+            type="button"
+            className="btn btn--ghost btn--sm"
+            onClick={onClose}
+            disabled={deleting}
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            className="btn btn--danger btn--sm"
+            onClick={handleConfirm}
+            disabled={deleting}
+          >
+            {deleting ? "Excluindo…" : "Excluir clínica"}
+            {!deleting && <BrandIcon name="trash" />}
+          </button>
+        </>
+      }
+    >
+      {error && (
+        <div className="portal-error" style={{ marginBottom: 14 }}>
+          {error}
+        </div>
+      )}
+      <p style={{ fontSize: 14.5, color: "var(--ink-soft)", lineHeight: 1.6 }}>
+        Excluir <strong style={{ color: "var(--ink)" }}>{tenant?.clinic_name}</strong>{" "}
+        remove a clínica e tudo que ela possui na plataforma — usuários, acessos,
+        assinatura e histórico de uso — além do cadastro dela na secretarIA. Conversas e
+        anamneses não são apagadas.
+      </p>
+      <p style={{ fontSize: 13.5, color: "var(--al-red-ink)", marginTop: 10, fontWeight: 600 }}>
+        Esta ação é irreversível.
+      </p>
+    </Modal>
   );
 }
 

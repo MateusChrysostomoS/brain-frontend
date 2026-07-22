@@ -151,6 +151,14 @@ img,svg{display:block}
 .btn--outline:hover{background:var(--surface-2)}
 .btn--ghost{background:transparent;color:var(--ink-soft)}
 .btn--ghost:hover{background:var(--surface-2);color:var(--ink)}
+/* Destructive action — solid red from the alert tokens (theme-aware, light+dark). */
+.btn--danger{background:var(--al-red-ink);color:#fff}
+.btn--danger:hover{filter:brightness(.94);transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.btn--danger:disabled{opacity:.6;cursor:not-allowed;transform:none;box-shadow:none;filter:none}
+/* Icon-only ghost button that turns red on hover — the per-row trash trigger. */
+.btn--icon-danger{background:transparent;color:var(--ink-soft);padding:7px;border-radius:9px}
+.btn--icon-danger:hover{background:var(--al-red-bg);color:var(--al-red-ink)}
+.btn--icon-danger svg{width:17px;height:17px;display:block}
 .btn--sm{padding:9px 16px;font-size:13.5px}
 .btn--lg{padding:15px 28px;font-size:16px}
 .btn--block{width:100%}
