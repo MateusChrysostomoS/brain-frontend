@@ -495,20 +495,39 @@ describe("getCheckoutTrialDays", () => {
   });
 });
 
-describe("createSignupIntent", () => {
-  it("14a. posts the payload unauthenticated and resolves intent_id", async () => {
-    fetchMock.mockResolvedValueOnce(mockResponse(201, { intent_id: "intent-1" }));
+describe("registerSignup", () => {
+  it("14a. registers unauthenticated with the password, returns intentId + a decoded session, persists nothing itself", async () => {
+    const jwt = makeJwt({ tenant_id: "tenant-1", role: "tenant_owner", sub: "user-1" });
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(201, {
+        intent_id: "intent-1",
+        session: {
+          access_token: jwt,
+          token_type: "bearer",
+          refresh_token: "rtok-1",
+          expires_in: 1800,
+        },
+      }),
+    );
 
-    const result = await api.createSignupIntent({
+    const result = await api.registerSignup({
       name: "Dr. Aurélio Lima",
       clinic_name: "Consultório Aurélio",
       email: "aurelio@clinica.com.br",
       whatsapp_phone: "+5511999998888",
+      password: "signup123",
       catalog_ids: ["precheck"],
       website: "",
     });
 
-    expect(result).toEqual({ intent_id: "intent-1" });
+    expect(result.intentId).toBe("intent-1");
+    expect(result.session.token).toBe(jwt);
+    expect(result.session.refreshToken).toBe("rtok-1");
+    expect(result.session.tenantId).toBe("tenant-1");
+    expect(result.session.role).toBe("tenant_owner");
+    // Email comes from the submitted payload (the access token carries no email claim).
+    expect(result.session.email).toBe("aurelio@clinica.com.br");
+
     const call = fetchMock.mock.calls[0];
     expect(call[0]).toBe("/public/signup-intents");
     expect(call[1].method).toBe("POST");
@@ -518,9 +537,13 @@ describe("createSignupIntent", () => {
       clinic_name: "Consultório Aurélio",
       email: "aurelio@clinica.com.br",
       whatsapp_phone: "+5511999998888",
+      password: "signup123",
       catalog_ids: ["precheck"],
       website: "",
     });
+
+    // Unlike login(), registerSignup does NOT persist — the caller (wizard) saves it.
+    expect(sessionStorage.getItem(api.SESSION_KEY)).toBeNull();
   });
 
   it("14b. 409 email_already_registered -> ManageApiError 409", async () => {
@@ -529,16 +552,75 @@ describe("createSignupIntent", () => {
     );
 
     await expectManageError(
-      api.createSignupIntent({
+      api.registerSignup({
         name: "n",
         clinic_name: "c",
         email: "e@x.com",
         whatsapp_phone: "+551199999999",
+        password: "signup123",
         catalog_ids: ["precheck"],
       }),
       409,
       "email_already_registered",
     );
+  });
+
+  it("14c. 422 weak password / bad catalog -> ManageApiError 422", async () => {
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(422, { detail: [{ loc: ["body", "password"], msg: "too weak" }] }),
+    );
+
+    await expectManageError(
+      api.registerSignup({
+        name: "n",
+        clinic_name: "c",
+        email: "e@x.com",
+        whatsapp_phone: "+551199999999",
+        password: "12345678",
+        catalog_ids: ["precheck"],
+      }),
+      422,
+    );
+  });
+});
+
+describe("attachSignupIntake", () => {
+  it("posts the intake authenticated to /doctor/onboarding/intake (204)", async () => {
+    const session = makeSession({ token: "tok1" });
+    fetchMock.mockResolvedValueOnce(mockResponse(204, {}));
+
+    await api.attachSignupIntake(session, {
+      whatsapp_usage: "business_recent",
+      prior_api: "no",
+      fb_page: "yes_admin",
+    });
+
+    const call = fetchMock.mock.calls[0];
+    expect(call[0]).toBe("/doctor/onboarding/intake");
+    expect(call[1].method).toBe("POST");
+    expect(call[1].headers.Authorization).toBe("Bearer tok1");
+    expect(JSON.parse(call[1].body)).toEqual({
+      whatsapp_usage: "business_recent",
+      prior_api: "no",
+      fb_page: "yes_admin",
+    });
+  });
+});
+
+describe("setPassword", () => {
+  it("posts { new_password } (the field the backend requires), authenticated", async () => {
+    const session = makeSession({ token: "tok1" });
+    fetchMock.mockResolvedValueOnce(mockResponse(204, {}));
+
+    await api.setPassword(session, "newpass123");
+
+    const call = fetchMock.mock.calls[0];
+    expect(call[0]).toBe("/auth/set-password");
+    expect(call[1].method).toBe("POST");
+    expect(call[1].headers.Authorization).toBe("Bearer tok1");
+    // Regression guard: the backend SetPasswordIn requires `new_password` (extra=forbid),
+    // NOT `password`.
+    expect(JSON.parse(call[1].body)).toEqual({ new_password: "newpass123" });
   });
 });
 

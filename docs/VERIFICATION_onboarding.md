@@ -42,12 +42,26 @@ The wizard only renders with a known `?plan=` — `precheck`, `secretaria_ferro`
 `secretaria_bronze_1` (`app/(site)/cadastro/lib/plans.ts::PURCHASABLE_PLANS`). The combo
 plan (`complete_clinic_combo`) is deliberately excluded — see the LIVE/PENDING table.
 
+> **Register-at-first-card update (2026-07-21).** The first card now REGISTERS the account
+> (name, clinic, email, WhatsApp, **password + confirm**) — `POST /public/signup-intents`
+> fires on that step's submit, creating the tenant + owner user (real password) + inert
+> entitlement and returning a session the wizard `saveSession()`s immediately. The intake
+> answers now ride the authenticated `POST /doctor/onboarding/intake` from the summary step
+> (the visitor is logged in), and the summary only opens `POST /public/checkout-sessions`.
+> See `brain-api/docs/CHECKPOINT_register_at_first_card.md`.
+
 1. Open `/cadastro` with no `?plan=` (or `?plan=complete_clinic_combo`). **Expected:**
    "Plano não encontrado" card with a link back to `/#planos` — the wizard never mounts.
 2. Open `/cadastro?plan=secretaria_ferro`. Step 1 ("Vamos criar sua conta.") — fill nome,
-   nome da clínica, e-mail, WhatsApp; "Continuar" stays disabled until all four are
-   non-empty. Confirm the honeypot `website` input is present in the DOM but visually
-   hidden (`left:-9999px`) — leave it empty.
+   nome da clínica, e-mail, WhatsApp, **senha + confirmar senha**; "Continuar" stays
+   disabled until all fields are non-empty. Confirm the honeypot `website` input is present
+   in the DOM but visually hidden (`left:-9999px`) — leave it empty. Try a weak password
+   (e.g. `12345678`) — **Expected:** an inline pt-BR error ("pelo menos uma letra e um
+   número") before any network call. Try mismatched confirm — "As senhas não coincidem."
+   On a valid submit, **Expected:** `POST /public/signup-intents` fires with the `password`,
+   a `201 {intent_id, session}` returns, the session is saved (`brain.session` in
+   sessionStorage), and the wizard advances to Q1. Re-registering the SAME email → `409` →
+   "Você já tem conta Brain — entre para contratar." + an "Entrar" link.
 3. Step 2 (Q1 — "Você já usa o WhatsApp Business App..."): pick **"Sim, há mais de 7 dias"**
    (`business_7d_plus`). **Expected:** advances straight to Q3 (prior_api) — the dedicated-
    number guide is skipped.
@@ -56,13 +70,22 @@ plan (`complete_clinic_combo`) is deliberately excluded — see the LIVE/PENDING
    straight to the Revisão/summary step — no inline notes, no guide screens.
 5. Summary step: confirm the four contact rows plus the three intake rows read back
    exactly what was picked ("Já uso há mais de 7 dias" / "Não, nunca foi usado com uma
-   API" / "Sim, e eu sou administrador(a) dela"). Click "Voltar" once — **Expected:**
-   returns to the Q4 screen with the prior answer still selected (history-stack back,
-   not a reset).
-6. Click "Ir para pagamento". **Expected:** `POST /public/signup-intents` fires with
-   `intake: {whatsapp_usage: "business_7d_plus", prior_api: "no", fb_page: "yes_admin"}`,
-   then `POST /public/checkout-sessions`, then a full-page redirect to the returned
-   `checkout_url` (Stripe test Checkout).
+   API" / "Sim, e eu sou administrador(a) dela"). Click "Voltar" back to the first card and
+   forward again — **Expected:** the account is NOT re-registered (no second
+   `/public/signup-intents`, no 409); the wizard just advances (history-stack back, not a
+   reset).
+6. Click "Ir para pagamento". **Expected:** the authenticated `POST /doctor/onboarding/intake`
+   fires (best-effort, `Authorization: Bearer <session>`) with
+   `{whatsapp_usage: "business_7d_plus", prior_api: "no", fb_page: "yes_admin"}`, then
+   `POST /public/checkout-sessions` with the existing `intent_id`, then a full-page redirect
+   to the returned `checkout_url` (Stripe test Checkout). **No `createSignupIntent` on this
+   step anymore.**
+7. **Login-before-payment (the core fix):** after step 2, open `/login` in a new tab and
+   sign in with the email + password just chosen. **Expected:** login succeeds and `/app`
+   shows the NoEntitlementsPanel ("Sua clínica ainda não tem um produto ativo") — registered
+   but not yet entitled. After completing Stripe checkout, `/checkout/sucesso` polls until
+   ready and routes into `/secretaria/configuracao` using the session already in hand (no
+   token exchange needed in the same browser).
 
 ### 1.1 Intake branches (each is its own pass)
 

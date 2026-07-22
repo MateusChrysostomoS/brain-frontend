@@ -1,11 +1,16 @@
 "use client";
 
-// ContactStep — Step 1: name, clinic, email, and the clinic's WhatsApp number.
-// Also carries the honeypot field (visually hidden), matching the convention
-// already used by PlanCheckoutCta's anonymous signup modal.
+// ContactStep — Step 1: name, clinic, email, the clinic's WhatsApp number, and a
+// password. Submitting this card REGISTERS the account (the wizard calls registerSignup
+// and saves the returned session) — so from here on the visitor is logged in and can log
+// back in later regardless of whether they finish the wizard or pay. Also carries the
+// honeypot field (visually hidden), matching the convention used by the anonymous-signup
+// modal it replaced.
 
-import type { FormEvent } from "react";
+import { useState, type FormEvent } from "react";
+import Link from "next/link";
 import { StepHeading, StepActions } from "./WizardShell";
+import { passwordError } from "../lib/password";
 import type { ContactFields } from "../lib/types";
 
 const honeypotStyle = {
@@ -21,17 +26,53 @@ type ContactStepProps = {
   onChange: (patch: Partial<ContactFields>) => void;
   planLabel: string;
   planTagline: string;
-  onNext: () => void;
+  // Triggers the wizard's registration call (registerSignup + saveSession). ContactStep
+  // validates locally first, then delegates the network round-trip to the wizard.
+  onSubmit: () => void;
+  // Registration in flight (wizard-owned) — disables the submit button.
+  submitting: boolean;
+  // Registration error surfaced by the wizard (409 existing account, 422, network).
+  serverError: string | null;
+  // True when serverError means "you already have a Brain account" — show a login link.
+  showLoginLink: boolean;
 };
 
-export function ContactStep({ value, onChange, planLabel, planTagline, onNext }: ContactStepProps) {
+export function ContactStep({
+  value,
+  onChange,
+  planLabel,
+  planTagline,
+  onSubmit,
+  submitting,
+  serverError,
+  showLoginLink,
+}: ContactStepProps) {
+  // Local (pre-network) validation error, e.g. weak password / mismatch.
+  const [localError, setLocalError] = useState<string | null>(null);
+
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    onNext();
+    // Password policy check before hitting the network (the backend re-validates too).
+    const pwError = passwordError(value.password, value.confirmPassword);
+    if (pwError) {
+      setLocalError(pwError);
+      return;
+    }
+    setLocalError(null);
+    onSubmit();
   }
 
-  const valid =
-    value.name.trim() && value.clinicName.trim() && value.email.trim() && value.whatsappPhone.trim();
+  // The submit button only needs the required identity fields to be non-empty; the
+  // password policy is checked on submit (so the visitor gets a specific message).
+  const basicsFilled =
+    value.name.trim() &&
+    value.clinicName.trim() &&
+    value.email.trim() &&
+    value.whatsappPhone.trim() &&
+    value.password &&
+    value.confirmPassword;
+
+  const error = localError ?? serverError;
 
   return (
     <form onSubmit={handleSubmit} noValidate>
@@ -40,7 +81,7 @@ export function ContactStep({ value, onChange, planLabel, planTagline, onNext }:
       </span>
       <StepHeading
         title="Vamos criar sua conta."
-        desc="Alguns dados de contato para preparar o cadastro da sua clínica na Brain."
+        desc="Alguns dados de contato e uma senha para o acesso da sua clínica na Brain."
       />
 
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -77,6 +118,7 @@ export function ContactStep({ value, onChange, planLabel, planTagline, onNext }:
             placeholder="voce@clinica.com.br"
             value={value.email}
             onChange={(e) => onChange({ email: e.target.value })}
+            autoComplete="email"
             required
           />
         </label>
@@ -89,6 +131,31 @@ export function ContactStep({ value, onChange, planLabel, planTagline, onNext }:
             placeholder="(11) 91234-5678"
             value={value.whatsappPhone}
             onChange={(e) => onChange({ whatsappPhone: e.target.value })}
+            required
+          />
+        </label>
+
+        <label className="field-l">
+          <span>Senha</span>
+          <input
+            className="input"
+            type="password"
+            placeholder="Pelo menos 8 caracteres, com letra e número"
+            value={value.password}
+            onChange={(e) => onChange({ password: e.target.value })}
+            autoComplete="new-password"
+            required
+          />
+        </label>
+
+        <label className="field-l">
+          <span>Confirmar senha</span>
+          <input
+            className="input"
+            type="password"
+            value={value.confirmPassword}
+            onChange={(e) => onChange({ confirmPassword: e.target.value })}
+            autoComplete="new-password"
             required
           />
         </label>
@@ -106,7 +173,23 @@ export function ContactStep({ value, onChange, planLabel, planTagline, onNext }:
         />
       </div>
 
-      <StepActions nextType="submit" nextLabel="Continuar" nextDisabled={!valid} />
+      {error && (
+        <p role="alert" style={{ fontSize: 12.5, color: "var(--danger, #c0392b)", marginTop: 14 }}>
+          {error}
+          {showLoginLink && (
+            <>
+              {" "}
+              <Link href="/login">Entrar</Link>
+            </>
+          )}
+        </p>
+      )}
+
+      <StepActions
+        nextType="submit"
+        nextLabel={submitting ? "Criando conta…" : "Continuar"}
+        nextDisabled={!basicsFilled || submitting}
+      />
     </form>
   );
 }

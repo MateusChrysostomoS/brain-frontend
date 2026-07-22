@@ -1,21 +1,20 @@
 "use client";
 
-// SummaryStep — Step 5: review + submit. Creates the signup intent (with the
-// collected `intake`), starts the Stripe Checkout session for it, and
-// redirects. Mirrors PlanCheckoutCta's former anonymous-signup-modal flow —
-// same error branches (409 existing account, 503 price not configured, 422
-// validation, honeypot passthrough). Also renders CheckoutTrialNotice right
-// above the submit button — this is the cold-signup funnel's last screen
-// before Stripe's hosted Checkout page, so the billing/trial disclosure must
-// be visible here. Passes `plan.catalogIds` (the wizard's actual selection)
-// so the notice renders nothing for a PreCheck-only signup.
+// SummaryStep — Step 5: review + submit. The account is already registered (ContactStep
+// did that at the first card), so this step only: attaches the collected `intake` to the
+// signup intent via the authenticated POST /doctor/onboarding/intake (best-effort — the
+// visitor is logged in), then opens the Stripe Checkout session for the existing intent
+// and redirects. Also renders CheckoutTrialNotice right above the submit button — this is
+// the cold-signup funnel's last screen before Stripe's hosted Checkout page, so the
+// billing/trial disclosure must be visible here. Passes `plan.catalogIds` (the wizard's
+// actual selection) so the notice renders nothing for a PreCheck-only signup.
 
 import { useState } from "react";
-import Link from "next/link";
 import { StepHeading, StepActions } from "./WizardShell";
 import {
+  attachSignupIntake,
   createPublicCheckoutSession,
-  createSignupIntent,
+  getSession,
   ManageApiError,
 } from "@/lib/manage-api";
 import { CheckoutTrialNotice } from "../../_components/CheckoutTrialNotice";
@@ -41,42 +40,50 @@ const FB_PAGE_LABEL: Record<string, string> = {
 type SummaryStepProps = {
   answers: WizardAnswers;
   plan: ResolvedPlan;
+  // The signup intent created at registration (ContactStep). Always set by the time the
+  // wizard reaches this step; guarded defensively below.
+  intentId: string | null;
   onBack: () => void;
 };
 
-export function SummaryStep({ answers, plan, onBack }: SummaryStepProps) {
+export function SummaryStep({ answers, plan, intentId, onBack }: SummaryStepProps) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showLoginLink, setShowLoginLink] = useState(false);
 
   async function handleSubmit() {
+    if (!intentId) {
+      // Defensive: reaching summary implies registration succeeded, but never redirect
+      // to Stripe without an intent.
+      setError("Sua sessão de cadastro expirou. Recomece o cadastro.");
+      return;
+    }
     setError(null);
-    setShowLoginLink(false);
     setSubmitting(true);
     try {
-      const { intent_id } = await createSignupIntent({
-        name: answers.contact.name.trim(),
-        clinic_name: answers.contact.clinicName.trim(),
-        email: answers.contact.email.trim(),
-        whatsapp_phone: answers.contact.whatsappPhone.trim(),
-        catalog_ids: plan.catalogIds,
-        website: answers.contact.website,
-        intake: {
-          whatsapp_usage: answers.whatsappUsage!,
-          prior_api: answers.priorApi!,
-          fb_page: answers.fbPage!,
-        },
-      });
-      const { checkout_url } = await createPublicCheckoutSession(intent_id);
+      // Best-effort: attach the eligibility answers so the webhook can seed onboarding
+      // state. A failure here must never block payment, so it's swallowed.
+      const session = getSession();
+      if (session && answers.whatsappUsage && answers.priorApi && answers.fbPage) {
+        try {
+          await attachSignupIntake(session, {
+            whatsapp_usage: answers.whatsappUsage,
+            prior_api: answers.priorApi,
+            fb_page: answers.fbPage,
+          });
+        } catch {
+          // Non-fatal — the tenant just starts in the default onboarding state.
+        }
+      }
+
+      const { checkout_url } = await createPublicCheckoutSession(intentId);
       window.location.assign(checkout_url);
       // Leave `submitting` true — the browser is navigating away to Stripe.
     } catch (e) {
       const status = e instanceof ManageApiError ? e.status : 0;
-      if (status === 409) {
-        setError("Você já tem conta Brain — entre para contratar.");
-        setShowLoginLink(true);
-      } else if (status === 503) {
+      if (status === 503) {
         setError("Cobrança ainda não configurada. Fale com a Brain.");
+      } else if (status === 409) {
+        setError("Este cadastro já foi finalizado. Atualize a página e entre na sua conta.");
       } else if (status === 422) {
         setError("Não foi possível validar os dados. Confira e tente novamente.");
       } else {
@@ -104,19 +111,12 @@ export function SummaryStep({ answers, plan, onBack }: SummaryStepProps) {
       {error && (
         <p role="alert" style={{ fontSize: 12.5, color: "var(--danger, #c0392b)", marginTop: 16 }}>
           {error}
-          {showLoginLink && (
-            <>
-              {" "}
-              <Link href="/login">Entrar</Link>
-            </>
-          )}
         </p>
       )}
 
-      {/* Pre-checkout billing disclosure — this submit creates the signup
-          intent + Stripe Checkout session and redirects straight there.
-          Renders nothing for a PreCheck-only selection (see
-          catalogRequiresWhatsappCoexistence). */}
+      {/* Pre-checkout billing disclosure — this submit opens the Stripe Checkout session
+          for the already-registered intent and redirects straight there. Renders nothing
+          for a PreCheck-only selection (see catalogRequiresWhatsappCoexistence). */}
       <CheckoutTrialNotice catalogIds={plan.catalogIds} />
 
       <StepActions

@@ -13,7 +13,8 @@
 //   POST /doctor/secretaria/hub-token -> secretarIA hub token (getSecretariaHubToken)
 //   POST /demo-requests  -> lead-capture confirmation         (submitDemoRequest)
 //   GET  /public/checkout-config         -> trial length, in days    (getCheckoutTrialDays)
-//   POST /public/signup-intents          -> pending signup intent    (createSignupIntent)
+//   POST /public/signup-intents          -> register lead + session  (registerSignup)
+//   POST /doctor/onboarding/intake       -> attach wizard intake     (attachSignupIntake)
 //   POST /public/checkout-sessions       -> Stripe Checkout URL      (createPublicCheckoutSession)
 //   GET  /public/onboarding-status       -> async webhook activation (getOnboardingStatus)
 //   POST /auth/exchange-onboarding-token -> real session, one-time   (exchangeOnboardingToken)
@@ -480,30 +481,71 @@ export type SignupIntake = {
   fb_page: SignupIntakeFbPage;
 };
 
-export type SignupIntentPayload = {
+export type SignupRegisterPayload = {
   name: string;
   clinic_name: string;
   email: string;
   whatsapp_phone: string;
+  // The password the visitor chooses on the FIRST card. Same policy the backend
+  // enforces (>= 8 chars, at least one letter and one digit — schemas/signup.py).
+  password: string;
   catalog_ids: string[];
   // Honeypot: always sent empty by real visitors (the field is visually
   // hidden in the form). A filled value marks the submission as spam server-side.
   website?: string;
-  intake?: SignupIntake;
 };
 
-export type SignupIntentResult = { intent_id: string };
+export type SignupRegisterResult = {
+  intentId: string;
+  // A REAL session (access + refresh), built exactly like login() builds one — the
+  // visitor is registered and logged in the moment the first card is submitted.
+  session: Session;
+};
 
-// POST /public/signup-intents — public lead+plan capture that seeds a pending
-// Stripe Checkout. Throws ManageApiError: 409 `email_already_registered`
-// (route the visitor to /login instead) or 422 (bad catalog_ids selection).
-export async function createSignupIntent(
-  payload: SignupIntentPayload,
-): Promise<SignupIntentResult> {
-  return manageFetch<SignupIntentResult>("/public/signup-intents", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+// POST /public/signup-intents — REGISTERS the lead at the first card: brain-api creates
+// the tenant + owner user (with this password) + inert entitlement + linked intent, and
+// returns a real session. The caller calls saveSession(session) immediately and drives
+// checkout with intentId. Throws ManageApiError: 409 `email_already_registered` (route
+// the visitor to /login instead) or 422 (weak password / bad catalog_ids selection).
+export async function registerSignup(
+  payload: SignupRegisterPayload,
+): Promise<SignupRegisterResult> {
+  const data = await manageFetch<{ intent_id: string; session: TokenResponse }>(
+    "/public/signup-intents",
+    { method: "POST", body: JSON.stringify(payload) },
+  );
+  const claims = decodeJwtPayload(data.session.access_token);
+  const tenantId =
+    typeof claims?.tenant_id === "string" ? (claims.tenant_id as string) : "";
+  const role = typeof claims?.role === "string" ? (claims.role as string) : "";
+  return {
+    intentId: data.intent_id,
+    session: {
+      token: data.session.access_token,
+      tenantId,
+      // The access token carries no email claim; use the one just submitted.
+      email: payload.email,
+      role,
+      refreshToken: data.session.refresh_token,
+      professionalId: readProfessionalIdClaim(claims),
+    },
+  };
+}
+
+// POST /doctor/onboarding/intake — authenticated (the visitor is logged in from
+// registration onward, so the intake rides the session already in hand rather than a
+// second public endpoint). Attaches the wizard's eligibility answers to the pending
+// signup intent so the Stripe webhook can seed the tenant's initial onboarding state.
+// Best-effort server-side (always 204) — callers treat a failure as non-fatal.
+export async function attachSignupIntake(
+  session: Session,
+  intake: SignupIntake,
+): Promise<void> {
+  await manageFetch<void>(
+    "/doctor/onboarding/intake",
+    { method: "POST", body: JSON.stringify(intake) },
+    session.token,
+  );
 }
 
 export type PublicCheckoutSessionResult = { checkout_url: string };
@@ -609,7 +651,8 @@ export async function setPassword(
 ): Promise<void> {
   await manageFetch<void>(
     "/auth/set-password",
-    { method: "POST", body: JSON.stringify({ password }) },
+    // Backend expects `new_password` (schemas/auth.py SetPasswordIn, extra="forbid").
+    { method: "POST", body: JSON.stringify({ new_password: password }) },
     session.token,
   );
 }

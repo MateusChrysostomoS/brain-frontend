@@ -13,6 +13,11 @@ export type ContactFields = {
   clinicName: string;
   email: string;
   whatsappPhone: string;
+  // The password the visitor chooses on this first card — the account is registered
+  // (and the visitor logged in) the moment this step is submitted, so they can log
+  // back in later regardless of whether they finish the wizard or pay.
+  password: string;
+  confirmPassword: string;
   // Honeypot — always empty for real visitors (see ContactStep).
   website: string;
 };
@@ -22,6 +27,8 @@ export const EMPTY_CONTACT: ContactFields = {
   clinicName: "",
   email: "",
   whatsappPhone: "",
+  password: "",
+  confirmPassword: "",
   website: "",
 };
 

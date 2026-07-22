@@ -1,9 +1,13 @@
 "use client";
 
 // CadastroWizard — owns all step state and the branching transition table for
-// the /cadastro flow (Feature 0). Steps are pushed onto a history stack on
-// every forward move so "Voltar" always returns to the exact previous step,
-// including the two conditional guided screens.
+// the /cadastro flow (Feature 0). The FIRST card (ContactStep) now REGISTERS the
+// account: on submit the wizard calls registerSignup (creating the tenant + owner user
+// + inert entitlement + linked intent) and saveSession(), so the lead is captured in the
+// DB and the visitor is logged in before they answer another question — even if they
+// abandon the wizard or never pay. Steps are pushed onto a history stack on every forward
+// move so "Voltar" always returns to the exact previous step, including the two
+// conditional guided screens.
 
 import { useState } from "react";
 import { WizardShell } from "./WizardShell";
@@ -14,6 +18,7 @@ import { PriorApiStep } from "./PriorApiStep";
 import { FacebookPageStep } from "./FacebookPageStep";
 import { PageCreationGuide } from "./PageCreationGuide";
 import { SummaryStep } from "./SummaryStep";
+import { registerSignup, saveSession, ManageApiError } from "@/lib/manage-api";
 import { EMPTY_ANSWERS, type StepId, type WizardAnswers } from "../lib/types";
 import type { ResolvedPlan } from "../lib/plans";
 
@@ -70,6 +75,15 @@ export function CadastroWizard({ plan }: CadastroWizardProps) {
   const [step, setStep] = useState<StepId>("contact");
   const [history, setHistory] = useState<StepId[]>([]);
 
+  // --- Registration state (set once, at the first-card submit) ---
+  // The signup intent id drives the later Stripe Checkout call; once set, it also marks
+  // "already registered" so returning to the contact step doesn't re-register (which
+  // would 409 on the visitor's own just-created email).
+  const [intentId, setIntentId] = useState<string | null>(null);
+  const [registering, setRegistering] = useState(false);
+  const [registerError, setRegisterError] = useState<string | null>(null);
+  const [showLoginLink, setShowLoginLink] = useState(false);
+
   function goNext() {
     setHistory((h) => [...h, step]);
     setStep(nextStepId(step, answers));
@@ -85,6 +99,48 @@ export function CadastroWizard({ plan }: CadastroWizardProps) {
     setAnswers((a) => ({ ...a, contact: { ...a.contact, ...patch } }));
   }
 
+  // Register the account on first-card submit, then advance. Idempotent from the UI's
+  // side: once registered (intentId set), a second submit (e.g. after "Voltar") just
+  // advances — the account already exists and its email can't be re-registered.
+  async function handleContactSubmit() {
+    if (intentId) {
+      goNext();
+      return;
+    }
+    setRegisterError(null);
+    setShowLoginLink(false);
+    setRegistering(true);
+    try {
+      const { intentId: newIntentId, session } = await registerSignup({
+        name: answers.contact.name.trim(),
+        clinic_name: answers.contact.clinicName.trim(),
+        email: answers.contact.email.trim(),
+        whatsapp_phone: answers.contact.whatsappPhone.trim(),
+        password: answers.contact.password,
+        catalog_ids: plan.catalogIds,
+        website: answers.contact.website,
+      });
+      // Persist the session immediately — the visitor is now logged in.
+      saveSession(session);
+      setIntentId(newIntentId);
+      setRegistering(false);
+      goNext();
+    } catch (e) {
+      const status = e instanceof ManageApiError ? e.status : 0;
+      if (status === 409) {
+        setRegisterError("Você já tem conta Brain — entre para contratar.");
+        setShowLoginLink(true);
+      } else if (status === 422) {
+        setRegisterError("Confira os dados e a senha e tente novamente.");
+      } else if (status === 429) {
+        setRegisterError("Muitas tentativas. Aguarde um instante e tente de novo.");
+      } else {
+        setRegisterError("Não foi possível criar sua conta agora. Tente novamente.");
+      }
+      setRegistering(false);
+    }
+  }
+
   return (
     <WizardShell progress={PROGRESS[step] / LAST_INDEX} progressLabel={PROGRESS_LABEL[step]}>
       {step === "contact" && (
@@ -93,7 +149,10 @@ export function CadastroWizard({ plan }: CadastroWizardProps) {
           onChange={patchContact}
           planLabel={plan.label}
           planTagline={plan.tagline}
-          onNext={goNext}
+          onSubmit={handleContactSubmit}
+          submitting={registering}
+          serverError={registerError}
+          showLoginLink={showLoginLink}
         />
       )}
       {step === "usage" && (
@@ -122,7 +181,9 @@ export function CadastroWizard({ plan }: CadastroWizardProps) {
         />
       )}
       {step === "page_creation" && <PageCreationGuide onNext={goNext} onBack={goBack} />}
-      {step === "summary" && <SummaryStep answers={answers} plan={plan} onBack={goBack} />}
+      {step === "summary" && (
+        <SummaryStep answers={answers} plan={plan} intentId={intentId} onBack={goBack} />
+      )}
     </WizardShell>
   );
 }

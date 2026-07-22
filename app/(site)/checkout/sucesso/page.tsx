@@ -3,9 +3,13 @@
 // /checkout/sucesso — Stripe Checkout return URL for the self-service cold
 // signup flow (both the "Contratar PreCheck" and "Contratar secretarIA" CTAs
 // point Stripe here on success). Reads `session_id` from the query string and
-// polls GET /public/onboarding-status every 2s until the async webhook
-// finishes provisioning the tenant — the webhook can lag behind the redirect,
-// so this NEVER assumes "ready" on the first load. Wrapped in Suspense because
+// polls GET /public/onboarding-status every 2s until the async webhook activates
+// the tenant's entitlement — the webhook can lag behind the redirect, so this
+// NEVER assumes "ready" on the first load. The visitor is normally ALREADY logged
+// in (registration saved a session at the first card, which survives the Stripe
+// round-trip in the same tab), so once ready this just routes into the portal; the
+// one-time onboarding-token exchange is only a FALLBACK for finishing checkout in a
+// different browser/tab that never got that session. Wrapped in Suspense because
 // useSearchParams requires it (same pattern as app/(SignOut)/login/page.tsx).
 
 import { Suspense, useEffect, useState, type ReactNode } from "react";
@@ -15,6 +19,7 @@ import { BrandGlyph } from "../../_components/BrandGlyph";
 import {
   exchangeOnboardingToken,
   getOnboardingStatus,
+  getSession,
   ManageApiError,
   saveSession,
 } from "@/lib/manage-api";
@@ -91,9 +96,14 @@ function CheckoutSucessoInner() {
         if (status.status === "ready") {
           stop();
           if (status.products?.secretaria) {
-            if (status.onboarding_token) {
-              // Always exchange the LATEST token — never one from an earlier poll.
-              setView("ready-secretaria");
+            setView("ready-secretaria");
+            // Fast path: registration already saved a session in this browser — just
+            // route into the portal (the entitlement is now active).
+            if (getSession()) {
+              router.replace("/secretaria/configuracao");
+            } else if (status.onboarding_token) {
+              // Fallback (different browser/tab): trade the LATEST one-time token for a
+              // session. Never reuse a token from an earlier poll.
               try {
                 const session = await exchangeOnboardingToken(
                   status.onboarding_token,
@@ -104,8 +114,8 @@ function CheckoutSucessoInner() {
                 setExchangeFailed(true);
               }
             } else {
-              // Token already spent in an earlier poll/tab — the tenant exists,
-              // but there's nothing left here to trade for a session.
+              // Token already spent in an earlier poll/tab and no local session — the
+              // tenant exists, but there's nothing left here to trade for a session.
               setView("ready-already-claimed");
             }
           } else {

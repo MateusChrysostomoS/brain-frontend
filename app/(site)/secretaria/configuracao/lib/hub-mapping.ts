@@ -89,9 +89,9 @@ export function toWireBusinessHours(
   return out;
 }
 
-// Wire appointment_types -> local Service[]. Requirements have no backend
-// counterpart yet (see schemas/config.py::AppointmentType) — hydrated
-// services always start with an empty requirements list.
+// Wire appointment_types -> local Service[]. `requirements` is a string[] on
+// the wire; hydrated ids are position-based (1-indexed) since they only need
+// to be stable React keys, never sent back to the server.
 export function applyWireAppointmentTypes(wire: AppointmentTypeWire[]): Service[] {
   return wire.map((t, i) => ({
     id: i + 1,
@@ -99,11 +99,12 @@ export function applyWireAppointmentTypes(wire: AppointmentTypeWire[]): Service[
     dur: t.duration_min,
     price: t.price ?? "",
     active: t.is_active,
-    requirements: [],
+    requirements: (t.requirements ?? []).map((text, j) => ({ id: j + 1, text })),
   }));
 }
 
-// Local Service[] -> wire appointment_types, for a config PUT body.
+// Local Service[] -> wire appointment_types, for a config PUT body. Blank
+// requirement rows (empty after trim) are dropped rather than sent as "".
 export function toWireAppointmentTypes(services: Service[]): AppointmentTypeWire[] {
   return services.map((s, i) => ({
     name: s.name,
@@ -113,6 +114,7 @@ export function toWireAppointmentTypes(services: Service[]): AppointmentTypeWire
     sort_order: i,
     price: s.price || null,
     long_description: null,
+    requirements: s.requirements.map((r) => r.text.trim()).filter(Boolean),
   }));
 }
 

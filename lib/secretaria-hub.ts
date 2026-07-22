@@ -160,6 +160,9 @@ export type AppointmentTypeWire = {
   sort_order: number;
   price: string | null;
   long_description: string | null;
+  // Pre-visit instructions shown to the patient when booking this type (e.g.
+  // fasting, documents to bring). Same shape on read and write.
+  requirements: string[];
 };
 
 // Structured clinic address (Onboarding & Multi-Professional contract §10).
