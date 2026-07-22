@@ -11,13 +11,9 @@ import type { CatalogPlanId } from "@/lib/manage-api";
 // even if a stray `?plan=complete_clinic_combo` link is ever created.
 const PURCHASABLE_PLANS: Record<string, { label: string; tagline: string }> = {
   precheck: { label: "PreCheck", tagline: "Pré-consulta no WhatsApp" },
-  secretaria_ferro: {
-    label: "secretarIA Individual",
-    tagline: "Para o médico autônomo",
-  },
-  secretaria_bronze_1: {
-    label: "secretarIA Clínica",
-    tagline: "Para consultórios com mais de um médico",
+  secretaria_basico: {
+    label: "secretarIA Básico",
+    tagline: "Converse e agende no WhatsApp — pague só pelo que usar",
   },
 };
 

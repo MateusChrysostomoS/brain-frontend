@@ -28,19 +28,23 @@ export const PRICING: Record<PricingPlanKey, PricingPlan> = {
   secretaria: {
     name: "Plano secretarIA",
     tagline: "Secretária com IA no WhatsApp",
-    amount: "R$ 300,00",
-    unit: "/mês",
-    // Must match the plan the deployed STRIPE_PRICE_MAP actually prices (its
-    // "secretaria_bronze" key is brain-api's alias for secretaria_bronze_1) and
-    // the authenticated CTA's plan prop in page.tsx.
-    catalogIds: ["secretaria_bronze_1"],
+    // secretarIA is fully metered — no flat/anchor monthly fee (2026-07-22 catalog
+    // collapse). Billed on active professionals, billable patients, and reminders
+    // sent outside the WhatsApp 24h window, so there is no single "R$ X/mês" to show.
+    amount: "Pague pelo uso",
+    unit: "profissionais, pacientes e lembretes",
+    // Must match the plan the deployed STRIPE_PRICE_MAP actually prices and the
+    // authenticated CTA's plan prop in page.tsx.
+    catalogIds: ["secretaria_basico"],
   },
   combo: {
-    // Plain sum of the two plans above — self-explanatory, no discount implied.
+    // secretarIA no longer has a flat monthly fee (see above), so this can't be a
+    // plain sum of the two plans anymore. Self-service checkout isn't wired for the
+    // combo (catalogIds: null below) — framed as "sob consulta" instead of stale math.
     name: "Brain Completo",
     tagline: "secretarIA + PreCheck",
-    amount: "R$ 420,00",
-    unit: "/mês",
+    amount: "Sob consulta",
+    unit: "PreCheck fixo + secretarIA por uso",
     catalogIds: null,
   },
 };

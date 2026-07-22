@@ -405,8 +405,10 @@ describe("catalogRequiresWhatsappCoexistence", () => {
   });
 
   it("any secretaria_* plan id -> true", () => {
-    expect(api.catalogRequiresWhatsappCoexistence(["secretaria_ferro"])).toBe(true);
-    expect(api.catalogRequiresWhatsappCoexistence(["secretaria_bronze_1"])).toBe(true);
+    expect(api.catalogRequiresWhatsappCoexistence(["secretaria_basico"])).toBe(true);
+    // Prefix-based (id.startsWith("secretaria")), not a fixed-list lookup — proven with
+    // a non-real id so this doesn't silently pass only because "basico" is the one real id.
+    expect(api.catalogRequiresWhatsappCoexistence(["secretaria_anything"])).toBe(true);
   });
 
   it("complete_clinic_combo -> true", () => {
@@ -415,7 +417,7 @@ describe("catalogRequiresWhatsappCoexistence", () => {
 
   it("mixed list matches if ANY id qualifies", () => {
     expect(
-      api.catalogRequiresWhatsappCoexistence(["precheck", "secretaria_bronze_1"]),
+      api.catalogRequiresWhatsappCoexistence(["precheck", "secretaria_basico"]),
     ).toBe(true);
   });
 

@@ -84,7 +84,7 @@ const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "Já tem lembrete automático, confirmação e campanhas?",
-    a: "Ainda não — e preferimos ser honestos. Hoje a secretarIA faz quatro coisas bem feitas: conversar com o paciente, agendar, cancelar e remarcar. Lembretes, confirmação ativa e outras automações estão no nosso roteiro e entrarão como módulos adicionais, sem mexer no seu plano base.",
+    a: "Lembrete automático (24h e 1h antes da consulta) já vem incluído em todo plano, sem custo fixo — você paga só pelos lembretes enviados fora da janela de 24h do WhatsApp. Com o add-on Sinal via Pix, o lembrete já chega com confirmação ativa: o paciente confirma, remarca ou cancela direto pelo WhatsApp. Campanhas de reativação de pacientes inativos ainda estão no nosso roteiro.",
   },
   {
     q: "Como funciona a contratação?",
@@ -521,54 +521,31 @@ export default function SecretariaPage() {
           </Reveal>
 
           <div className="price-grid">
+            {/* Single secretarIA plan (secretaria_basico) — replaces the old
+                Individual/Clínica tier split (2026-07-22 catalog collapse): every
+                secretarIA tenant is on this one fully-metered plan now, so there is
+                no separate "for solo doctors" vs "for clinics" tier to sell. */}
             <Reveal>
               <PriceCard
-                name="Individual"
-                tagline="Para o médico autônomo"
-                amount="R$ —"
-                unit="/mês · valor de exemplo"
-                note="a partir de · editar"
+                name="Básico"
+                tagline="Para qualquer clínica — de um médico autônomo a uma equipe"
+                amount="Pague pelo uso"
+                unit="profissionais, pacientes e lembretes"
+                note="valor de exemplo · editar"
+                featured
                 features={[
-                  "1 número de WhatsApp",
                   "Respostas com o seu contexto",
                   "Agendar, cancelar e remarcar",
                   "Sincronização com Google Calendar",
+                  "Suporte a múltiplos profissionais",
                 ]}
-                ctaLabel="Falar com a Brain"
+                ctaLabel="Contratar secretarIA"
                 ctaHref="#contato"
                 cta={
                   <PlanCheckoutCta
-                    plan="secretaria_ferro"
-                    catalogIds={["secretaria_ferro"]}
-                    label="Contratar Individual"
-                    secondaryHref="#contato"
-                    secondaryLabel="Falar com a Brain"
-                  />
-                }
-              />
-            </Reveal>
-            <Reveal delay={1}>
-              <PriceCard
-                name="Clínica"
-                tagline="Para consultórios com mais de um médico"
-                amount="R$ —"
-                unit="/mês · valor de exemplo"
-                note="a partir de · editar"
-                features={[
-                  "Tudo do plano Individual",
-                  "Vários médicos e agendas",
-                  "Configuração de tom por profissional",
-                  "Implantação assistida",
-                ]}
-                ctaLabel="Agendar demonstração"
-                ctaHref="#contato"
-                featured
-                flag="Mais comum"
-                cta={
-                  <PlanCheckoutCta
-                    plan="secretaria_bronze_1"
-                    catalogIds={["secretaria_bronze_1"]}
-                    label="Contratar Clínica"
+                    plan="secretaria_basico"
+                    catalogIds={["secretaria_basico"]}
+                    label="Contratar secretarIA"
                     featured
                     secondaryHref="#contato"
                     secondaryLabel="Agendar demonstração"
@@ -576,7 +553,7 @@ export default function SecretariaPage() {
                 }
               />
             </Reveal>
-            <Reveal delay={2}>
+            <Reveal delay={1}>
               <PriceCard
                 name="Rede / sob consulta"
                 tagline="Para redes e setor público"
@@ -594,10 +571,12 @@ export default function SecretariaPage() {
             </Reveal>
           </div>
 
-          {/* Closing note about add-on modules */}
+          {/* Closing note about add-on modules — reminders are a core capability on
+              every plan now (not an add-on), so this points to the actual current
+              add-ons instead. */}
           <p className="muted center mt-l" style={{ fontSize: 13.5 }}>
-            Novos módulos (lembretes, confirmação ativa e mais) entram como
-            add-ons à medida que forem lançados — sem mudar o seu plano base.
+            Dashboard Avançado, Sinal via Pix e outros módulos entram como
+            add-ons sob demanda — sem mudar o seu plano base.
           </p>
         </div>
       </section>

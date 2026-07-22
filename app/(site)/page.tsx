@@ -386,7 +386,7 @@ export default function BrainHomePage() {
                 ctaHref="#contato"
                 cta={
                   <PlanCheckoutCta
-                    plan="secretaria_bronze_1"
+                    plan="secretaria_basico"
                     catalogIds={PRICING.secretaria.catalogIds ?? []}
                     label="Contratar secretarIA"
                     secondaryHref="#contato"

@@ -33,9 +33,7 @@ import "./billing.css";
 
 const PLAN_LABELS: Record<string, string> = {
   precheck: "PreCheck",
-  secretaria_ferro: "secretarIA Ferro",
-  secretaria_bronze_1: "secretarIA Bronze",
-  secretaria_bronze_2: "secretarIA Bronze 2",
+  secretaria_basico: "secretarIA Básico",
   complete_clinic_combo: "Brain Completo",
   "brain-completo": "Brain Completo", // legacy alias (see Entitlements comment in manage-api.ts)
   free: "Gratuito",
@@ -47,8 +45,9 @@ const ADDON_LABELS: Record<string, string> = {
   multi_professional: "Múltiplos profissionais",
   multi_unit: "Múltiplas unidades",
   ehr: "Prontuário eletrônico",
-  pix_whatsapp: "Pix pelo WhatsApp",
+  pix_deposit: "Sinal via Pix",
   analytics_bi: "Analytics & BI",
+  analytics_bi_advanced: "Dashboard Avançado",
   human_backup_24_7: "Backup humano 24/7",
 };
 

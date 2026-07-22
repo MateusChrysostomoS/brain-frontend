@@ -57,7 +57,7 @@ export type Entitlements = {
   plan: string; // catalog plan id (legacy rows may carry an alias like "brain-completo")
   clinicName: string;
   status: string; // "active" | "trialing" | "past_due" | "canceled" | "inactive"
-  secretariaTier: string | null; // "ferro" | "bronze_1" | "bronze_2" | null
+  secretariaTier: string | null; // "basico" | null (single tier since the 2026-07-22 catalog collapse)
   addons: Record<string, boolean>;
   limits: Record<string, number>;
 };
@@ -666,12 +666,14 @@ export async function setPassword(
 // give call sites type safety over the same ids.
 // ---------------------------------------------------------------------------
 
-// Assignable catalog plan ids (§3.2; secretaria_bronze_2 is a reserved slot and
-// "free" is not purchasable — both rejected by the backend with 422).
+// Assignable catalog plan ids (§3.2; "free" is not purchasable — rejected by the
+// backend with 422). The old secretaria_ferro/secretaria_bronze_1/secretaria_bronze_2
+// tier ladder was collapsed (2026-07-22) into one fully-metered plan, secretaria_basico
+// (no flat/anchor price — billed on active professionals, billable patients, and
+// reminders sent outside the WhatsApp 24h window).
 export type CatalogPlanId =
   | "precheck"
-  | "secretaria_ferro"
-  | "secretaria_bronze_1"
+  | "secretaria_basico"
   | "complete_clinic_combo";
 
 // The formalized add-on keyset (§3.2).
@@ -681,8 +683,9 @@ export type CatalogAddonId =
   | "multi_professional"
   | "multi_unit"
   | "ehr"
-  | "pix_whatsapp"
+  | "pix_deposit"
   | "analytics_bi"
+  | "analytics_bi_advanced"
   | "human_backup_24_7";
 
 // True when the given catalog ids include a plan that enables the secretarIA
