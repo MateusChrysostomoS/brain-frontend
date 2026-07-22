@@ -50,35 +50,51 @@ const TOKEN_SAFETY_MARGIN_MS = 30_000;
 
 type CachedToken = { token: string; expiresAt: number };
 
-let cachedToken: CachedToken | null = null;
-let mintInFlight: Promise<string> | null = null;
+// Keyed by the OWNING session's identity (tenantId + brain-api access token),
+// never just "the last one minted". Login is a client-side route push (no
+// full page reload — app/(SignOut)/login/page.tsx), so a single browser tab
+// can hold hub tokens for more than one account/tenant within the same
+// 60-minute HUB_TOKEN_EXPIRE_MINUTES window (e.g. testing an old clinic, then
+// logging into a new one). A single unkeyed cache would silently keep serving
+// the FIRST tenant's token to every later session — every hub GET/PUT would
+// read/write the wrong clinic's config with no error surfaced anywhere.
+const tokenCache = new Map<string, CachedToken>();
+const mintsInFlight = new Map<string, Promise<string>>();
 
-async function mintHubToken(session: Session): Promise<string> {
+function sessionKey(session: Session): string {
+  return `${session.tenantId}:${session.token}`;
+}
+
+async function mintHubToken(session: Session, key: string): Promise<string> {
   const { hubToken, expiresIn } = await getSecretariaHubToken(session);
-  cachedToken = { token: hubToken, expiresAt: Date.now() + expiresIn * 1000 };
+  tokenCache.set(key, { token: hubToken, expiresAt: Date.now() + expiresIn * 1000 });
   return hubToken;
 }
 
-// Returns a live hub token, minting a fresh one via brain-api when the cache
-// is empty or about to expire. Concurrent callers share one in-flight mint.
-// Throws ManageApiError (notably 403 `secretaria_not_entitled`) when brain-api
-// refuses to mint.
+// Returns a live hub token, minting a fresh one via brain-api when this
+// session's cache entry is empty or about to expire. Concurrent callers for
+// the SAME session share one in-flight mint. Throws ManageApiError (notably
+// 403 `secretaria_not_entitled`) when brain-api refuses to mint.
 export async function getHubToken(session: Session): Promise<string> {
-  if (cachedToken && cachedToken.expiresAt - Date.now() > TOKEN_SAFETY_MARGIN_MS) {
-    return cachedToken.token;
+  const key = sessionKey(session);
+  const cached = tokenCache.get(key);
+  if (cached && cached.expiresAt - Date.now() > TOKEN_SAFETY_MARGIN_MS) {
+    return cached.token;
   }
-  if (!mintInFlight) {
-    mintInFlight = mintHubToken(session).finally(() => {
-      mintInFlight = null;
+  let inFlight = mintsInFlight.get(key);
+  if (!inFlight) {
+    inFlight = mintHubToken(session, key).finally(() => {
+      mintsInFlight.delete(key);
     });
+    mintsInFlight.set(key, inFlight);
   }
-  return mintInFlight;
+  return inFlight;
 }
 
-// Drop the cached token so the next getHubToken() call mints fresh. Used by
-// hubFetch's 401 retry path.
-function invalidateHubToken(): void {
-  cachedToken = null;
+// Drop this session's cached token so the next getHubToken() call mints
+// fresh. Used by hubFetch's 401 retry path.
+function invalidateHubToken(session: Session): void {
+  tokenCache.delete(sessionKey(session));
 }
 
 // ---------------------------------------------------------------------------
@@ -134,7 +150,7 @@ export async function hubFetch<T>(
   const token = await getHubToken(session);
   const res = await rawHubFetch(path, token, opts);
   if (res.status === 401) {
-    invalidateHubToken();
+    invalidateHubToken(session);
     const fresh = await getHubToken(session);
     const retryRes = await rawHubFetch(path, fresh, opts);
     return parseHubResponse<T>(retryRes);
