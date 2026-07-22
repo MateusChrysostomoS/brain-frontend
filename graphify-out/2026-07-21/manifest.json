@@ -375,8 +375,8 @@
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/components/AvailabilitySection.tsx": {
-    "mtime": 1784660813.0573387,
-    "ast_hash": "00f207a5ef598399d5e56a1082dba08d",
+    "mtime": 1784358266.0198467,
+    "ast_hash": "3ed221efaffb4aa099388ab4d1809dc6",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/components/CSelect.tsx": {
@@ -405,8 +405,8 @@
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/components/GoogleSection.tsx": {
-    "mtime": 1784660813.86826,
-    "ast_hash": "bedc32f625b18d8a6e69d05ad8a2bf25",
+    "mtime": 1784358276.2681663,
+    "ast_hash": "3e9ad7eed59620dde854a5b24d8fbf31",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/components/Section.tsx": {
@@ -420,13 +420,13 @@
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/components/ServicesSection.tsx": {
-    "mtime": 1784660811.9243054,
-    "ast_hash": "6f5f152dbe4e6555671d662d16d9b157",
+    "mtime": 1784358252.6121674,
+    "ast_hash": "bdf23d790c7e232a207d474812d80d8f",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/components/SideNav.tsx": {
-    "mtime": 1784660827.0405478,
-    "ast_hash": "3958a02cde9bd1d947b683d71427dad1",
+    "mtime": 1784358229.906957,
+    "ast_hash": "a041b7beb38d4dec05015a3854fd2e29",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/components/ToggleRow.tsx": {
@@ -435,18 +435,18 @@
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/lib/hub-mapping.ts": {
-    "mtime": 1784660738.3329215,
-    "ast_hash": "9dc425c8eb496b4d8f23a73a21687cfc",
+    "mtime": 1784357989.6158128,
+    "ast_hash": "237dca668492b0f6cc62c9af38adff96",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/lib/types.ts": {
-    "mtime": 1784660721.2648032,
-    "ast_hash": "aa981b1d78c3c67b2230161e87ae59f8",
+    "mtime": 1784357939.5752935,
+    "ast_hash": "77d3482608401a0c16a63c37eb947682",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/page.tsx": {
-    "mtime": 1784660806.5742753,
-    "ast_hash": "53e524426b462adff4375d08642edae4",
+    "mtime": 1784358587.0564163,
+    "ast_hash": "2525129b7ea5d1ad01e5261f865a74f6",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/page.tsx": {
@@ -570,8 +570,8 @@
     "semantic_hash": ""
   },
   "lib/secretaria-hub.ts": {
-    "mtime": 1784660714.6458168,
-    "ast_hash": "5d141fcf77cd57e70ca3f7c0d057bfa3",
+    "mtime": 1784357086.4963045,
+    "ast_hash": "d6ca1d3bd6d5e8e2d6348f5415e8c541",
     "semantic_hash": ""
   },
   "lib/seen.ts": {
@@ -755,18 +755,13 @@
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/components/ProfessionalsSection.tsx": {
-    "mtime": 1784660811.2433102,
-    "ast_hash": "c982d059129697f93cfd7745fd13ec7a",
+    "mtime": 1784502604.4695194,
+    "ast_hash": "d357f700701bf7641e7673f972c91be7",
     "semantic_hash": ""
   },
   "docs/VERIFICATION_onboarding.md": {
     "mtime": 1784658739.0164099,
     "ast_hash": "f898b846075ad14773512df9fd3b2c70",
-    "semantic_hash": ""
-  },
-  "app/(site)/secretaria/configuracao/components/PostConsultSection.tsx": {
-    "mtime": 1784660752.9256155,
-    "ast_hash": "ad17751aecaab69b8fb7e2938dc412eb",
     "semantic_hash": ""
   }
 }

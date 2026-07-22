@@ -64,8 +64,6 @@
   "62": "ServiceCard.tsx",
   "63": "sign-out.test.ts",
   "64": "ContactForm.tsx",
-  "65": "useSecretariaHub.ts",
   "66": "DashHeader.tsx",
-  "67": "ConfirmDeleteModal.tsx",
-  "68": "page.tsx"
+  "67": "ConfirmDeleteModal.tsx"
 }
