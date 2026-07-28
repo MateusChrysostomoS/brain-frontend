@@ -65,5 +65,17 @@
   "63": "sign-out.test.ts",
   "64": "ContactForm.tsx",
   "65": "useSecretariaHub.ts",
-  "66": "DashHeader.tsx"
+  "66": "DashHeader.tsx",
+  "67": "usePortalGuard",
+  "68": "page.tsx",
+  "69": "page.tsx",
+  "70": "doRefresh",
+  "71": "page.tsx",
+  "72": "AddonsStep.tsx",
+  "73": "useSecretariaHub.ts",
+  "74": "page.tsx",
+  "75": "HubNotice.tsx",
+  "76": "RestartButton.tsx",
+  "77": "PriorApiStep.tsx",
+  "78": "page.tsx"
 }

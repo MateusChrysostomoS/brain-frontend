@@ -235,8 +235,8 @@
     "semantic_hash": ""
   },
   "app/(site)/_lib/pricing.ts": {
-    "mtime": 1784235230.4412687,
-    "ast_hash": "674d9b2f3ab36b3acabe802717fe5090",
+    "mtime": 1784733986.491415,
+    "ast_hash": "da4352d8de495f3770605335b6564331",
     "semantic_hash": ""
   },
   "app/(site)/admin/dashboard/page.tsx": {
@@ -270,13 +270,13 @@
     "semantic_hash": ""
   },
   "app/(site)/app/billing/page.tsx": {
-    "mtime": 1784235230.4412687,
-    "ast_hash": "2c2131748f2c48efd2e4a26b3482b6b9",
+    "mtime": 1784769916.023412,
+    "ast_hash": "b0ca2c1173d6da6afb25d2e1ddb941fe",
     "semantic_hash": ""
   },
   "app/(site)/app/page.tsx": {
-    "mtime": 1784235230.4412687,
-    "ast_hash": "c5b623b7d2c590af3f0b0667fbb64178",
+    "mtime": 1784771471.3167076,
+    "ast_hash": "757ea110bdbc1c70684c6957182fea31",
     "semantic_hash": ""
   },
   "app/(site)/checkout/cancelado/page.tsx": {
@@ -315,8 +315,8 @@
     "semantic_hash": ""
   },
   "app/(site)/page.tsx": {
-    "mtime": 1784235230.4562516,
-    "ast_hash": "e080f55f4b16aca2f6c4665519e7b046",
+    "mtime": 1784733995.9592593,
+    "ast_hash": "169c6617a83f18c3466c6b87794916bc",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/_shared/Header.tsx": {
@@ -325,13 +325,13 @@
     "semantic_hash": ""
   },
   "app/(site)/secretaria/_shared/HubNotice.tsx": {
-    "mtime": 1784235230.4562516,
-    "ast_hash": "142d8a20077465f4eb98252e8e307bde",
+    "mtime": 1784770080.9302888,
+    "ast_hash": "78e7ad3af07519fa97f2401a49136e50",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/_shared/data.ts": {
-    "mtime": 1781816849.806592,
-    "ast_hash": "be92d3cbd735c7486a8084fcf7dfab1f",
+    "mtime": 1784771401.5050285,
+    "ast_hash": "454206bfbc417c0b849e9bec6ecbb9b1",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/_shared/ui.tsx": {
@@ -340,8 +340,8 @@
     "semantic_hash": ""
   },
   "app/(site)/secretaria/_shared/useSecretariaHub.ts": {
-    "mtime": 1784235230.4562516,
-    "ast_hash": "04b9b0778d16134728e0021927112d06",
+    "mtime": 1784770063.9009585,
+    "ast_hash": "311b1d1dc0d8bf383909233e49dd81ec",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/agenda/calendar.tsx": {
@@ -350,28 +350,28 @@
     "semantic_hash": ""
   },
   "app/(site)/secretaria/agenda/drawer.tsx": {
-    "mtime": 1781817241.3464198,
-    "ast_hash": "12b15a6ba30d38bba73197b9a81b6eb5",
+    "mtime": 1784771472.60971,
+    "ast_hash": "233f78c894375d3b5b8503d4f8731c32",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/agenda/lib/hub-mapping.ts": {
-    "mtime": 1784235230.4562516,
-    "ast_hash": "b2abbe757317fcae71022ed96c9c1b59",
+    "mtime": 1784771432.3192265,
+    "ast_hash": "962f8f970a74f72b645e0f3f65921ff3",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/agenda/modals.tsx": {
-    "mtime": 1781817347.8536115,
-    "ast_hash": "cd7017d50b1a457dfb1fd7112a8cc89e",
+    "mtime": 1784771509.2324886,
+    "ast_hash": "867ef400ffa2b2ba0d3dd5aa0a44a376",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/agenda/page.tsx": {
-    "mtime": 1784235230.4562516,
-    "ast_hash": "1d7010441eb05400459fea07d0830744",
+    "mtime": 1784771732.3021147,
+    "ast_hash": "325f52c535105baf9893955b8568f462",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/components/AddressFields.tsx": {
-    "mtime": 1784358040.6372583,
-    "ast_hash": "2c07b5c1c9739ee1aad446b0c5d98d3e",
+    "mtime": 1784769882.9551606,
+    "ast_hash": "58197b66c7f95af9c1ca619460030441",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/components/AvailabilitySection.tsx": {
@@ -385,8 +385,8 @@
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/components/CToast.tsx": {
-    "mtime": 1781817172.426227,
-    "ast_hash": "92f3026562e5c4517542e650f2075045",
+    "mtime": 1784770204.0619824,
+    "ast_hash": "7c271feaf99f04afe57c64248f5461ec",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/components/CToggle.tsx": {
@@ -395,8 +395,8 @@
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/components/ContextSection.tsx": {
-    "mtime": 1784358005.3513248,
-    "ast_hash": "41dfcfe4736c14ccf42675b81f1f33ee",
+    "mtime": 1784769877.5096586,
+    "ast_hash": "d817d698c7a2eeb13c1652ab37959050",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/components/GoogleGlyph.tsx": {
@@ -405,8 +405,8 @@
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/components/GoogleSection.tsx": {
-    "mtime": 1784685840.9162445,
-    "ast_hash": "7dd0f4e71f2fabd76cba2950e24ed0eb",
+    "mtime": 1784770581.358597,
+    "ast_hash": "f7c5a91a71e90f23e811803b1040029a",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/components/Section.tsx": {
@@ -435,23 +435,23 @@
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/lib/hub-mapping.ts": {
-    "mtime": 1784685785.5783105,
-    "ast_hash": "1c711c641b33502343d087e39daa0309",
+    "mtime": 1784769937.70699,
+    "ast_hash": "10ee844094bfd11135281f6b9bdc484e",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/lib/types.ts": {
-    "mtime": 1784685734.877057,
-    "ast_hash": "fae88347a286b71d30c161bcd2668a69",
+    "mtime": 1784769935.8895357,
+    "ast_hash": "946b1bff93950727b6dcd2f413f36826",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/page.tsx": {
-    "mtime": 1784685902.9684215,
-    "ast_hash": "3d4e0cfee696936c92079105942a000d",
+    "mtime": 1784770231.0414114,
+    "ast_hash": "8ff278465c72b5c911bfe46aba728a23",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/page.tsx": {
-    "mtime": 1784235230.471451,
-    "ast_hash": "12ca35af7c1927307ae631d7c94b7cac",
+    "mtime": 1784736969.9974117,
+    "ast_hash": "e8ff655ffd2422de2870f47ce913edc3",
     "semantic_hash": ""
   },
   "app/layout.tsx": {
@@ -525,8 +525,8 @@
     "semantic_hash": ""
   },
   "lib/__tests__/manage-api.test.ts": {
-    "mtime": 1784729890.5037713,
-    "ast_hash": "066175f14a7c0da34226c29e3e7363a1",
+    "mtime": 1784771364.1970363,
+    "ast_hash": "e10f273cc1ca0f47c6ce9c35bae211d6",
     "semantic_hash": ""
   },
   "lib/__tests__/sign-out.test.ts": {
@@ -555,8 +555,8 @@
     "semantic_hash": ""
   },
   "lib/manage-api.ts": {
-    "mtime": 1784729704.690545,
-    "ast_hash": "cc04330a0439360555b353580fd95066",
+    "mtime": 1784771350.9124894,
+    "ast_hash": "9feaab86691e50a9e8c619bd8eb56596",
     "semantic_hash": ""
   },
   "lib/pageSize.ts": {
@@ -570,8 +570,8 @@
     "semantic_hash": ""
   },
   "lib/secretaria-hub.ts": {
-    "mtime": 1784685744.9874487,
-    "ast_hash": "c42ecea9646e561a472010275c0f3f18",
+    "mtime": 1784769830.299089,
+    "ast_hash": "ea642d4779f4a74ed8bb1de27d02faf3",
     "semantic_hash": ""
   },
   "lib/seen.ts": {
@@ -630,8 +630,8 @@
     "semantic_hash": ""
   },
   "app/(site)/_components/CheckoutTrialNotice.tsx": {
-    "mtime": 1784503504.8308334,
-    "ast_hash": "fd2e416f00656f46fe82160a8b3342bc",
+    "mtime": 1784769856.9738526,
+    "ast_hash": "e57de63b80c0840d915d5b16f0d52a11",
     "semantic_hash": ""
   },
   "app/(site)/_components/OnboardingBanner.tsx": {
@@ -665,8 +665,8 @@
     "semantic_hash": ""
   },
   "app/(site)/cadastro/_components/CadastroWizard.tsx": {
-    "mtime": 1784658326.1259491,
-    "ast_hash": "1f35e1874e9c04e23d263de51caa5d53",
+    "mtime": 1784769808.3300874,
+    "ast_hash": "a14614320855bb75eeb7bcfc189c0b6b",
     "semantic_hash": ""
   },
   "app/(site)/cadastro/_components/ContactStep.tsx": {
@@ -700,8 +700,8 @@
     "semantic_hash": ""
   },
   "app/(site)/cadastro/_components/SummaryStep.tsx": {
-    "mtime": 1784658367.4854128,
-    "ast_hash": "ffdf63bc4871d6cbe6e15bf2fee413de",
+    "mtime": 1784769831.6177764,
+    "ast_hash": "a6ff37b987557510a98e6147e17c14f4",
     "semantic_hash": ""
   },
   "app/(site)/cadastro/_components/WhatsappUsageStep.tsx": {
@@ -715,13 +715,13 @@
     "semantic_hash": ""
   },
   "app/(site)/cadastro/lib/plans.ts": {
-    "mtime": 1784357152.5938184,
-    "ast_hash": "33eff2f23900022978cb104afbc08c72",
+    "mtime": 1784733977.8796718,
+    "ast_hash": "8a15691572f3b4b97ec735b61cd799f3",
     "semantic_hash": ""
   },
   "app/(site)/cadastro/lib/types.ts": {
-    "mtime": 1784658239.448176,
-    "ast_hash": "ede0f176f366e2d2eeb0b51dae217679",
+    "mtime": 1784769739.8840337,
+    "ast_hash": "2d110d359f153a53a74076240de0ed30",
     "semantic_hash": ""
   },
   "app/(site)/cadastro/page.tsx": {
@@ -745,18 +745,18 @@
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/components/InviteProfessionalModal.tsx": {
-    "mtime": 1784358127.4294891,
-    "ast_hash": "24eef3b0a022f394a8a528b44d4cd7f7",
+    "mtime": 1784770039.7030222,
+    "ast_hash": "d49346b72399d91904a3c8e469137b9b",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/components/MessagesSection.tsx": {
-    "mtime": 1784358232.9005075,
-    "ast_hash": "bbfcfe9d82a1cb12022badfe474b823d",
+    "mtime": 1784769940.2667408,
+    "ast_hash": "d40b9c6fc2d03c9f031a64e431bf8a86",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/components/ProfessionalsSection.tsx": {
-    "mtime": 1784685828.9225137,
-    "ast_hash": "ee34b8af48769adad60c627509678184",
+    "mtime": 1784770032.5536761,
+    "ast_hash": "166b56b86495bfbb54a03d344b45551c",
     "semantic_hash": ""
   },
   "docs/VERIFICATION_onboarding.md": {
@@ -765,13 +765,48 @@
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/components/PostConsultSection.tsx": {
-    "mtime": 1784660752.9256155,
-    "ast_hash": "ad17751aecaab69b8fb7e2938dc412eb",
+    "mtime": 1784769889.4639437,
+    "ast_hash": "af9b34976d6f242187e17361287b5a5d",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/components/PixSection.tsx": {
-    "mtime": 1784685812.5730844,
-    "ast_hash": "6d451403e067810f568320d6bf8f353c",
+    "mtime": 1784769896.1734507,
+    "ast_hash": "4e2ecb90f857c74d0017974bee09ab03",
+    "semantic_hash": ""
+  },
+  "app/(site)/app/_components/PanelStates.tsx": {
+    "mtime": 1784771336.2923133,
+    "ast_hash": "1d6dcb109f66c792c567e993d21f373a",
+    "semantic_hash": ""
+  },
+  "app/(site)/app/_components/PreCheckPanel.tsx": {
+    "mtime": 1784771790.8243215,
+    "ast_hash": "eb407569c9e7133fff67439daa240124",
+    "semantic_hash": ""
+  },
+  "app/(site)/app/_components/SecretariaPanel.tsx": {
+    "mtime": 1784771800.5009427,
+    "ast_hash": "d8080c914bef865c3d97b40b892a8764",
+    "semantic_hash": ""
+  },
+  "app/(site)/app/_components/format.ts": {
+    "mtime": 1784771301.7543757,
+    "ast_hash": "ca0e0f50d2c1520821daaac868fa9a19",
+    "semantic_hash": ""
+  },
+  "app/(site)/app/reativar/_components/RestartButton.tsx": {
+    "mtime": 1784769883.4604807,
+    "ast_hash": "04629769dccdbc94ba91e7850c02ab31",
+    "semantic_hash": ""
+  },
+  "app/(site)/app/reativar/page.tsx": {
+    "mtime": 1784770005.269536,
+    "ast_hash": "6aff3da0adf7e29cadebc511ead171ea",
+    "semantic_hash": ""
+  },
+  "app/(site)/cadastro/_components/AddonsStep.tsx": {
+    "mtime": 1784769772.9739432,
+    "ast_hash": "f27d32a8b4eb8be3e6573bc55b2247ed",
     "semantic_hash": ""
   }
 }
