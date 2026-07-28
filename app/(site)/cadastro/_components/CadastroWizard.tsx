@@ -7,8 +7,9 @@
 // DB and the visitor is logged in before they answer another question — even if they
 // abandon the wizard or never pay. Steps are pushed onto a history stack on every forward
 // move so "Voltar" always returns to the exact previous step, including the two
-// conditional guided screens. A third conditional step, `addons` (Task 1a), sits right
-// before `summary` for secretarIA purchases only — see nextAfterEligibility.
+// conditional guided screens. Two more conditional steps sit right before `summary`
+// for secretarIA purchases only — see nextAfterEligibility: `addons` (Task 1a), then
+// `test_window` (the WhatsApp Coexistence connection-test-window explainer).
 
 import { useState } from "react";
 import { WizardShell } from "./WizardShell";
@@ -19,12 +20,13 @@ import { PriorApiStep } from "./PriorApiStep";
 import { FacebookPageStep } from "./FacebookPageStep";
 import { PageCreationGuide } from "./PageCreationGuide";
 import { AddonsStep } from "./AddonsStep";
+import { TestWindowExplainerStep } from "./TestWindowExplainerStep";
 import { SummaryStep } from "./SummaryStep";
 import { registerSignup, saveSession, ManageApiError } from "@/lib/manage-api";
 import { EMPTY_ANSWERS, SIGNUP_ADDON_IDS, type StepId, type WizardAnswers } from "../lib/types";
 import type { ResolvedPlan } from "../lib/plans";
 
-// Ordinal position per step, used only for the progress bar (0..7). Branches
+// Ordinal position per step, used only for the progress bar (0..8). Branches
 // that skip a conditional screen simply jump positions instead of by one —
 // a minor visual jump, not worth a fully dynamic step count.
 const PROGRESS: Record<StepId, number> = {
@@ -35,9 +37,10 @@ const PROGRESS: Record<StepId, number> = {
   fb_page: 4,
   page_creation: 5,
   addons: 6,
-  summary: 7,
+  test_window: 7,
+  summary: 8,
 };
-const LAST_INDEX = 7;
+const LAST_INDEX = 8;
 
 const PROGRESS_LABEL: Record<StepId, string> = {
   contact: "Dados de contato",
@@ -47,13 +50,16 @@ const PROGRESS_LABEL: Record<StepId, string> = {
   fb_page: "Página no Facebook",
   page_creation: "Criar Página",
   addons: "Complementos",
+  test_window: "Período de teste",
   summary: "Revisão",
 };
 
 // The branching transition table (spec §A): Q1 "none" detours through the
 // dedicated-number guide; Q4 "no" detours through the page-creation guide. Both
 // eligibility branches converge on `addons` (Task 1a) before `summary` — but only
-// for a secretarIA purchase; see nextAfterEligibility.
+// for a secretarIA purchase; see nextAfterEligibility. `addons` always continues to
+// `test_window` next (the connection-test-window explainer) — reachable only via a
+// secretarIA purchase in the first place, so it never needs its own eligibility check.
 function nextStepId(current: StepId, answers: WizardAnswers, plan: ResolvedPlan): StepId {
   switch (current) {
     case "contact":
@@ -69,6 +75,8 @@ function nextStepId(current: StepId, answers: WizardAnswers, plan: ResolvedPlan)
     case "page_creation":
       return nextAfterEligibility(plan);
     case "addons":
+      return "test_window";
+    case "test_window":
     case "summary":
       return "summary";
   }
@@ -210,9 +218,12 @@ export function CadastroWizard({ plan }: CadastroWizardProps) {
           selected={answers.selectedAddonIds}
           onSelectedChange={(ids) => setAnswers((a) => ({ ...a, selectedAddonIds: ids }))}
           onNext={goNext}
-          onSkip={() => setStep("summary")}
+          onSkip={() => setStep("test_window")}
           onBack={goBack}
         />
+      )}
+      {step === "test_window" && (
+        <TestWindowExplainerStep onNext={goNext} onSkip={() => setStep("summary")} onBack={goBack} />
       )}
       {step === "summary" && (
         <SummaryStep answers={answers} plan={plan} intentId={intentId} onBack={goBack} />

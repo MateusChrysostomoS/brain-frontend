@@ -111,6 +111,19 @@
   margin-top: 16px;
 }
 
+/* Lead callout on TestWindowExplainerStep — the "no máximo N dias até a
+   cobrança" headline, ahead of the numbered breakdown below it. */
+.cad-testwindow-highlight {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--brand-tint);
+  color: var(--brand-ink);
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 1.4;
+  margin: 6px 0 18px;
+}
+
 /* Add-on toggle cards (Task 1a) — same tokens as .radio-pill--block but a real
    checkbox (multi-select, not a radio group). */
 .cad-addon-list {

@@ -44,8 +44,8 @@ export const SIGNUP_ADDON_IDS: readonly SignupAddonId[] = [
 ];
 
 // Every step the wizard can visit. `dedicated_number` and `page_creation` are
-// conditional guided screens, and `addons` is shown only for a secretarIA
-// purchase — see CadastroWizard's transition table.
+// conditional guided screens, and `addons`/`test_window` are shown only for a
+// secretarIA purchase — see CadastroWizard's transition table.
 export type StepId =
   | "contact"
   | "usage"
@@ -54,6 +54,7 @@ export type StepId =
   | "fb_page"
   | "page_creation"
   | "addons"
+  | "test_window"
   | "summary";
 
 export type WizardAnswers = {

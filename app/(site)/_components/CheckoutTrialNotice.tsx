@@ -90,8 +90,8 @@ export function CheckoutTrialNotice({ catalogIds }: CheckoutTrialNoticeProps) {
   return (
     <p className="muted" style={noticeStyle} role="status">
       {trialDays === null
-        ? "Período de teste de ativação: seu cartão só é cobrado quando a Meta aprovar o WhatsApp Coexistence no seu número — seu ciclo mensal começa na data da aprovação. Se a aprovação não sair dentro do período de teste, cancelamos a assinatura automaticamente e você não paga nada — e você pode reiniciar o teste depois, se quiser."
-        : `Período de teste de ativação: seu cartão só é cobrado quando a Meta aprovar o WhatsApp Coexistence no seu número — seu ciclo mensal começa na data da aprovação. Se a aprovação não sair em até ${trialDays} dias, cancelamos a assinatura automaticamente e você não paga nada — e você pode reiniciar o teste depois, se quiser.`}
+        ? "Sem cobrança agora. Este é o período de teste de conexão do seu número com o WhatsApp Coexistence: seu cartão só é cobrado quando a Meta aprovar essa conexão, e o ciclo mensal começa na data da aprovação. Sem aprovação a tempo, cancelamos a assinatura automaticamente e você não paga nada — e você pode reiniciar o teste depois, se quiser."
+        : `Sem cobrança agora — no máximo ${trialDays} dias até a primeira cobrança. Este é o período de teste de conexão do seu número com o WhatsApp Coexistence: seu cartão só é cobrado quando a Meta aprovar essa conexão (pode ser antes dos ${trialDays} dias), e o ciclo mensal começa na data da aprovação. Sem aprovação em até ${trialDays} dias, cancelamos a assinatura automaticamente e você não paga nada — e você pode reiniciar o teste depois, se quiser.`}
     </p>
   );
 }
