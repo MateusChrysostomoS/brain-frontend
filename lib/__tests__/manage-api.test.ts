@@ -497,6 +497,83 @@ describe("getCheckoutTrialDays", () => {
   });
 });
 
+describe("getCheckoutConfig", () => {
+  it("resolves trial_period_days + addons, unauthenticated", async () => {
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(200, {
+        trial_period_days: 30,
+        addons: [
+          { id: "analytics_bi_advanced", available: true },
+          { id: "pix_deposit", available: false },
+        ],
+      }),
+    );
+
+    const result = await api.getCheckoutConfig();
+
+    expect(result).toEqual({
+      trial_period_days: 30,
+      addons: [
+        { id: "analytics_bi_advanced", available: true },
+        { id: "pix_deposit", available: false },
+      ],
+    });
+    const call = fetchMock.mock.calls[0];
+    expect(call[0]).toBe("/public/checkout-config");
+    expect(call[1].headers.Authorization).toBeUndefined();
+  });
+
+  it("missing addons field defaults to an empty array (backend not deployed yet)", async () => {
+    fetchMock.mockResolvedValueOnce(mockResponse(200, { trial_period_days: 30 }));
+
+    const result = await api.getCheckoutConfig();
+
+    expect(result).toEqual({ trial_period_days: 30, addons: [] });
+  });
+
+  it("malformed addon entries are dropped, valid ones kept", async () => {
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(200, {
+        trial_period_days: 30,
+        addons: [
+          { id: "pix_deposit", available: true },
+          { id: "no_available_field" },
+          { available: true },
+          "not-an-object",
+          null,
+        ],
+      }),
+    );
+
+    const result = await api.getCheckoutConfig();
+
+    expect(result).toEqual({
+      trial_period_days: 30,
+      addons: [{ id: "pix_deposit", available: true }],
+    });
+  });
+
+  it("non-200 response resolves null instead of throwing", async () => {
+    fetchMock.mockResolvedValueOnce(mockResponse(500, { detail: "server_error" }));
+
+    await expect(api.getCheckoutConfig()).resolves.toBeNull();
+  });
+
+  it("network failure resolves null instead of rejecting", async () => {
+    fetchMock.mockRejectedValueOnce(new Error("network down"));
+
+    await expect(api.getCheckoutConfig()).resolves.toBeNull();
+  });
+
+  it("malformed trial_period_days resolves null even when addons is well-formed", async () => {
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(200, { trial_period_days: null, addons: [{ id: "pix_deposit", available: true }] }),
+    );
+
+    await expect(api.getCheckoutConfig()).resolves.toBeNull();
+  });
+});
+
 describe("registerSignup", () => {
   it("14a. registers unauthenticated with the password, returns intentId + a decoded session, persists nothing itself", async () => {
     const jwt = makeJwt({ tenant_id: "tenant-1", role: "tenant_owner", sub: "user-1" });
@@ -581,6 +658,54 @@ describe("registerSignup", () => {
         password: "12345678",
         catalog_ids: ["precheck"],
       }),
+      422,
+    );
+  });
+});
+
+describe("updateSignupIntentCatalog", () => {
+  it("PATCHes { catalog_ids }, unauthenticated, and resolves the response body", async () => {
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(200, { intent_id: "intent-1", catalog_ids: ["secretaria_basico", "pix_deposit"] }),
+    );
+
+    const result = await api.updateSignupIntentCatalog("intent-1", [
+      "secretaria_basico",
+      "pix_deposit",
+    ]);
+
+    expect(result).toEqual({
+      intent_id: "intent-1",
+      catalog_ids: ["secretaria_basico", "pix_deposit"],
+    });
+    const call = fetchMock.mock.calls[0];
+    expect(call[0]).toBe("/public/signup-intents/intent-1");
+    expect(call[1].method).toBe("PATCH");
+    expect(call[1].headers.Authorization).toBeUndefined();
+    expect(JSON.parse(call[1].body)).toEqual({
+      catalog_ids: ["secretaria_basico", "pix_deposit"],
+    });
+  });
+
+  it("409 intent no longer pending -> ManageApiError 409", async () => {
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(409, { detail: "signup_intent_not_pending" }),
+    );
+
+    await expectManageError(
+      api.updateSignupIntentCatalog("intent-1", ["secretaria_basico"]),
+      409,
+      "signup_intent_not_pending",
+    );
+  });
+
+  it("422 invalid selection -> ManageApiError 422", async () => {
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(422, { detail: [{ loc: ["body", "catalog_ids"], msg: "invalid" }] }),
+    );
+
+    await expectManageError(
+      api.updateSignupIntentCatalog("intent-1", ["not-a-real-addon"]),
       422,
     );
   });
@@ -763,6 +888,214 @@ describe("adminDeleteTenant", () => {
       api.adminDeleteTenant(session, "missing"),
       404,
       "Tenant not found",
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Doctor appointments / patients — /app dashboard SecretariaPanel data-truth pass
+// ---------------------------------------------------------------------------
+
+describe("listDoctorAppointments", () => {
+  it("GETs /doctor/appointments with skip/limit and the bearer, resolves { data }", async () => {
+    const session = makeSession({ token: "tok1" });
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(200, {
+        data: [
+          {
+            id: "appt-1",
+            patient_id: "pat-1",
+            appointment_type: "Retorno",
+            start_at: "2026-07-22T11:00:00Z",
+            end_at: "2026-07-22T11:30:00Z",
+            status: "confirmed",
+            phone: "+5511999998888",
+          },
+        ],
+      }),
+    );
+
+    const result = await api.listDoctorAppointments(session, 0, 100);
+
+    expect(result.data).toHaveLength(1);
+    expect(result.data[0].status).toBe("confirmed");
+    const call = fetchMock.mock.calls[0];
+    expect(call[0]).toBe("/doctor/appointments?skip=0&limit=100");
+    expect(call[1].headers.Authorization).toBe("Bearer tok1");
+  });
+
+  it("defaults to skip=0, limit=100 when omitted", async () => {
+    const session = makeSession({ token: "tok1" });
+    fetchMock.mockResolvedValueOnce(mockResponse(200, { data: [] }));
+
+    await api.listDoctorAppointments(session);
+
+    const call = fetchMock.mock.calls[0];
+    expect(call[0]).toBe("/doctor/appointments?skip=0&limit=100");
+  });
+
+  it("degraded mesh: 200 with { data: [], stub: true } resolves normally, not an error", async () => {
+    const session = makeSession({ token: "tok1" });
+    fetchMock.mockResolvedValueOnce(mockResponse(200, { data: [], stub: true }));
+
+    const result = await api.listDoctorAppointments(session);
+
+    expect(result).toEqual({ data: [], stub: true });
+  });
+
+  it("upstream failure -> ManageApiError 502", async () => {
+    const session = makeSession({ token: "tok1" });
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(502, { detail: "secretaria upstream error" }),
+    );
+
+    await expectManageError(
+      api.listDoctorAppointments(session),
+      502,
+      "secretaria upstream error",
+    );
+  });
+});
+
+describe("listDoctorPatients", () => {
+  it("GETs /doctor/patients with skip/limit and the bearer, resolves { data }", async () => {
+    const session = makeSession({ token: "tok1" });
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(200, {
+        data: [
+          {
+            id: "pat-1",
+            name: "Maria Souza",
+            wa_id: "5511999999999",
+            created_at: "2026-07-01T10:00:00Z",
+          },
+        ],
+      }),
+    );
+
+    const result = await api.listDoctorPatients(session, 0, 100);
+
+    expect(result.data).toEqual([
+      {
+        id: "pat-1",
+        name: "Maria Souza",
+        wa_id: "5511999999999",
+        created_at: "2026-07-01T10:00:00Z",
+      },
+    ]);
+    const call = fetchMock.mock.calls[0];
+    expect(call[0]).toBe("/doctor/patients?skip=0&limit=100");
+    expect(call[1].headers.Authorization).toBe("Bearer tok1");
+  });
+
+  it("upstream failure -> ManageApiError 502", async () => {
+    const session = makeSession({ token: "tok1" });
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(502, { detail: "secretaria upstream error" }),
+    );
+
+    await expectManageError(
+      api.listDoctorPatients(session),
+      502,
+      "secretaria upstream error",
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Activation test window — /app/reativar (Task 2)
+// ---------------------------------------------------------------------------
+
+describe("getTestWindow", () => {
+  it("GETs /doctor/onboarding/test-window authenticated and passes the shape through", async () => {
+    const session = makeSession({ token: "tok1" });
+    const body = {
+      applicable: true,
+      days_total: 14,
+      started_at: "2026-07-10T12:00:00Z",
+      deadline_at: "2026-07-24T12:00:00Z",
+      onboarding_state: "aquecimento",
+      connected_at: null,
+      expired: false,
+      notified: false,
+      subscription_status: "trialing",
+      can_restart: false,
+    };
+    fetchMock.mockResolvedValueOnce(mockResponse(200, body));
+
+    const result = await api.getTestWindow(session);
+
+    expect(result).toEqual(body);
+    const call = fetchMock.mock.calls[0];
+    expect(call[0]).toBe("/doctor/onboarding/test-window");
+    expect(call[1].headers.Authorization).toBe("Bearer tok1");
+  });
+
+  it("applicable=false (e.g. PreCheck-only plan)", async () => {
+    const session = makeSession({ token: "tok1" });
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(200, {
+        applicable: false,
+        days_total: 0,
+        started_at: null,
+        deadline_at: null,
+        onboarding_state: "ativo",
+        connected_at: null,
+        expired: false,
+        notified: false,
+        subscription_status: "active",
+        can_restart: false,
+      }),
+    );
+
+    const result = await api.getTestWindow(session);
+    expect(result.applicable).toBe(false);
+  });
+});
+
+describe("restartTestWindow", () => {
+  it("POSTs the restart, authenticated, and resolves the new deadline + payment_method_present", async () => {
+    const session = makeSession({ token: "tok1" });
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(200, {
+        restarted: true,
+        deadline_at: "2026-08-05T12:00:00Z",
+        payment_method_present: false,
+      }),
+    );
+
+    const result = await api.restartTestWindow(session);
+
+    expect(result).toEqual({
+      restarted: true,
+      deadline_at: "2026-08-05T12:00:00Z",
+      payment_method_present: false,
+    });
+    const call = fetchMock.mock.calls[0];
+    expect(call[0]).toBe("/doctor/onboarding/test-window/restart");
+    expect(call[1].method).toBe("POST");
+    expect(call[1].headers.Authorization).toBe("Bearer tok1");
+  });
+
+  it("409 checkout_required -> ManageApiError 409 (caller routes to /app/billing)", async () => {
+    const session = makeSession({ token: "tok1" });
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(409, { detail: "checkout_required" }),
+    );
+
+    await expectManageError(api.restartTestWindow(session), 409, "checkout_required");
+  });
+
+  it("409 test_window_not_applicable -> ManageApiError 409", async () => {
+    const session = makeSession({ token: "tok1" });
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(409, { detail: "test_window_not_applicable" }),
+    );
+
+    await expectManageError(
+      api.restartTestWindow(session),
+      409,
+      "test_window_not_applicable",
     );
   });
 });

@@ -19,6 +19,9 @@ import type { PixDeposit } from "../lib/types";
 type PixSectionProps = {
   v: PixDeposit;
   set: <K extends keyof PixDeposit>(key: K, value: PixDeposit[K]) => void;
+  // True when the secretarIA hub is unreachable right now (see
+  // useSecretariaHub) — inputs are disabled since nothing typed here could
+  // be saved until the connection returns.
   readOnly?: boolean;
 };
 
@@ -128,13 +131,6 @@ export function PixSection({ v, set, readOnly }: PixSectionProps) {
       desc="Reduz falta cobrando um sinal via Pix no agendamento. A política pode ser preparada com antecedência, mesmo antes do add-on estar ativo."
     >
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-        {readOnly && (
-          <div className="alert-line alert-line--amber" style={{ marginBottom: -4 }}>
-            <span className="dot dot--amber" />
-            Somente o proprietário da clínica pode editar essas informações.
-          </div>
-        )}
-
         <ToggleRow
           on={v.enabled}
           onChange={value => set("enabled", value)}

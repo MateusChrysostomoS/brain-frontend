@@ -297,6 +297,18 @@ export default function BillingPage() {
                   {portalError}
                 </p>
               )}
+
+              {/* Discreet cross-link to the activation test-window screen (Task 2) —
+                  relevant mainly while a subscription is still trialing/awaiting Meta
+                  approval, but harmless to show otherwise (that screen has its own
+                  "doesn't apply" state). */}
+              <Link
+                href="/app/reativar"
+                className="muted"
+                style={{ display: "inline-block", fontSize: 12.5, marginTop: 12 }}
+              >
+                Ver período de teste de ativação →
+              </Link>
             </div>
           </section>
         </main>

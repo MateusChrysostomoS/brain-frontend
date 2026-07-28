@@ -111,6 +111,128 @@
   margin-top: 16px;
 }
 
+/* Add-on toggle cards (Task 1a) — same tokens as .radio-pill--block but a real
+   checkbox (multi-select, not a radio group). */
+.cad-addon-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 6px 0 22px;
+}
+
+.cad-addon-card {
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  overflow: hidden;
+  transition: border-color 0.14s var(--ease);
+}
+
+.cad-addon-card.on {
+  border-color: var(--brand);
+}
+
+.cad-addon-toggle {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  width: 100%;
+  padding: 14px 16px;
+  cursor: pointer;
+}
+
+.cad-addon-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cad-addon-check {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1.5px solid var(--line-strong);
+  flex-shrink: 0;
+  margin-top: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.14s var(--ease);
+}
+.cad-addon-card.on .cad-addon-check {
+  border-color: var(--brand);
+  background: var(--brand);
+}
+.cad-addon-check svg {
+  width: 12px;
+  height: 12px;
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+.cad-addon-card.on .cad-addon-check svg {
+  opacity: 1;
+}
+
+.cad-addon-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cad-addon-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.cad-addon-desc {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+/* "Como funciona" expandable (Task 1b) — native <details>, no extra JS. Sits as a
+   sibling of .cad-addon-toggle, not nested inside it (see AddonsStep). */
+.cad-addon-details {
+  border-top: 1px solid var(--line);
+  padding: 0 16px;
+}
+.cad-addon-details summary {
+  padding: 11px 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--brand-ink);
+  cursor: pointer;
+  list-style: none;
+}
+.cad-addon-details summary::-webkit-details-marker {
+  display: none;
+}
+.cad-addon-details summary::before {
+  content: "+ ";
+}
+.cad-addon-details[open] summary::before {
+  content: "\2013 "; /* en dash, mirrors the "+" collapse affordance when open */
+}
+.cad-addon-details-body {
+  padding: 0 0 16px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+.cad-addon-details-body p {
+  margin: 0 0 10px;
+}
+.cad-addon-details-body p:last-child {
+  margin-bottom: 0;
+}
+
+/* Brief loading state while AddonsStep resolves add-on availability. */
+.cad-addon-loading {
+  padding: 30px 0;
+}
+
 /* Read-only summary rows on the last step. */
 .cad-summary-row {
   display: flex;

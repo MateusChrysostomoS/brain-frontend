@@ -3,16 +3,19 @@
 // Appears above the sticky save bar (bottom: 88px) and auto-dismisses
 // after the parent clears the `toast` prop to null.
 // The popIn animation comes from app-shell.css / product-tokens.css keyframes.
+// `kind` picks the visual style — "error" NEVER reuses the success
+// green+checkmark look, so a failed save can't read as a fake success.
 
 import { Icon } from "../../_shared/ui";
 
 type CToastProps = {
-  toast: string | null;
+  toast: { message: string; kind: "success" | "error" } | null;
 };
 
-// Renders a success toast pill when toast is non-null; returns null otherwise.
+// Renders a success/error toast pill when toast is non-null; returns null otherwise.
 export function CToast({ toast }: CToastProps) {
   if (!toast) return null;
+  const isError = toast.kind === "error";
 
   return (
     <div style={{
@@ -29,8 +32,8 @@ export function CToast({ toast }: CToastProps) {
         gap: 11,
         padding: "13px 20px",
         borderRadius: 14,
-        background: "#0e564d",
-        color: "#eafff4",
+        background: isError ? "var(--st-miss-ink, #a4452f)" : "#0e564d",
+        color: isError ? "#fff5f2" : "#eafff4",
         boxShadow: "var(--shadow-lg)",
         fontSize: 14,
         fontWeight: 500,
@@ -42,9 +45,9 @@ export function CToast({ toast }: CToastProps) {
           display: "flex", alignItems: "center", justifyContent: "center",
           flexShrink: 0,
         }}>
-          <Icon name="check" size={15} />
+          <Icon name={isError ? "ban" : "check"} size={15} />
         </span>
-        {toast}
+        {toast.message}
       </div>
     </div>
   );

@@ -5,9 +5,10 @@
 // (TenantConfigRead.clinic_name, never sent back on save); address/insurances/
 // collectInsurance are REAL wire fields (Onboarding & Multi-Professional
 // contract §10) as of this pass. `phone` stays demo-only — secretarIA still
-// has no clinic-phone wire field. Specialty/about/tone-of-voice moved out:
-// specialty/about are now per-professional (see ProfessionalsSection),
-// tone-of-voice is now the real `persona_notes` field in MessagesSection.
+// has no clinic-phone wire field. Specialty/about moved out: they are now
+// per-professional (see ProfessionalsSection). Tone-of-voice is no longer
+// clinic-editable at all — a hardcoded safety layer now lives in the
+// backend prompt instead of a form field.
 
 import { Field, TextInput } from "../../_shared/ui";
 import { Section } from "./Section";
@@ -19,8 +20,9 @@ type ContextSectionProps = {
   v: ClinicCtx;
   // Generic setter — keeps each key bound to its own value type (string/boolean).
   set: <K extends keyof ClinicCtx>(key: K, value: ClinicCtx[K]) => void;
-  // True for a professional-scoped tenant_staff session (Feature E) — clinic-
-  // level info is read-only for them, editable only by the owner.
+  // True when the secretarIA hub is unreachable right now (see
+  // useSecretariaHub) — inputs are disabled since nothing typed here could
+  // be saved until the connection returns.
   readOnly?: boolean;
 };
 
@@ -35,13 +37,6 @@ export function ContextSection({ v, set, readOnly }: ContextSectionProps) {
       desc="É a base de tudo. A secretarIA usa essas informações para responder pacientes no WhatsApp com o tom e os dados certos."
     >
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-        {readOnly && (
-          <div className="alert-line alert-line--amber" style={{ marginBottom: -4 }}>
-            <span className="dot dot--amber" />
-            Somente o proprietário da clínica pode editar essas informações.
-          </div>
-        )}
-
         <Field
           label="Nome da clínica / consultório"
           tip="Nome que a secretarIA usa ao se apresentar e em mensagens — ex.: “Consultório Dr. Aurélio Lima”."

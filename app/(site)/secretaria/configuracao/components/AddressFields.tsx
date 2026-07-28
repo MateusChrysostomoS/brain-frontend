@@ -11,7 +11,7 @@ type AddressFieldsProps = {
   v: ClinicCtx;
   // Generic setter shared with ContextSection — type-safe per ClinicCtx key.
   set: <K extends keyof ClinicCtx>(key: K, value: ClinicCtx[K]) => void;
-  // Professional-scoped tenant_staff session (Feature E) — read-only for them.
+  // True when the secretarIA hub is unreachable right now — see ContextSection.
   readOnly?: boolean;
 };
 

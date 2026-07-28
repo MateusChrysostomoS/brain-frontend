@@ -1,13 +1,15 @@
 "use client";
 
-// CheckoutTrialNotice — pre-checkout billing disclosure. Every subscription
-// checkout starts a Stripe trial; the clinic's card is only ever charged once
-// Meta approves WhatsApp Coexistence on their number, and the subscription is
-// cancelled automatically (no charge) if that approval never lands within the
-// trial window. This ONLY applies to purchases that actually enable the
-// secretarIA product — PreCheck has no WhatsApp Coexistence step, so a
-// PreCheck-only purchase must render nothing here (see
-// catalogRequiresWhatsappCoexistence in lib/manage-api.ts, which brain-api's
+// CheckoutTrialNotice — pre-checkout billing disclosure, framed as an ACTIVATION
+// TEST WINDOW (Task 2): every subscription checkout starts a Stripe trial, the
+// clinic's card is only ever charged once Meta approves WhatsApp Coexistence on
+// their number, and the subscription is cancelled automatically (no charge) if
+// that approval never lands within the window — the copy also says explicitly
+// that the monthly cycle starts on the approval date, and that the tenant can
+// restart the window later (see /app/reativar) if it expires. This ONLY applies
+// to purchases that actually enable the secretarIA product — PreCheck has no
+// WhatsApp Coexistence step, so a PreCheck-only purchase must render nothing here
+// (see catalogRequiresWhatsappCoexistence in lib/manage-api.ts, which brain-api's
 // own trial-cancellation behavior mirrors).
 //
 // The visitor must see the (applicable) disclosure BEFORE reaching Stripe's
@@ -88,8 +90,8 @@ export function CheckoutTrialNotice({ catalogIds }: CheckoutTrialNoticeProps) {
   return (
     <p className="muted" style={noticeStyle} role="status">
       {trialDays === null
-        ? "Seu cartão só é cobrado quando a Meta aprovar o WhatsApp Coexistence no seu número. Se isso não acontecer dentro do período de teste, cancelamos a assinatura automaticamente — você não paga nada."
-        : `Seu cartão só é cobrado quando a Meta aprovar o WhatsApp Coexistence no seu número. Se isso não acontecer em até ${trialDays} dias, cancelamos a assinatura automaticamente — você não paga nada.`}
+        ? "Período de teste de ativação: seu cartão só é cobrado quando a Meta aprovar o WhatsApp Coexistence no seu número — seu ciclo mensal começa na data da aprovação. Se a aprovação não sair dentro do período de teste, cancelamos a assinatura automaticamente e você não paga nada — e você pode reiniciar o teste depois, se quiser."
+        : `Período de teste de ativação: seu cartão só é cobrado quando a Meta aprovar o WhatsApp Coexistence no seu número — seu ciclo mensal começa na data da aprovação. Se a aprovação não sair em até ${trialDays} dias, cancelamos a assinatura automaticamente e você não paga nada — e você pode reiniciar o teste depois, se quiser.`}
     </p>
   );
 }

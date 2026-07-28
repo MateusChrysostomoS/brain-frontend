@@ -2,6 +2,16 @@
 // ===== secretarIA — Appointment detail Drawer =====
 // Ported from _design-source/drawer.jsx.
 // Slides in from the right; shows either appointment details or a block summary.
+//
+// De-demo note (agenda mock-purge round, 2026-07-22): every item ever passed
+// here now comes from a real secretarIA hub fetch (id prefixed "hub-" — see
+// hub-mapping.ts) — the local seed/demo data this drawer used to also show is
+// gone. The hub only exposes CREATE for appointments/blocks so far; it has no
+// way to map a Google Calendar event back to the DB Appointment.id that
+// cancel/reschedule/status-change need, and no update endpoint for edits or
+// block removal at all (TODO(hub-write) — see hub-mapping.ts's module doc).
+// So every mutating action below is rendered but disabled with an honest
+// hint, instead of quietly mutating local state and flashing a fake success.
 
 import { Icon, Btn, StatusBadge, Avatar, IconBtn } from "../_shared/ui";
 import { STATUS_META, fmtRange, dayFull } from "../_shared/data";
@@ -14,12 +24,12 @@ import type { Appt, ApptStatus } from "../_shared/data";
 type DrawerProps = {
   appt: Appt;
   onClose: () => void;
-  onSetStatus: (appt: Appt, status: ApptStatus) => void;
-  onCancel: (appt: Appt) => void;
-  onReschedule: (appt: Appt) => void;
-  onEdit: (appt: Appt) => void;
-  onRemoveBlock: (appt: Appt) => void;
 };
+
+// Shared hint copy for every disabled mutation control below.
+const APPOINTMENT_HINT =
+  "Disponível em breve — por enquanto, gerencie pelo WhatsApp ou Google Calendar.";
+const BLOCK_HINT = "Gerencie pelo Google Calendar por enquanto.";
 
 // ---------------------------------------------------------------------------
 // InfoRow — labelled data row with leading icon
@@ -80,16 +90,12 @@ function InfoRow({
 // ---------------------------------------------------------------------------
 
 /**
- * Grid of three status buttons used to quickly update appointment attendance.
- * Active button adopts the matching status tone colours.
+ * Grid of three status buttons showing the appointment's current attendance
+ * status. Disabled (no hub endpoint to persist a status change against yet —
+ * see the module doc above) — the active state still highlights the current
+ * status so the picker stays informative even though it no longer picks.
  */
-function StatusPicker({
-  value,
-  onPick,
-}: {
-  value: ApptStatus;
-  onPick: (k: ApptStatus) => void;
-}) {
+function StatusPicker({ value }: { value: ApptStatus }) {
   const opts: Array<{ k: ApptStatus; label: string; icon: Parameters<typeof Icon>[0]["name"] }> = [
     { k: "confirmou",  label: "Confirmou",  icon: "check" },
     { k: "compareceu", label: "Compareceu", icon: "checkCircle" },
@@ -104,7 +110,8 @@ function StatusPicker({
         return (
           <button
             key={o.k}
-            onClick={() => onPick(o.k)}
+            disabled
+            title={APPOINTMENT_HINT}
             style={{
               display: "flex",
               flexDirection: "column",
@@ -114,11 +121,11 @@ function StatusPicker({
               borderRadius: 11,
               fontSize: 12.5,
               fontWeight: 600,
-              transition: "all .15s var(--ease)",
               background: active ? `var(--st-${tone}-bg)` : "var(--surface-2)",
               color: active ? `var(--st-${tone}-ink)` : "var(--ink-soft)",
               border: `1px solid ${active ? `var(--st-${tone}-bd)` : "var(--line)"}`,
-              cursor: "pointer",
+              opacity: active ? 1 : 0.55,
+              cursor: "not-allowed",
             }}
           >
             <Icon name={o.icon} size={19} />
@@ -136,19 +143,12 @@ function StatusPicker({
 
 /**
  * Right-side detail drawer.
- * - For a bloqueio: shows reason, time range, and a "Remover bloqueio" action.
+ * - For a bloqueio: shows reason, time range, and a disabled "Remover
+ *   bloqueio" action (no hub endpoint to remove a block yet).
  * - For an appointment: shows patient identity, info rows, anamnese status,
- *   a quick-status picker, and action buttons (remarcar / editar / cancelar).
+ *   a read-only status picker, and disabled remarcar/editar/cancelar actions.
  */
-export function Drawer({
-  appt,
-  onClose,
-  onSetStatus,
-  onCancel,
-  onReschedule,
-  onEdit,
-  onRemoveBlock,
-}: DrawerProps) {
+export function Drawer({ appt, onClose }: DrawerProps) {
   if (!appt) return null;
 
   const isBlock = appt.status === "bloqueio";
@@ -250,11 +250,15 @@ export function Drawer({
             <Btn
               variant="danger"
               icon="ban"
-              onClick={() => onRemoveBlock(appt)}
+              disabled
+              title={BLOCK_HINT}
               style={{ justifyContent: "center" }}
             >
               Remover bloqueio
             </Btn>
+            <p style={{ fontSize: 11.5, color: "var(--ink-faint)", lineHeight: 1.5, textAlign: "center" }}>
+              {BLOCK_HINT}
+            </p>
           </div>
         ) : (
           /* --- Appointment content --- */
@@ -338,7 +342,7 @@ export function Drawer({
               )}
             </div>
 
-            {/* quick status update */}
+            {/* quick status update — read-only for now, see StatusPicker */}
             <div>
               <div
                 style={{
@@ -348,15 +352,12 @@ export function Drawer({
                   marginBottom: 9,
                 }}
               >
-                Marcar status
+                Status
               </div>
-              <StatusPicker
-                value={appt.status}
-                onPick={(k) => onSetStatus(appt, k)}
-              />
+              <StatusPicker value={appt.status} />
             </div>
 
-            {/* action buttons */}
+            {/* action buttons — disabled, see APPOINTMENT_HINT */}
             <div style={{ display: "flex", flexDirection: "column", gap: 9, marginTop: 2 }}>
               <div
                 style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ink-soft)" }}
@@ -367,7 +368,8 @@ export function Drawer({
                 <Btn
                   variant="outline"
                   icon="swap"
-                  onClick={() => onReschedule(appt)}
+                  disabled
+                  title={APPOINTMENT_HINT}
                   style={{ justifyContent: "center", borderRadius: 11 }}
                 >
                   Remarcar
@@ -375,7 +377,8 @@ export function Drawer({
                 <Btn
                   variant="outline"
                   icon="edit"
-                  onClick={() => onEdit(appt)}
+                  disabled
+                  title={APPOINTMENT_HINT}
                   style={{ justifyContent: "center", borderRadius: 11 }}
                 >
                   Editar
@@ -384,14 +387,16 @@ export function Drawer({
               <Btn
                 variant="danger"
                 icon="xCircle"
-                onClick={() => onCancel(appt)}
+                disabled
+                title={APPOINTMENT_HINT}
                 style={{ justifyContent: "center", borderRadius: 11 }}
               >
                 Cancelar consulta
               </Btn>
             </div>
 
-            {/* WhatsApp disclaimer */}
+            {/* honest limitation notice — replaces the old "we'll notify the
+                patient" disclaimer, which is no longer true for hub items */}
             <p
               style={{
                 fontSize: 11.5,
@@ -399,14 +404,9 @@ export function Drawer({
                 lineHeight: 1.5,
                 textAlign: "center",
                 marginTop: 2,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 6,
               }}
             >
-              <Icon name="whatsapp" size={13} style={{ color: "#25a35f" }} />
-              Cancelar e remarcar enviam aviso ao paciente — você revisa antes.
+              {APPOINTMENT_HINT}
             </p>
           </div>
         )}

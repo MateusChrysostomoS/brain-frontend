@@ -19,13 +19,23 @@ import {
   WEEK_DAYS,
   APPT_TYPES,
   DURATIONS,
-  CLINIC,
   fmtTime,
   fmtRange,
   dayFull,
   firstName,
 } from "../_shared/data";
 import type { Appt } from "../_shared/data";
+
+// ---------------------------------------------------------------------------
+// clinicDisplay — strips a leading "Consultório " so a real clinic_name reads
+// naturally as "no {clinic}" / "do {clinic}" in the message templates below,
+// the same way the old CLINIC demo constant's name was authored to. Real
+// tenant names are free text (no guaranteed prefix), so this is a no-op for
+// most of them — kept only for continuity with names that DO follow the old
+// convention.
+// ---------------------------------------------------------------------------
+
+const clinicDisplay = (name: string): string => name.replace(/^Consultório\s+/, "");
 
 // ---------------------------------------------------------------------------
 // TIME_OPTS — list of selectable time slots (15-min intervals within HOUR_START..HOUR_END)
@@ -428,6 +438,7 @@ export function NewApptModal({
   onClose,
   onCreate,
   presetDay,
+  clinicName,
 }: {
   onClose: () => void;
   onCreate: (
@@ -435,6 +446,10 @@ export function NewApptModal({
     message: string | null
   ) => void;
   presetDay?: number;
+  // Real clinic name (from getMe(session) in page.tsx) — "" while logged out
+  // or before the fetch settles, in which case the message below simply omits
+  // the clinic mention rather than ever showing a hardcoded demo name.
+  clinicName: string;
 }) {
   const [patient, setPatient] = useState("");
   const [phone, setPhone]     = useState("+55 ");
@@ -449,7 +464,8 @@ export function NewApptModal({
     patient.trim().length > 1 && phone.replace(/\D/g, "").length >= 10;
 
   // Build the default WhatsApp message — recalculated whenever key fields change
-  const msg = `Olá, ${firstName(patient) || "tudo bem"}! Sua consulta de ${type} ficou agendada para ${dayFull(day)} às ${fmtTime(start)}. Antes do atendimento envio a pré-consulta por aqui. Até lá! 😊`;
+  const clinicPhrase = clinicName ? ` no ${clinicDisplay(clinicName)}` : "";
+  const msg = `Olá, ${firstName(patient) || "tudo bem"}! Sua consulta de ${type}${clinicPhrase} ficou agendada para ${dayFull(day)} às ${fmtTime(start)}. Antes do atendimento envio a pré-consulta por aqui. Até lá! 😊`;
   const [text, setText] = useState(msg);
 
   // Keep the default text in sync when scheduling fields change
@@ -714,6 +730,7 @@ export function RescheduleModal({
   appt,
   onClose,
   onConfirm,
+  clinicName,
 }: {
   appt: Appt;
   onClose: () => void;
@@ -722,12 +739,18 @@ export function RescheduleModal({
     slot: { day: number; start: number },
     message: string
   ) => void;
+  // See NewApptModal's clinicName doc — same real-name-or-omit contract.
+  // Currently unreachable from page.tsx (see agenda/drawer.tsx's disabled
+  // "Remarcar" action) — kept wired so this component has no fake clinic
+  // name left in it for whenever a follow-up re-enables it.
+  clinicName: string;
 }) {
   const [day, setDay]     = useState(appt.day);
   const [start, setStart] = useState(appt.start);
 
   // Base message template — {NOVO} is replaced by the new slot label
-  const base = `Olá, ${firstName(appt.patient)}! Sua consulta de ${appt.type} no ${CLINIC.name.replace("Consultório ", "")} foi remarcada de ${dayFull(appt.day)} às ${fmtTime(appt.start)} para {NOVO}. Pode confirmar pra gente? Qualquer coisa é só responder por aqui.`;
+  const clinicPhrase = clinicName ? ` no ${clinicDisplay(clinicName)}` : "";
+  const base = `Olá, ${firstName(appt.patient)}! Sua consulta de ${appt.type}${clinicPhrase} foi remarcada de ${dayFull(appt.day)} às ${fmtTime(appt.start)} para {NOVO}. Pode confirmar pra gente? Qualquer coisa é só responder por aqui.`;
 
   const newLabel = `${dayFull(day)} às ${fmtTime(start)}`;
   const [text, setText] = useState(base.replace("{NOVO}", newLabel));
@@ -831,16 +854,24 @@ export function CancelModal({
   appt,
   onClose,
   onConfirm,
+  clinicName,
 }: {
   appt: Appt;
   onClose: () => void;
   onConfirm: (appt: Appt, reason: string, message: string) => void;
+  // See NewApptModal's clinicName doc — same real-name-or-omit contract.
+  // Currently unreachable from page.tsx (see agenda/drawer.tsx's disabled
+  // "Cancelar consulta" action) — kept wired so this component has no fake
+  // clinic name left in it for whenever a follow-up re-enables it.
+  clinicName: string;
 }) {
   const [reason, setReason] = useState<string>(CANCEL_REASONS[0]);
 
   // Message body — reason is not currently interpolated in the source; kept faithful
-  const build = () =>
-    `Olá, ${firstName(appt.patient)}! Aqui é do ${CLINIC.name.replace("Consultório ", "")}. Precisamos cancelar sua consulta de ${appt.type} marcada para ${dayFull(appt.day)} às ${fmtTime(appt.start)}. Desculpe o imprevisto. Quer que a gente já reagende um novo horário? É só responder por aqui. 🙏`;
+  const build = () => {
+    const intro = clinicName ? `Aqui é do ${clinicDisplay(clinicName)}.` : "Aqui é da secretaria.";
+    return `Olá, ${firstName(appt.patient)}! ${intro} Precisamos cancelar sua consulta de ${appt.type} marcada para ${dayFull(appt.day)} às ${fmtTime(appt.start)}. Desculpe o imprevisto. Quer que a gente já reagende um novo horário? É só responder por aqui. 🙏`;
+  };
 
   const [text, setText] = useState(build());
 

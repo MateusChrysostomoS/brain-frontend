@@ -1,6 +1,19 @@
-// ===== secretarIA — seed data, status metadata, time helpers =====
+// ===== secretarIA — calendar grid constants, status metadata, time helpers =====
 // Ported from _design-source/data.jsx — plain ES module, no browser globals.
-// Reference week: Mon 01/06 – Sat 06/06 (2026). Today = Tue 02/06.
+//
+// The weekly/monthly grid labels below (WEEK_DAYS, MONTH_LABEL, PERIOD_LABEL —
+// plus MonthView's hardcoded June-2026 grid in calendar.tsx) still describe a
+// fixed reference week (Mon 01/06 – Sat 06/06 2026) inherited from the ported
+// design. Real hub events are mapped onto these fixed day columns by
+// day-of-week only (see agenda/lib/hub-mapping.ts) — the header/month-grid
+// dates do not track which real calendar week is actually being fetched. This
+// is a known scaffold limitation, not something the agenda mock-purge round
+// (2026-07-22) fixes — see that round's notes for follow-up.
+//
+// The fabricated SEED_APPTS/SEED_BLOCKS appointment rows that used to live in
+// this file were deleted in that same round: the agenda page now only ever
+// renders real secretarIA hub data or an honest empty/error state, never
+// fabricated appointments.
 
 // ---------------------------------------------------------------------------
 // Domain types
@@ -92,81 +105,6 @@ export const STATUS_META: Record<ApptStatus, { label: string; short: string; ton
 
 export const CURRENT_USER = { name: "Camila Soares", role: "Secretária" };
 export const CLINIC = { name: "Consultório Dr. Aurélio Lima", specialty: "Clínica geral" };
-
-// ---------------------------------------------------------------------------
-// Seed appointments (factory mirrors the original data.jsx `A()` helper)
-// ---------------------------------------------------------------------------
-
-let _id = 1;
-const A = (
-  day: number,
-  start: number,
-  dur: number,
-  patient: string,
-  phone: string,
-  type: string,
-  status: ApptStatus,
-  anamnese: Anamnese,
-): Appt => ({ id: "a" + _id++, day, start, dur, patient, phone, type, status, anamnese, notes: "" });
-
-export const SEED_APPTS: Appt[] = [
-  // ---- Segunda ----
-  A(0,  8*60,     50, "Helena Vasconcelos",  "+55 11 98841-2207", "Retorno",            "compareceu", "recebida"),
-  A(0,  9*60,     40, "Rafael Monteiro",     "+55 11 99120-7741", "Consulta",            "compareceu", "recebida"),
-  A(0, 10*60,     60, "Bianca Ferraz",       "+55 11 98003-5512", "Primeira consulta",   "faltou",     "pendente"),
-  A(0, 14*60,     50, "Otávio Lacerda",      "+55 11 99710-8830", "Consulta",            "compareceu", "recebida"),
-  A(0, 15*60+30,  40, "Marina Antunes",      "+55 11 98455-1190", "Teleconsulta",        "compareceu", "—"),
-  A(0, 17*60,     30, "Diego Prado",         "+55 11 99088-4471", "Retorno",             "compareceu", "recebida"),
-  // ---- Terça (hoje) ----
-  A(1,  8*60,     40, "Camila Rezende",      "+55 11 98712-0094", "Retorno",             "compareceu", "recebida"),
-  A(1,  8*60+50,  50, "Júlia Bernardes",     "+55 11 99633-2218", "Consulta",            "confirmou",  "recebida"),
-  A(1, 10*60,     60, "André Coutinho",      "+55 11 98290-7765", "Primeira consulta",   "confirmou",  "recebida"),
-  A(1, 11*60+10,  30, "Fernanda Lemos",      "+55 11 99514-8802", "Retorno",             "agendado",   "pendente"),
-  A(1, 14*60,     50, "Lucas Tavares",       "+55 11 98176-3340", "Consulta",            "confirmou",  "recebida"),
-  A(1, 15*60,     40, "Patrícia Nogueira",   "+55 11 99847-1126", "Teleconsulta",        "agendado",   "—"),
-  A(1, 16*60,     60, "Roberto Almeida",     "+55 11 98620-5519", "Avaliação",           "agendado",   "pendente"),
-  A(1, 17*60+30,  30, "Sofia Marques",       "+55 11 99205-7783", "Retorno",             "agendado",   "recebida"),
-  // ---- Quarta ----
-  A(2,  8*60+30,  50, "Gustavo Pires",       "+55 11 98330-2214", "Consulta",            "agendado",   "pendente"),
-  A(2,  9*60+40,  60, "Larissa Fontes",      "+55 11 99761-0085", "Primeira consulta",   "agendado",   "recebida"),
-  A(2, 14*60,     40, "Eduardo Salles",      "+55 11 98014-6628", "Retorno",             "agendado",   "pendente"),
-  A(2, 15*60+30,  50, "Beatriz Cunha",       "+55 11 99458-2231", "Consulta",            "agendado",   "recebida"),
-  // ---- Quinta ----
-  A(3,  9*60,     60, "Henrique Duarte",     "+55 11 98877-3300", "Procedimento",        "agendado",   "pendente"),
-  A(3, 11*60,     30, "Vanessa Rocha",       "+55 11 99332-7714", "Retorno",             "agendado",   "recebida"),
-  A(3, 14*60+30,  50, "Thiago Barros",       "+55 11 98540-1182", "Consulta",            "agendado",   "pendente"),
-  A(3, 16*60,     40, "Aline Castro",        "+55 11 99670-4408", "Teleconsulta",        "agendado",   "—"),
-  // ---- Sexta ----
-  A(4,  8*60,     50, "Mariana Vidal",       "+55 11 98123-9970", "Consulta",            "agendado",   "recebida"),
-  A(4,  9*60+30,  60, "Felipe Andrade",      "+55 11 99812-2256", "Primeira consulta",   "agendado",   "pendente"),
-  A(4, 14*60,     40, "Carolina Paiva",      "+55 11 98447-6613", "Retorno",             "agendado",   "pendente"),
-  // ---- Sábado ----
-  A(5,  8*60+30,  40, "Renato Figueira",     "+55 11 98905-3321", "Retorno",             "confirmou",  "recebida"),
-  A(5,  9*60+30,  50, "Isabela Moraes",      "+55 11 99277-8840", "Consulta",            "agendado",   "pendente"),
-];
-
-// ---------------------------------------------------------------------------
-// Seed blocks (lunch + absences) — reuse Appt shape with status "bloqueio"
-// ---------------------------------------------------------------------------
-
-const B = (day: number, start: number, dur: number, reason: string): Appt => ({
-  id: "b" + _id++,
-  day,
-  start,
-  dur,
-  status: "bloqueio",
-  reason,
-});
-
-export const SEED_BLOCKS: Appt[] = [
-  B(0, 12*60, 60,  "Almoço"),
-  B(1, 12*60, 60,  "Almoço"),
-  B(2, 12*60, 60,  "Almoço"),
-  B(3, 12*60, 60,  "Almoço"),
-  B(4, 12*60, 60,  "Almoço"),
-  B(2, 16*60+30, 90, "Reunião clínica"),
-  B(4, 11*60,    90, "Ausência"),
-];
 
 // ---------------------------------------------------------------------------
 // Time helpers

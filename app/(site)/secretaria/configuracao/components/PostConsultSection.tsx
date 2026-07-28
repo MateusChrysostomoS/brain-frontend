@@ -1,9 +1,9 @@
 "use client";
 // PostConsultSection — Section 03 "Pós-consulta": two new tenant-level wire
-// fields (siblings of greeting_message/persona_notes) — a fixed message sent
-// right after a consult, and reference knowledge the AI uses to answer the
-// patient's post-consult questions. The two must never be conflated — see
-// each field's tip below.
+// fields (siblings of greeting_message) — a fixed message sent right after a
+// consult, and reference knowledge the AI uses to answer the patient's
+// post-consult questions. The two must never be conflated — see each
+// field's tip below.
 
 import { Field, TextArea } from "../../_shared/ui";
 import { Section } from "./Section";
@@ -12,6 +12,9 @@ import type { PostConsult } from "../lib/types";
 type PostConsultSectionProps = {
   v: PostConsult;
   set: <K extends keyof PostConsult>(key: K, value: PostConsult[K]) => void;
+  // True when the secretarIA hub is unreachable right now (see
+  // useSecretariaHub) — inputs are disabled since nothing typed here could
+  // be saved until the connection returns.
   readOnly?: boolean;
 };
 
@@ -25,13 +28,6 @@ export function PostConsultSection({ v, set, readOnly }: PostConsultSectionProps
       desc="O que a secretarIA envia e responde depois que o paciente já passou pela consulta."
     >
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-        {readOnly && (
-          <div className="alert-line alert-line--amber" style={{ marginBottom: -4 }}>
-            <span className="dot dot--amber" />
-            Somente o proprietário da clínica pode editar essas informações.
-          </div>
-        )}
-
         <Field
           label="Mensagem pós-consulta"
           tip="Mensagem pronta que a secretarIA usa com o paciente logo depois da consulta — ex.: agradecer a visita e lembrar os próximos passos. É enviada como está escrita, não improvisada pela IA."

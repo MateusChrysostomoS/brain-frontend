@@ -1,7 +1,10 @@
 "use client";
-// InviteProfessionalModal — owner-only "Convidar profissional" form
-// (nome/email/especialidade) -> POST /doctor/professionals/invites -> shows a
-// copyable invite_link + "convite enviado por email" note (Feature C3).
+// InviteProfessionalModal — "Convidar profissional" form (nome/email/
+// especialidade) -> POST /doctor/professionals/invites -> shows a copyable
+// invite_link + "convite enviado por email" note (Feature C3). Open to any
+// authenticated tenant member (owner or staff) — ProfessionalsSection no
+// longer owner-gates rendering this; the backend is the real authority on
+// who may invite.
 // Reuses the shared portal Modal (app/(site)/_components/Modal.tsx) and its
 // PortalShell.css — imported directly here since this route never otherwise
 // pulls that stylesheet in.

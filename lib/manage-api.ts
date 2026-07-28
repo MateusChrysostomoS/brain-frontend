@@ -12,12 +12,15 @@
 //   POST /billing/portal   -> Stripe Billing Portal URL       (createPortalSession)
 //   POST /doctor/secretaria/hub-token -> secretarIA hub token (getSecretariaHubToken)
 //   POST /demo-requests  -> lead-capture confirmation         (submitDemoRequest)
-//   GET  /public/checkout-config         -> trial length, in days    (getCheckoutTrialDays)
+//   GET  /public/checkout-config         -> trial length + add-on availability (getCheckoutConfig, getCheckoutTrialDays)
 //   POST /public/signup-intents          -> register lead + session  (registerSignup)
+//   PATCH /public/signup-intents/{id}    -> update add-on selection  (updateSignupIntentCatalog)
 //   POST /doctor/onboarding/intake       -> attach wizard intake     (attachSignupIntake)
 //   POST /public/checkout-sessions       -> Stripe Checkout URL      (createPublicCheckoutSession)
 //   GET  /public/onboarding-status       -> async webhook activation (getOnboardingStatus)
 //   POST /auth/exchange-onboarding-token -> real session, one-time   (exchangeOnboardingToken)
+//   GET  /doctor/onboarding/test-window          -> activation test-window state (getTestWindow)
+//   POST /doctor/onboarding/test-window/restart  -> restart the test window      (restartTestWindow)
 
 // ---------------------------------------------------------------------------
 // Types
@@ -440,27 +443,58 @@ export async function submitDemoRequest(
 // ---------------------------------------------------------------------------
 
 // GET /public/checkout-config — unauthenticated config read backing the
-// pre-checkout trial disclosure (CheckoutTrialNotice component). The deployed
-// STRIPE_TRIAL_PERIOD_DAYS value lives ONLY on brain-api; this is the single
-// place the frontend learns it, so the disclosure copy can never hardcode a
-// number that drifts from the real Stripe trial length.
+// pre-checkout trial disclosure (CheckoutTrialNotice component) and the
+// /cadastro add-ons step (AddonsStep). The deployed STRIPE_TRIAL_PERIOD_DAYS
+// value and per-add-on availability live ONLY on brain-api; this is the single
+// place the frontend learns them, so neither the disclosure copy nor the
+// add-ons list can ever hardcode a value that drifts from what's really live.
+// `addons` is optional — today's backend only returns `trial_period_days`;
+// treat an absent/empty list as "nothing offerable yet", never as an error.
+export type CheckoutConfigAddon = { id: string; available: boolean };
+
 export type CheckoutConfig = {
   trial_period_days: number;
+  addons?: CheckoutConfigAddon[];
 };
 
-// Resolves the trial length in days, or null on ANY failure (network error,
-// non-200 status, or a malformed/missing field). Never throws — callers
-// render a number-free fallback disclosure instead of breaking the funnel.
-export async function getCheckoutTrialDays(): Promise<number | null> {
+function isCheckoutConfigAddon(value: unknown): value is CheckoutConfigAddon {
+  if (typeof value !== "object" || value === null) return false;
+  const v = value as Record<string, unknown>;
+  return typeof v.id === "string" && typeof v.available === "boolean";
+}
+
+// Resolves the full checkout config, or null on ANY failure (network error,
+// non-200 status, or a malformed/missing trial_period_days field). Never
+// throws — callers render/skip defensively instead of breaking the funnel.
+// Malformed entries inside `addons` are dropped rather than failing the whole
+// call — same defensive spirit as coerceAddons/coerceLimits above.
+export async function getCheckoutConfig(): Promise<CheckoutConfig | null> {
   try {
-    const data = await manageFetch<CheckoutConfig>("/public/checkout-config");
-    return typeof data.trial_period_days === "number" &&
-      Number.isFinite(data.trial_period_days)
-      ? data.trial_period_days
-      : null;
+    const data = await manageFetch<{ trial_period_days?: unknown; addons?: unknown }>(
+      "/public/checkout-config",
+    );
+    if (
+      typeof data.trial_period_days !== "number" ||
+      !Number.isFinite(data.trial_period_days)
+    ) {
+      return null;
+    }
+    return {
+      trial_period_days: data.trial_period_days,
+      addons: Array.isArray(data.addons) ? data.addons.filter(isCheckoutConfigAddon) : [],
+    };
   } catch {
     return null;
   }
+}
+
+// Resolves just the trial length in days — the original, narrower contract this
+// function has always had (see CheckoutTrialNotice). Thin wrapper over
+// getCheckoutConfig so the two can never drift; behavior is UNCHANGED for
+// existing callers/tests (null on any failure, 0 passed through as-is).
+export async function getCheckoutTrialDays(): Promise<number | null> {
+  const config = await getCheckoutConfig();
+  return config ? config.trial_period_days : null;
 }
 
 // Onboarding intake — collected by the /cadastro wizard (Feature 0) so brain-api
@@ -530,6 +564,23 @@ export async function registerSignup(
       professionalId: readProfessionalIdClaim(claims),
     },
   };
+}
+
+// PATCH /public/signup-intents/{intent_id} — updates the catalog (plan + add-on)
+// selection on a still-pending signup intent. Unauthenticated, same public flow as
+// registerSignup — called by AddonsStep (Task 1a) right before the intent moves to
+// checkout. The exact shape of "updated intent summary" isn't pinned down by the
+// contract yet, so callers that only care about success/failure can ignore the
+// resolved value. Throws ManageApiError: 409 if the intent is no longer pending, or
+// a 4xx if the selection is invalid.
+export async function updateSignupIntentCatalog(
+  intentId: string,
+  catalogIds: string[],
+): Promise<unknown> {
+  return manageFetch<unknown>(`/public/signup-intents/${intentId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ catalog_ids: catalogIds }),
+  });
 }
 
 // POST /doctor/onboarding/intake — authenticated (the visitor is logged in from
@@ -1187,6 +1238,78 @@ export function getAnamnesis(
   );
 }
 
+// One appointment row (list) — lean projection from secretaria (no Google/internal
+// ids, see secretaria's InternalAppointment). `patient_id`/`phone` are both null for a
+// doctor-hub schedule BLOCK (no patient attached); a block is also always
+// `appointment_type === "Bloqueado"`. Callers exclude blocks from any consultas
+// list/count (see the /app dashboard SecretariaPanel).
+export type DoctorAppointment = {
+  id: string;
+  patient_id: string | null;
+  appointment_type: string | null;
+  start_at: string | null;
+  end_at: string | null;
+  // Loosely typed (like Anamnesis.status below) rather than a literal union: today's
+  // values are scheduled|cancelled|rescheduled|confirmed|attended|no_show, but callers
+  // must not hard-crash if the backend ever adds one before the frontend redeploys.
+  status: string;
+  phone: string | null;
+};
+
+export type DoctorAppointmentList = {
+  data: DoctorAppointment[];
+  // true when brain-api's secretaria mesh is unconfigured locally — `data` is always
+  // [] in that case (secretaria_internal.py::_empty_page). Never surfaced as an error;
+  // callers treat an empty `data` the same whether or not this flag is set.
+  stub?: boolean;
+};
+
+// GET /doctor/appointments — the tenant's appointments (brain-api -> secretaria
+// `/internal/tenants/{tenant_id}/appointments`, scoped server-side to the caller's own
+// tenant_id). Degrades to an empty `{ data: [] }` page when the secretaria mesh is
+// unconfigured (never a 500); a genuinely failing upstream (key mismatch, network
+// error, secretaria 5xx) surfaces as ManageApiError 502.
+export function listDoctorAppointments(
+  session: Session,
+  skip = 0,
+  limit = 100,
+): Promise<DoctorAppointmentList> {
+  return manageFetch<DoctorAppointmentList>(
+    "/doctor/appointments" + pageQuery(skip, limit),
+    {},
+    session.token,
+  );
+}
+
+// One patient row (list) — `wa_id` is the patient's WhatsApp id (== their phone,
+// E.164-ish digits), the only contact handle secretaria stores; `name` can be null
+// (never collected yet). Appointment rows carry no name of their own — join on `id`.
+export type DoctorPatient = {
+  id: string;
+  name: string | null;
+  wa_id: string;
+  created_at: string;
+};
+
+export type DoctorPatientList = {
+  data: DoctorPatient[];
+  stub?: boolean; // see DoctorAppointmentList
+};
+
+// GET /doctor/patients — the tenant's patients (same brain-api -> secretaria
+// `/internal` path, and the same degrade/error semantics, as listDoctorAppointments).
+export function listDoctorPatients(
+  session: Session,
+  skip = 0,
+  limit = 100,
+): Promise<DoctorPatientList> {
+  return manageFetch<DoctorPatientList>(
+    "/doctor/patients" + pageQuery(skip, limit),
+    {},
+    session.token,
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Doctor onboarding API (role=tenant_owner|tenant_staff) — Onboarding &
 // Multi-Professional contract §7. Drives the /app/onboarding eligibility
@@ -1308,6 +1431,60 @@ export function pauseOnboarding(
   return manageFetch<unknown>(
     "/doctor/onboarding/pause",
     { method: "POST", body: JSON.stringify(payload) },
+    session.token,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Activation test window (role=tenant_owner|tenant_staff) — the billing-side
+// counterpart to the onboarding state above. A subscription's first Stripe cycle
+// is a "test window": nothing is charged until Meta approves WhatsApp
+// Coexistence, and the subscription auto-cancels if that approval doesn't land
+// before the deadline (see CheckoutTrialNotice for the pre-checkout disclosure of
+// this same window). Drives the /app/reativar screen (Task 2).
+// ---------------------------------------------------------------------------
+
+export type TestWindow = {
+  // False for a plan that never carries the WhatsApp Coexistence promise (e.g.
+  // PreCheck-only) — /app/reativar renders a "doesn't apply" state.
+  applicable: boolean;
+  days_total: number;
+  started_at: string | null;
+  deadline_at: string | null;
+  onboarding_state: string;
+  connected_at: string | null;
+  expired: boolean;
+  notified: boolean;
+  subscription_status: string | null;
+  // Whether POST .../restart is currently expected to succeed. The backend is
+  // still the authority — a restart attempt can still 409 regardless of this flag.
+  can_restart: boolean;
+};
+
+// GET /doctor/onboarding/test-window — current state of the tenant's activation
+// test window. Side-effect free; safe to poll/refetch freely (mirrors
+// getDoctorOnboarding above).
+export function getTestWindow(session: Session): Promise<TestWindow> {
+  return manageFetch<TestWindow>("/doctor/onboarding/test-window", {}, session.token);
+}
+
+export type RestartTestWindowResult = {
+  restarted: true;
+  deadline_at: string;
+  // False means no card is on file — the caller should point the tenant at
+  // /app/billing so the eventual (post-approval) charge doesn't fail.
+  payment_method_present: boolean;
+};
+
+// POST /doctor/onboarding/test-window/restart — starts a fresh test window (new
+// deadline) after the previous one expired unapproved. Throws ManageApiError 409
+// with `.message` one of `test_window_not_applicable` | `already_connected` |
+// `checkout_required` — the last one means the subscription needs a new Stripe
+// Checkout before it can carry a test window again.
+export function restartTestWindow(session: Session): Promise<RestartTestWindowResult> {
+  return manageFetch<RestartTestWindowResult>(
+    "/doctor/onboarding/test-window/restart",
+    { method: "POST" },
     session.token,
   );
 }

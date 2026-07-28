@@ -1,9 +1,11 @@
 "use client";
 // MessagesSection — Section 02 "Mensagens". Every field here already existed
 // on secretarIA's wire (TenantConfigWire) — this is the first UI for them.
-// greeting_message/returning_greeting_message/persona_notes/language were
-// silently unused by the old UI; greeting_buttons is capped at 3 short labels
-// (WhatsApp quick-reply buttons).
+// greeting_message/returning_greeting_message/language were silently unused
+// by the old UI; greeting_buttons is capped at 3 short labels (WhatsApp
+// quick-reply buttons). The old free-text tone/behavior-rules field was
+// removed from this UI — a hardcoded safety layer now lives in the backend
+// prompt instead of a clinic-editable field.
 
 import { Icon, Field, TextInput, TextArea } from "../../_shared/ui";
 import { Section } from "./Section";
@@ -20,6 +22,9 @@ const LANGUAGE_OPTIONS: { value: string; label: string }[] = [
 type MessagesSectionProps = {
   v: Messages;
   set: <K extends keyof Messages>(key: K, value: Messages[K]) => void;
+  // True when the secretarIA hub is unreachable right now (see
+  // useSecretariaHub) — inputs are disabled since nothing typed here could
+  // be saved until the connection returns.
   readOnly?: boolean;
 };
 
@@ -50,13 +55,6 @@ export function MessagesSection({ v, set, readOnly }: MessagesSectionProps) {
       desc="Como a secretarIA cumprimenta e se comporta no WhatsApp — a primeira impressão que o paciente tem da clínica."
     >
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-        {readOnly && (
-          <div className="alert-line alert-line--amber" style={{ marginBottom: -4 }}>
-            <span className="dot dot--amber" />
-            Somente o proprietário da clínica pode editar essas informações.
-          </div>
-        )}
-
         <Field
           label="Mensagem de boas-vindas"
           tip="Enviada quando um paciente escreve pela primeira vez (ou depois de muito tempo sem conversar)."
@@ -136,31 +134,18 @@ export function MessagesSection({ v, set, readOnly }: MessagesSectionProps) {
           </div>
         </Field>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-          <Field
-            label="Tom de voz e regras do atendimento"
-            tip="Como a secretarIA deve falar e o que NÃO pode fazer. Ex.: tratar por “você”, não dar diagnóstico, encaminhar urgências ao pronto-socorro."
+        <Field label="Idioma de atendimento">
+          <CSelect
+            value={v.language}
+            onChange={e => set("language", e.target.value)}
+            disabled={readOnly}
+            style={{ maxWidth: 320 }}
           >
-            <TextArea
-              value={v.personaNotes}
-              onChange={e => set("personaNotes", e.target.value)}
-              rows={4}
-              placeholder="Ex.: Tom cordial e próximo, tratando o paciente por “você”. Nunca dar diagnóstico nem orientação clínica. Em caso de urgência, orientar a procurar o pronto-socorro mais próximo."
-              disabled={readOnly}
-            />
-          </Field>
-          <Field label="Idioma de atendimento">
-            <CSelect
-              value={v.language}
-              onChange={e => set("language", e.target.value)}
-              disabled={readOnly}
-            >
-              {LANGUAGE_OPTIONS.map(o => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </CSelect>
-          </Field>
-        </div>
+            {LANGUAGE_OPTIONS.map(o => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </CSelect>
+        </Field>
       </div>
     </Section>
   );

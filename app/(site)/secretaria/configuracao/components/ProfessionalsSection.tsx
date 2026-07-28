@@ -1,10 +1,17 @@
 "use client";
-// ProfessionalsSection — Section 05 "Profissionais" (Feature C3). Owner view:
-// self-bind prompt, a selector for which professional Services/Availability
-// edit below, that professional's specialty/about/context fields, the roster
-// (completeness chips + per-row Calendar connect), and "Convidar profissional".
-// Staff view (Feature E, `lockedToOwnProfessional`): just their own profile
-// fields — no roster, no invite, no self-bind (owner-only actions).
+// ProfessionalsSection — Section 05 "Profissionais" (Feature C3). Every
+// authenticated tenant member (owner OR staff) gets the full view: the
+// selector for which professional Services/Availability edit below, that
+// professional's specialty/about/context fields, the roster (completeness
+// chips + per-row Calendar connect), and "Convidar profissional" — invites
+// are no longer owner-gated client-side (the backend is the real authority,
+// and is being relaxed to accept staff writes too). The self-bind prompt
+// ("Você também atende pacientes?") stays owner-only: it exists to let the
+// clinic OWNER become a treating professional too, which doesn't apply to
+// staff who were already invited AS a professional. A staff member's own
+// professional is preselected the first time the roster loads (see
+// page.tsx's loadProfessionals), but nothing stops them from switching to a
+// colleague afterwards.
 
 import { useState } from "react";
 import { Avatar, Btn, Field, Icon, TextArea, TextInput } from "../../_shared/ui";
@@ -20,12 +27,14 @@ type ProfessionalsSectionProps = {
   // (with an explanatory title) rather than a broken/inert click, mirroring
   // GoogleSection's optional onConnect/onDisconnect pattern.
   session: Session | null;
+  // Gates ONLY the self-bind prompt ("Você também atende pacientes?") — an
+  // owner-specific action. Roster visibility and invite management are open
+  // to any authenticated tenant member; see the header comment above.
   isOwner: boolean;
   roster: DoctorProfessional[] | null;
   rosterError: boolean;
   selectedId: string | null;
   onSelect: (id: string) => void;
-  lockedToOwnProfessional: boolean;
   profile: ProfessionalProfile;
   onProfileChange: <K extends keyof ProfessionalProfile>(key: K, value: ProfessionalProfile[K]) => void;
   onRosterChanged: () => void;
@@ -38,7 +47,6 @@ export function ProfessionalsSection({
   rosterError,
   selectedId,
   onSelect,
-  lockedToOwnProfessional,
   profile,
   onProfileChange,
   onRosterChanged,
@@ -93,11 +101,7 @@ export function ProfessionalsSection({
       num="05"
       icon="users"
       title="Profissionais"
-      desc={
-        lockedToOwnProfessional
-          ? "Suas informações como profissional — visíveis apenas para você e para quem administra a clínica."
-          : "Cada profissional tem sua própria agenda, serviços e horários. Convide sua equipe e conecte a agenda de cada um."
-      }
+      desc="Cada profissional tem sua própria agenda, serviços e horários. Convide sua equipe e conecte a agenda de cada um."
     >
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {showSelfBindPrompt && (
@@ -128,7 +132,7 @@ export function ProfessionalsSection({
         )}
 
         {/* --- Professional selector chips (only when there's a real choice) --- */}
-        {!lockedToOwnProfessional && roster && roster.length > 1 && (
+        {roster && roster.length > 1 && (
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {roster.map((p) => (
               <button
@@ -153,9 +157,9 @@ export function ProfessionalsSection({
         )}
 
         {/* --- Selected professional's profile fields --- */}
-        {(lockedToOwnProfessional || selectedId) && (
+        {selectedId && (
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {selectedName && !lockedToOwnProfessional && (
+            {selectedName && (
               <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--ink-faint)", letterSpacing: ".02em" }}>
                 EDITANDO: {selectedName.toUpperCase()}
               </span>
@@ -197,8 +201,8 @@ export function ProfessionalsSection({
           </div>
         )}
 
-        {/* --- Roster (owner only) --- */}
-        {!lockedToOwnProfessional && roster && roster.length > 0 && (
+        {/* --- Roster --- */}
+        {roster && roster.length > 0 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {connectError && (
               <p role="alert" style={{ fontSize: 12.5, color: "var(--danger, #c0392b)" }}>
@@ -219,14 +223,16 @@ export function ProfessionalsSection({
           </div>
         )}
 
-        {!lockedToOwnProfessional && isOwner && (
+        {/* Invite management is open to any authenticated tenant member —
+            not owner-gated client-side (the backend is the real authority). */}
+        {session && (
           <Btn variant="outline" icon="plus" onClick={() => setInviteOpen(true)} style={{ alignSelf: "flex-start" }}>
             Convidar profissional
           </Btn>
         )}
       </div>
 
-      {isOwner && session && (
+      {session && (
         <InviteProfessionalModal
           session={session}
           open={inviteOpen}

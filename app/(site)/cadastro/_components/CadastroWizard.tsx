@@ -7,7 +7,8 @@
 // DB and the visitor is logged in before they answer another question — even if they
 // abandon the wizard or never pay. Steps are pushed onto a history stack on every forward
 // move so "Voltar" always returns to the exact previous step, including the two
-// conditional guided screens.
+// conditional guided screens. A third conditional step, `addons` (Task 1a), sits right
+// before `summary` for secretarIA purchases only — see nextAfterEligibility.
 
 import { useState } from "react";
 import { WizardShell } from "./WizardShell";
@@ -17,13 +18,14 @@ import { DedicatedNumberGuide } from "./DedicatedNumberGuide";
 import { PriorApiStep } from "./PriorApiStep";
 import { FacebookPageStep } from "./FacebookPageStep";
 import { PageCreationGuide } from "./PageCreationGuide";
+import { AddonsStep } from "./AddonsStep";
 import { SummaryStep } from "./SummaryStep";
 import { registerSignup, saveSession, ManageApiError } from "@/lib/manage-api";
-import { EMPTY_ANSWERS, type StepId, type WizardAnswers } from "../lib/types";
+import { EMPTY_ANSWERS, SIGNUP_ADDON_IDS, type StepId, type WizardAnswers } from "../lib/types";
 import type { ResolvedPlan } from "../lib/plans";
 
-// Ordinal position per step, used only for the progress bar (0..6). Branches
-// that skip a conditional screen simply jump two positions instead of one —
+// Ordinal position per step, used only for the progress bar (0..7). Branches
+// that skip a conditional screen simply jump positions instead of by one —
 // a minor visual jump, not worth a fully dynamic step count.
 const PROGRESS: Record<StepId, number> = {
   contact: 0,
@@ -32,9 +34,10 @@ const PROGRESS: Record<StepId, number> = {
   prior_api: 3,
   fb_page: 4,
   page_creation: 5,
-  summary: 6,
+  addons: 6,
+  summary: 7,
 };
-const LAST_INDEX = 6;
+const LAST_INDEX = 7;
 
 const PROGRESS_LABEL: Record<StepId, string> = {
   contact: "Dados de contato",
@@ -43,12 +46,15 @@ const PROGRESS_LABEL: Record<StepId, string> = {
   prior_api: "Histórico do número",
   fb_page: "Página no Facebook",
   page_creation: "Criar Página",
+  addons: "Complementos",
   summary: "Revisão",
 };
 
 // The branching transition table (spec §A): Q1 "none" detours through the
-// dedicated-number guide; Q4 "no" detours through the page-creation guide.
-function nextStepId(current: StepId, answers: WizardAnswers): StepId {
+// dedicated-number guide; Q4 "no" detours through the page-creation guide. Both
+// eligibility branches converge on `addons` (Task 1a) before `summary` — but only
+// for a secretarIA purchase; see nextAfterEligibility.
+function nextStepId(current: StepId, answers: WizardAnswers, plan: ResolvedPlan): StepId {
   switch (current) {
     case "contact":
       return "usage";
@@ -59,11 +65,21 @@ function nextStepId(current: StepId, answers: WizardAnswers): StepId {
     case "prior_api":
       return "fb_page";
     case "fb_page":
-      return answers.fbPage === "no" ? "page_creation" : "summary";
+      return answers.fbPage === "no" ? "page_creation" : nextAfterEligibility(plan);
     case "page_creation":
+      return nextAfterEligibility(plan);
+    case "addons":
     case "summary":
       return "summary";
   }
+}
+
+// Shared by both eligibility-question exits (fb_page's "yes*" answers and the
+// page_creation guide's "Entendi, continuar"): a secretarIA purchase gets the
+// add-ons step first; PreCheck has no add-ons to offer today and goes straight to
+// the summary/checkout step.
+function nextAfterEligibility(plan: ResolvedPlan): StepId {
+  return plan.planId === "secretaria_basico" ? "addons" : "summary";
 }
 
 type CadastroWizardProps = {
@@ -71,7 +87,13 @@ type CadastroWizardProps = {
 };
 
 export function CadastroWizard({ plan }: CadastroWizardProps) {
-  const [answers, setAnswers] = useState<WizardAnswers>(EMPTY_ANSWERS);
+  // Lazy init: preselect any add-on already named in the incoming `?catalog=`
+  // (intersected against the two known offerable ids) so a marketing link that
+  // already names an add-on shows it pre-checked on the addons step.
+  const [answers, setAnswers] = useState<WizardAnswers>(() => ({
+    ...EMPTY_ANSWERS,
+    selectedAddonIds: SIGNUP_ADDON_IDS.filter((id) => plan.catalogIds.includes(id)),
+  }));
   const [step, setStep] = useState<StepId>("contact");
   const [history, setHistory] = useState<StepId[]>([]);
 
@@ -86,7 +108,7 @@ export function CadastroWizard({ plan }: CadastroWizardProps) {
 
   function goNext() {
     setHistory((h) => [...h, step]);
-    setStep(nextStepId(step, answers));
+    setStep(nextStepId(step, answers, plan));
   }
 
   function goBack() {
@@ -181,6 +203,17 @@ export function CadastroWizard({ plan }: CadastroWizardProps) {
         />
       )}
       {step === "page_creation" && <PageCreationGuide onNext={goNext} onBack={goBack} />}
+      {step === "addons" && (
+        <AddonsStep
+          intentId={intentId}
+          plan={plan}
+          selected={answers.selectedAddonIds}
+          onSelectedChange={(ids) => setAnswers((a) => ({ ...a, selectedAddonIds: ids }))}
+          onNext={goNext}
+          onSkip={() => setStep("summary")}
+          onBack={goBack}
+        />
+      )}
       {step === "summary" && (
         <SummaryStep answers={answers} plan={plan} intentId={intentId} onBack={goBack} />
       )}

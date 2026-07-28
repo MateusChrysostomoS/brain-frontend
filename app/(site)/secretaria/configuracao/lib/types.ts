@@ -39,10 +39,6 @@ export type Messages = {
   returningGreetingMessage: string;
   // Short quick-reply labels shown as WhatsApp buttons — capped at 3.
   greetingButtons: string[];
-  // Free-text tone/behavior rules — this REPLACES the old demo-only
-  // ClinicCtx.tone field (that never round-tripped); persona_notes is a real
-  // wire field, so it now carries the same "how should the bot talk" intent.
-  personaNotes: string;
   language: string;
 };
 
@@ -50,7 +46,7 @@ export type Messages = {
 // Section 03 — Post-consult (message sent + knowledge used to answer questions)
 // ---------------------------------------------------------------------------
 
-// Two NEW tenant-level wire fields, siblings of greeting_message/persona_notes
+// Two NEW tenant-level wire fields, siblings of greeting_message
 // (see Messages above) — kept as their own type because the two jobs are easy
 // to conflate:
 export type PostConsult = {
@@ -166,10 +162,11 @@ export type Prefs = {
 // Section 08 — Google Calendar (tenant-level; unchanged single-professional path)
 // ---------------------------------------------------------------------------
 
+// `connected` is the ONLY field secretarIA's wire actually backs
+// (TenantConfigWire.calendar_connected, read-only). There is no account
+// email, no named-calendar list, and no two-way-sync preference on the wire
+// today — GoogleSection intentionally shows nothing for those instead of
+// inventing values (see GoogleSection's connected-state rendering).
 export type GcalState = {
   connected: boolean;
-  email: string;
-  calendar: string;
-  tz: string;
-  twoWay: boolean;
 };

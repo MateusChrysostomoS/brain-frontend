@@ -1,11 +1,18 @@
 "use client";
 // GoogleSection — Section 08 "Integração com o Google Calendar".
 // Shows an OAuth connect card when disconnected, and a connected state card
-// when gcal.connected is true. Includes two-way sync toggle and manual
-// credential entry (advanced, inside a <details> element).
+// when gcal.connected is true.
 // When `onConnect`/`onDisconnect` are provided (hubReady in the parent page),
-// they drive the real secretarIA hub OAuth handoff instead of the local
-// simulated flow (1.4s delay, matching the original design demo).
+// they drive the real secretarIA hub OAuth handoff. When either is
+// undefined, the corresponding action is genuinely unavailable — the button
+// renders disabled with an explanatory hint, never a fabricated result.
+//
+// `connected` is the ONLY field GcalState carries, because it is the ONLY
+// one secretarIA's wire actually backs (TenantConfigWire.calendar_connected).
+// There is no account email, named-calendar list, or two-way-sync
+// preference on the wire today, so none of that is rendered or editable
+// here — inventing values for them would be exactly the kind of fake data
+// on an authenticated surface this pass removes.
 //
 // Onboarding & Multi-Professional pass: this stays the TENANT-level connect
 // (unchanged single-professional path, per spec) — multi-professional clinics
@@ -13,70 +20,65 @@
 // ProfessionalsSection (Section 05).
 
 import { useState } from "react";
-import type { Dispatch, SetStateAction } from "react";
-import { Icon, Btn, Field, TextInput } from "../../_shared/ui";
+import { Icon, Btn } from "../../_shared/ui";
 import { Section } from "./Section";
-import { CSelect } from "./CSelect";
-import { ToggleRow } from "./ToggleRow";
 import { GoogleGlyph } from "./GoogleGlyph";
 import type { GcalState } from "../lib/types";
 
 type GoogleSectionProps = {
+  // Read-only display state — the real `connected` flag is owned and
+  // updated by the parent page (hydration on load, onDisconnect on
+  // success). GoogleSection has no local mutation path for it anymore: the
+  // old fake-connect/demo-edit branches that needed a setter are gone.
   gcal: GcalState;
-  setGcal: Dispatch<SetStateAction<GcalState>>;
-  // Real hub handoff (see lib/secretaria-hub.ts). undefined => demo mode.
+  // Real hub handoff (see lib/secretaria-hub.ts). undefined => genuinely
+  // unavailable right now (not logged in, or the hub isn't reachable) — the
+  // connect button renders disabled instead of simulating a result.
   onConnect?: () => Promise<void>;
   onDisconnect?: () => Promise<void>;
+  // Shown next to the disabled connect button when onConnect is undefined,
+  // so the parent can explain WHY (not logged in vs. hub temporarily
+  // unreachable) instead of one generic message.
+  connectHint?: string;
 };
 
-// Section 08 — Google Calendar OAuth connect/disconnect + settings when connected.
-export function GoogleSection({ gcal, setGcal, onConnect, onDisconnect }: GoogleSectionProps) {
-  // Local loading state for the connect flow (real or simulated)
+// Section 08 — Google Calendar OAuth connect/disconnect + real connected status.
+export function GoogleSection({
+  gcal,
+  onConnect,
+  onDisconnect,
+  connectHint = "Conecte-se após entrar na sua conta para ativar a integração.",
+}: GoogleSectionProps) {
+  // Local loading state for the connect flow
   const [connecting, setConnecting] = useState(false);
   // Inline error shown when the real hub OAuth handoff fails
   const [oauthError, setOauthError] = useState<string | null>(null);
 
   const connect = async () => {
+    if (!onConnect) return; // no real handoff available — button is disabled instead
     setOauthError(null);
-    if (onConnect) {
-      setConnecting(true);
-      try {
-        // On success this navigates the browser away to Google's consent
-        // screen — the pending state below only matters on failure.
-        await onConnect();
-      } catch (e) {
-        console.error("secretaria hub: failed to start Google OAuth", e);
-        setOauthError("Não foi possível iniciar a conexão com o Google agora. Tente novamente.");
-      } finally {
-        setConnecting(false);
-      }
-      return;
-    }
-    // --- demo mode: simulate OAuth round-trip (1.4 s delay mirrors the source) ---
     setConnecting(true);
-    setTimeout(() => {
+    try {
+      // On success this navigates the browser away to Google's consent
+      // screen — the pending state below only matters on failure.
+      await onConnect();
+    } catch (e) {
+      console.error("secretaria hub: failed to start Google OAuth", e);
+      setOauthError("Não foi possível iniciar a conexão com o Google agora. Tente novamente.");
+    } finally {
       setConnecting(false);
-      setGcal(g => ({
-        ...g,
-        connected: true,
-        email: "dr.aurelio.lima@gmail.com",
-        calendar: "Agenda — Consultório",
-      }));
-    }, 1400);
+    }
   };
 
   const disconnect = async () => {
+    if (!onDisconnect) return; // connected card only renders with real data — see below
     setOauthError(null);
-    if (onDisconnect) {
-      try {
-        await onDisconnect();
-      } catch (e) {
-        console.error("secretaria hub: failed to disconnect Google Calendar", e);
-        setOauthError("Não foi possível desconectar agora. Tente novamente.");
-      }
-      return;
+    try {
+      await onDisconnect();
+    } catch (e) {
+      console.error("secretaria hub: failed to disconnect Google Calendar", e);
+      setOauthError("Não foi possível desconectar agora. Tente novamente.");
     }
-    setGcal(g => ({ ...g, connected: false, email: "", calendar: "" }));
   };
 
   return (
@@ -111,8 +113,19 @@ export function GoogleSection({ gcal, setGcal, onConnect, onDisconnect }: Google
               <div style={{ fontSize: 13, color: "var(--ink-soft)", marginTop: 2 }}>
                 Conecte para sincronizar a agenda de atendimentos.
               </div>
+              {/* real "can't connect right now" state — never a fabricated success */}
+              {!onConnect && (
+                <div style={{ fontSize: 12.5, color: "var(--ink-faint)", marginTop: 6 }}>
+                  {connectHint}
+                </div>
+              )}
             </div>
-            <Btn variant="solidDark" icon="calendar" onClick={connect} disabled={connecting}>
+            <Btn
+              variant="solidDark"
+              icon="calendar"
+              onClick={connect}
+              disabled={connecting || !onConnect}
+            >
               {connecting ? "Autorizando…" : "Conectar com Google"}
             </Btn>
           </div>
@@ -135,38 +148,9 @@ export function GoogleSection({ gcal, setGcal, onConnect, onDisconnect }: Google
               na agenda escolhida — nada além disso. Você pode revogar quando quiser.
             </span>
           </div>
-
-          {/* advanced manual credentials (collapsed by default) */}
-          <details style={{ borderTop: "1px solid var(--line)", paddingTop: 16 }}>
-            <summary style={{
-              fontSize: 13, fontWeight: 600, color: "var(--ink-soft)",
-              cursor: "pointer",
-              display: "flex", alignItems: "center", gap: 7,
-            }}>
-              <Icon name="edit" size={15} />
-              Conectar manualmente com credenciais (avançado)
-            </summary>
-            <div style={{
-              display: "grid", gridTemplateColumns: "1fr 1fr",
-              gap: 16, marginTop: 16,
-            }}>
-              <Field
-                label="Client ID"
-                tip="ID do cliente OAuth gerado no Google Cloud Console do consultório."
-              >
-                <TextInput placeholder="xxxxx.apps.googleusercontent.com" />
-              </Field>
-              <Field
-                label="Client Secret"
-                tip="Chave secreta do cliente OAuth. Fica criptografada e nunca é exibida ao paciente."
-              >
-                <TextInput type="password" placeholder="••••••••••••••••" />
-              </Field>
-            </div>
-          </details>
         </div>
       ) : (
-        // --- connected state ---
+        // --- connected state — only `connected` is real, so only `connected` is shown ---
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
           {/* connected account card */}
           <div style={{
@@ -189,14 +173,10 @@ export function GoogleSection({ gcal, setGcal, onConnect, onDisconnect }: Google
                 </span>
                 <Icon name="checkCircle" size={16} style={{ color: "var(--st-attend-ink)" }} />
               </div>
-              <div style={{
-                fontSize: 13, color: "var(--ink-soft)", marginTop: 2,
-                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-              }}>
-                {gcal.email}
-              </div>
             </div>
-            <Btn variant="outline" size="sm" onClick={disconnect}>Desconectar</Btn>
+            <Btn variant="outline" size="sm" onClick={disconnect} disabled={!onDisconnect}>
+              Desconectar
+            </Btn>
           </div>
 
           {/* inline error — only surfaces when the real hub disconnect fails */}
@@ -205,44 +185,6 @@ export function GoogleSection({ gcal, setGcal, onConnect, onDisconnect }: Google
               {oauthError}
             </p>
           )}
-
-          {/* calendar + timezone selects */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-            <Field
-              label="Agenda de destino"
-              tip="Em qual calendário do Google as consultas serão criadas. Use uma agenda dedicada ao consultório."
-            >
-              <CSelect
-                value={gcal.calendar}
-                onChange={e => setGcal(g => ({ ...g, calendar: e.target.value }))}
-              >
-                <option>Agenda — Consultório</option>
-                <option>Pessoal</option>
-                <option>Plantões</option>
-              </CSelect>
-            </Field>
-            <Field
-              label="Fuso horário"
-              tip="Garante que os horários enviados ao paciente batam com os da agenda."
-            >
-              <CSelect
-                value={gcal.tz}
-                onChange={e => setGcal(g => ({ ...g, tz: e.target.value }))}
-              >
-                <option>(GMT-03:00) Brasília</option>
-                <option>(GMT-04:00) Manaus</option>
-                <option>(GMT-05:00) Acre</option>
-              </CSelect>
-            </Field>
-          </div>
-
-          {/* two-way sync toggle row */}
-          <ToggleRow
-            on={gcal.twoWay}
-            onChange={v => setGcal(g => ({ ...g, twoWay: v }))}
-            title="Sincronização nos dois sentidos"
-            desc="Eventos criados direto no Google também bloqueiam horários na secretarIA."
-          />
         </div>
       )}
     </Section>

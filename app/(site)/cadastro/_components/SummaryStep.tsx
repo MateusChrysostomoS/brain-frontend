@@ -7,7 +7,10 @@
 // and redirects. Also renders CheckoutTrialNotice right above the submit button — this is
 // the cold-signup funnel's last screen before Stripe's hosted Checkout page, so the
 // billing/trial disclosure must be visible here. Passes `plan.catalogIds` (the wizard's
-// actual selection) so the notice renders nothing for a PreCheck-only signup.
+// actual selection) so the notice renders nothing for a PreCheck-only signup. The review
+// rows also surface `answers.selectedAddonIds` (Task 1a) — the add-on choice AddonsStep
+// already PATCHed onto the intent itself before handing off here, so this step only
+// displays it, it doesn't send it again.
 
 import { useState } from "react";
 import { StepHeading, StepActions } from "./WizardShell";
@@ -35,6 +38,13 @@ const FB_PAGE_LABEL: Record<string, string> = {
   yes_admin: "Sim, sou administrador(a)",
   yes_unknown_admin: "Sim, mas não sei se sou administrador(a)",
   no: "Ainda não tenho uma Página",
+};
+// Task 1a — mirrors the card titles in AddonsStep, but WITHOUT the "(BI)" suffix:
+// matches the shorter label already used on /app/billing's "Módulos ativos" list,
+// the next place the tenant sees this same id after checkout.
+const ADDON_SUMMARY_LABEL: Record<string, string> = {
+  analytics_bi_advanced: "Dashboard Avançado",
+  pix_deposit: "Sinal via Pix",
 };
 
 type SummaryStepProps = {
@@ -106,6 +116,14 @@ export function SummaryStep({ answers, plan, intentId, onBack }: SummaryStepProp
         <Row label="Uso do WhatsApp Business App" value={USAGE_LABEL[answers.whatsappUsage ?? ""] ?? "—"} />
         <Row label="Número usado com API antes" value={PRIOR_API_LABEL[answers.priorApi ?? ""] ?? "—"} />
         <Row label="Página no Facebook" value={FB_PAGE_LABEL[answers.fbPage ?? ""] ?? "—"} />
+        <Row
+          label="Complementos"
+          value={
+            answers.selectedAddonIds.length > 0
+              ? answers.selectedAddonIds.map((id) => ADDON_SUMMARY_LABEL[id] ?? id).join(", ")
+              : "nenhum"
+          }
+        />
       </div>
 
       {error && (

@@ -185,16 +185,14 @@ export function applyWireMessages(cfg: TenantConfigWire): Messages {
     greetingMessage: cfg.greeting_message ?? "",
     returningGreetingMessage: cfg.returning_greeting_message ?? "",
     greetingButtons: cfg.greeting_buttons ?? [],
-    personaNotes: cfg.persona_notes ?? "",
     language: cfg.language || "pt-BR",
   };
 }
 
 // ---------------------------------------------------------------------------
 // Post-consult (new "Pós-consulta" section) — two NEW tenant-level wire
-// fields, siblings of greeting_message/persona_notes; see PostConsult in
-// lib/types.ts for why the two jobs (sent message vs. answer knowledge) are
-// kept apart.
+// fields, siblings of greeting_message; see PostConsult in lib/types.ts for
+// why the two jobs (sent message vs. answer knowledge) are kept apart.
 // ---------------------------------------------------------------------------
 
 export function applyWirePostConsult(cfg: TenantConfigWire): PostConsult {
@@ -264,7 +262,6 @@ export function buildConfigUpdatePayload(
     greeting_message: messages.greetingMessage || null,
     returning_greeting_message: messages.returningGreetingMessage || null,
     greeting_buttons: messages.greetingButtons,
-    persona_notes: messages.personaNotes || null,
     language: messages.language,
     post_consult_message: postConsult.postConsultMessage || null,
     post_consult_knowledge: postConsult.postConsultKnowledge || null,

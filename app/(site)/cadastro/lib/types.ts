@@ -32,8 +32,20 @@ export const EMPTY_CONTACT: ContactFields = {
   website: "",
 };
 
+// The two add-ons the /cadastro wizard can offer today (Task 1a) — both only make
+// sense for a secretarIA purchase, see the plan.planId gate in CadastroWizard's
+// nextAfterEligibility. Shared between CadastroWizard (initial preselection from
+// plan.catalogIds) and AddonsStep (rendering + the PATCH payload) so the two can
+// never drift apart.
+export type SignupAddonId = "analytics_bi_advanced" | "pix_deposit";
+export const SIGNUP_ADDON_IDS: readonly SignupAddonId[] = [
+  "analytics_bi_advanced",
+  "pix_deposit",
+];
+
 // Every step the wizard can visit. `dedicated_number` and `page_creation` are
-// conditional guided screens — see CadastroWizard's transition table.
+// conditional guided screens, and `addons` is shown only for a secretarIA
+// purchase — see CadastroWizard's transition table.
 export type StepId =
   | "contact"
   | "usage"
@@ -41,6 +53,7 @@ export type StepId =
   | "prior_api"
   | "fb_page"
   | "page_creation"
+  | "addons"
   | "summary";
 
 export type WizardAnswers = {
@@ -48,6 +61,11 @@ export type WizardAnswers = {
   whatsappUsage: SignupIntakeWhatsappUsage | null;
   priorApi: SignupIntakePriorApi | null;
   fbPage: SignupIntakeFbPage | null;
+  // Add-on catalog ids selected on the addons step (Task 1a). Starts as the
+  // intersection of the incoming plan.catalogIds with SIGNUP_ADDON_IDS (see
+  // CadastroWizard) so a `?catalog=` link that already names an add-on shows it
+  // pre-checked; stays empty for a PreCheck-only signup, which never visits the step.
+  selectedAddonIds: string[];
 };
 
 export const EMPTY_ANSWERS: WizardAnswers = {
@@ -55,4 +73,5 @@ export const EMPTY_ANSWERS: WizardAnswers = {
   whatsappUsage: null,
   priorApi: null,
   fbPage: null,
+  selectedAddonIds: [],
 };

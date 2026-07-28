@@ -198,7 +198,6 @@ export type TenantConfigWire = {
   greeting_message: string | null;
   returning_greeting_message: string | null;
   greeting_buttons: string[];
-  persona_notes: string | null;
   // Ready-made message the secretary sends/uses right after a patient's
   // consult (send automation comes later; today it is stored + surfaced).
   post_consult_message: string | null;
@@ -244,7 +243,6 @@ export type TenantConfigUpdatePayload = Partial<{
   greeting_message: string | null;
   returning_greeting_message: string | null;
   greeting_buttons: string[];
-  persona_notes: string | null;
   post_consult_message: string | null;
   post_consult_knowledge: string | null;
   language: string;
