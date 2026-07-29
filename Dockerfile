@@ -27,7 +27,7 @@ ENV NEXT_PUBLIC_MANAGE_API_BASE_URL=${NEXT_PUBLIC_MANAGE_API_BASE_URL}
 # from EasyPanel → secretarIA service → Domains. Scheme + host only: no trailing
 # slash, no path, no port. NOT brain-api's SECRETARIA_BASE_URL — that one may be an
 # internal-network address, which the doctor's browser cannot reach.
-ARG NEXT_PUBLIC_SECRETARIA_HUB_BASE_URL=https://secretaria-secretaria-api.cpux9k.easypanel.host/
+ARG NEXT_PUBLIC_SECRETARIA_HUB_BASE_URL=https://secretaria-secretaria-api.cpux9k.easypanel.host
 ENV NEXT_PUBLIC_SECRETARIA_HUB_BASE_URL=${NEXT_PUBLIC_SECRETARIA_HUB_BASE_URL}
 # Fail the build loudly if the placeholder above was never replaced. Without this
 # guard an unreplaced "<host-...>" would bake an unreachable URL into the bundle:
