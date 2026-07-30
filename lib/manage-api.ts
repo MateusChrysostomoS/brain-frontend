@@ -1509,10 +1509,25 @@ export type DoctorProfessional = {
   invite_pending: boolean;
 };
 
-export function getDoctorProfessionals(
+// GET /doctor/professionals — ALWAYS resolves to an array. The endpoint wraps its
+// rows in an `{ items: [...] }` envelope (brain-api schemas/onboarding.py::
+// ProfessionalsOut), so the raw body is an OBJECT, not a list. Unwrapping here (and
+// tolerating a bare array, in case the envelope is ever dropped) keeps that shape
+// detail out of every caller: the Configuração page feeds this straight into
+// `list.some(...)` inside a setState updater, which React runs DURING RENDER — a
+// non-array there throws past every try/catch and blanks the whole page with
+// "Application error: a client-side exception has occurred".
+export async function getDoctorProfessionals(
   session: Session,
 ): Promise<DoctorProfessional[]> {
-  return manageFetch<DoctorProfessional[]>("/doctor/professionals", {}, session.token);
+  const data = await manageFetch<DoctorProfessional[] | { items?: unknown }>(
+    "/doctor/professionals",
+    {},
+    session.token,
+  );
+  if (Array.isArray(data)) return data;
+  const items = (data as { items?: unknown })?.items;
+  return Array.isArray(items) ? (items as DoctorProfessional[]) : [];
 }
 
 export type ProfessionalInvitePayload = {
