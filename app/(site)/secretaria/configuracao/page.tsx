@@ -62,6 +62,7 @@ import {
   applyWireAddress,
   applyWireAppointmentTypes,
   applyWireBusinessHours,
+  applyWireGcal,
   applyWireInsurances,
   applyWireMessages,
   applyWirePixDeposit,
@@ -227,7 +228,6 @@ export default function ConfiguracaoPage() {
   const [messages, setMessages] = useState<Messages>({
     greetingMessage: "",
     returningGreetingMessage: "",
-    greetingButtons: [],
     language: "pt-BR",
   });
   const setMessagesK = <K extends keyof Messages>(key: K, value: Messages[K]) =>
@@ -337,7 +337,7 @@ export default function ConfiguracaoPage() {
       ...prev,
       defaultDur: cfg.appointment_duration_min || prev.defaultDur,
     }));
-    setGcal({ connected: cfg.calendar_connected });
+    setGcal(applyWireGcal(cfg));
   }, []);
 
   // Hydrate tenant-level fields from the real tenant config once the hub is
@@ -407,10 +407,12 @@ export default function ConfiguracaoPage() {
   }, [selectedProfessionalId, hubProfessionalsById]);
 
   // --- Section 08: Google Calendar (tenant-level; unchanged single-professional path) ---
-  // `connected` is the ONLY field that round-trips (TenantConfigRead.
-  // calendar_connected, read-only) — see GcalState in lib/types.ts for why
-  // there's nothing else here.
-  const [gcal, setGcal] = useState<GcalState>({ connected: false });
+  // `connected` round-trips read-only (TenantConfigRead.calendar_connected).
+  // `mode` (google_calendar_mode) is writable via the mode selector — see
+  // GcalState in lib/types.ts.
+  const [gcal, setGcal] = useState<GcalState>({ connected: false, mode: "per_professional" });
+  const setGcalMode = (mode: GcalState["mode"]) =>
+    setGcal((prev) => ({ ...prev, mode }));
 
   // --- Demo-data honesty: once we know real data can't load for a
   // LOGGED-IN tenant (hub unreachable or not configured in this
@@ -435,7 +437,7 @@ export default function ConfiguracaoPage() {
       insurances: "",
       collectInsurance: false,
     });
-    setMessages({ greetingMessage: "", returningGreetingMessage: "", greetingButtons: [], language: "pt-BR" });
+    setMessages({ greetingMessage: "", returningGreetingMessage: "", language: "pt-BR" });
     setPostConsult({ postConsultMessage: "", postConsultKnowledge: "" });
     setPixDeposit(DEFAULT_PIX_DEPOSIT);
     setRoster(null);
@@ -445,7 +447,7 @@ export default function ConfiguracaoPage() {
     setProfile(EMPTY_PROFESSIONAL_PROFILE);
     setServices([]);
     setDays(closedWeek());
-    setGcal({ connected: false });
+    setGcal({ connected: false, mode: "per_professional" });
   }, [hubUnreachable]);
 
   // --- Save: writes to the real hub config, or refuses honestly ---
@@ -470,7 +472,7 @@ export default function ConfiguracaoPage() {
     try {
       const savedCfg = await updateTenantConfig(
         session,
-        buildConfigUpdatePayload(ctx, messages, postConsult, pixDeposit, prefs.defaultDur),
+        buildConfigUpdatePayload(ctx, messages, postConsult, pixDeposit, prefs.defaultDur, gcal.mode),
       );
       // Reflect exactly what the backend persisted — same mappers the
       // hydration effect uses — rather than trusting the local form state.
@@ -505,7 +507,11 @@ export default function ConfiguracaoPage() {
     hubReady && session
       ? async () => {
           await disconnectCalendar(session);
-          setGcal({ connected: false });
+          // Disconnecting only clears `connected` — `mode` is an independent
+          // tenant preference that survives a disconnect (see GoogleSection's
+          // "trocar de modo não desconecta nada" copy — the converse holds
+          // too: disconnecting doesn't quietly reset the mode choice).
+          setGcal((prev) => ({ ...prev, connected: false }));
         }
       : undefined;
 
@@ -516,6 +522,15 @@ export default function ConfiguracaoPage() {
     roster && roster.length > 1
       ? roster.find((p) => p.id === selectedProfessionalId)?.name
       : undefined;
+
+  // --- Derived: professional id -> dedicated Google Calendar id, for
+  // ProfessionalsSection's shared_account-mode chip/button (see
+  // ProfessionalRow). Narrowed from hubProfessionalsById (the full
+  // ProfessionalWire per id) so ProfessionalsSection's prop surface only
+  // carries what it actually renders. ---
+  const googleCalendarIdByProfessional: Record<string, string | null> = Object.fromEntries(
+    Object.entries(hubProfessionalsById).map(([id, p]) => [id, p.google_calendar_id]),
+  );
 
   // ---------------------------------------------------------------------------
   // Render
@@ -598,6 +613,9 @@ export default function ConfiguracaoPage() {
                 profile={profile}
                 onProfileChange={setProfileK}
                 onRosterChanged={loadProfessionals}
+                googleCalendarMode={gcal.mode}
+                clinicCalendarConnected={gcal.connected}
+                googleCalendarIdByProfessional={googleCalendarIdByProfessional}
               />
               <ServicesSection
                 services={services}
@@ -620,6 +638,8 @@ export default function ConfiguracaoPage() {
                     ? "Conecte-se após entrar na sua conta para ativar a integração."
                     : "Isso ficará disponível assim que a conexão com sua clínica for restabelecida."
                 }
+                onModeChange={setGcalMode}
+                readOnly={hubUnreachable}
               />
             </div>
           </div>

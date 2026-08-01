@@ -1215,6 +1215,28 @@ export function getDoctorMe(session: Session): Promise<DoctorMe> {
   return manageFetch<DoctorMe>("/doctor/me", {}, session.token);
 }
 
+// Body of PATCH /doctor/me — the ONLY self-editable field today. brain-api's schema is
+// `extra="forbid"` (DoctorMeUpdateIn): sending anything else (email/role/tenant_id/
+// password) is rejected 422 by the backend itself, so this type deliberately carries
+// nothing more than what's actually editable ("Meu Perfil", CONTRACTS.md §12).
+export type DoctorMeUpdatePayload = {
+  name: string;
+};
+
+// PATCH /doctor/me — self-edit the caller's OWN low-risk profile fields (Bearer). Returns
+// the refreshed DoctorMe (same shape as getDoctorMe), so callers can swap it straight into
+// state instead of refetching. Throws ManageApiError 422 for a blank/too-long name.
+export function updateDoctorMe(
+  session: Session,
+  payload: DoctorMeUpdatePayload,
+): Promise<DoctorMe> {
+  return manageFetch<DoctorMe>(
+    "/doctor/me",
+    { method: "PATCH", body: JSON.stringify(payload) },
+    session.token,
+  );
+}
+
 export function listAnamneses(
   session: Session,
   skip = 0,

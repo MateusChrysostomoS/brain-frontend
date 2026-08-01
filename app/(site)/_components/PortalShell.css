@@ -404,7 +404,8 @@
   margin-bottom: 7px;
 }
 .pfield input,
-.pfield select {
+.pfield select,
+.pfield textarea {
   width: 100%;
   padding: 11px 13px;
   border-radius: var(--r-md);
@@ -412,13 +413,19 @@
   background: var(--surface-inset);
   color: var(--ink);
   font-size: 14px;
+  font-family: inherit;
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 .pfield input:focus,
-.pfield select:focus {
+.pfield select:focus,
+.pfield textarea:focus {
   border-color: var(--brand);
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--brand) 22%, transparent);
+}
+.pfield textarea {
+  resize: vertical;
+  line-height: 1.5;
 }
 
 /* --- Modal --- */

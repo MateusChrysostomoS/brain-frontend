@@ -192,16 +192,19 @@ export function Segmented<T extends string>({
   value,
   onChange,
   size = "md",
+  disabled,
 }: {
   options: { value: T; label: string; icon?: IconName }[];
   value: T;
   onChange: (v: T) => void;
   size?: "sm" | "md";
+  disabled?: boolean;
 }) {
   return (
     <div style={{
       display: "inline-flex", gap: 3, padding: 4,
       background: "var(--surface-2)", borderRadius: 999, border: "1px solid var(--line)",
+      opacity: disabled ? 0.6 : 1,
     }}>
       {options.map(o => {
         const active = o.value === value;
@@ -209,6 +212,7 @@ export function Segmented<T extends string>({
           <button
             key={o.value}
             onClick={() => onChange(o.value)}
+            disabled={disabled}
             style={{
               display: "inline-flex", alignItems: "center", gap: 6,
               padding: size === "sm" ? "6px 13px" : "8px 17px", borderRadius: 999,
@@ -216,7 +220,8 @@ export function Segmented<T extends string>({
               color:      active ? "#fff" : "var(--ink-soft)",
               background: active ? "var(--brand)" : "transparent",
               boxShadow:  active ? "var(--shadow-sm)" : "none",
-              transition: "all .18s var(--ease)", cursor: "pointer", border: "none",
+              transition: "all .18s var(--ease)", cursor: disabled ? "not-allowed" : "pointer",
+              border: "none",
             }}
           >
             {o.icon && <Icon name={o.icon} size={15} />}

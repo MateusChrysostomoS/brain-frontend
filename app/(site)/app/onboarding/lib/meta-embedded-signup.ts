@@ -15,6 +15,11 @@
 // message, which never gets a `code`).
 
 const SDK_SRC = "https://connect.facebook.net/en_US/sdk.js";
+// Graph API / JS SDK version (matches backend's META_GRAPH_BASE_URL). This is a
+// DIFFERENT axis from the Embedded Signup flow version (v2/v4, see the FB.login
+// `extras` comment below) — bumping this does not affect which Embedded Signup
+// version runs, and vice versa. See GUIA_CREDENCIAIS_META_EMBEDDED_SIGNUP.md
+// ("Versão do Embedded Signup", brain-api/docs) for the full writeup + sources.
 const SDK_VERSION = "v23.0";
 
 // Meta only ever posts embedded-signup messages from these two origins.
@@ -132,7 +137,19 @@ export async function runEmbeddedSignup(
         config_id: configId,
         response_type: "code",
         override_default_response_type: true,
-        extras: { setup: {}, featureType: "", sessionInfoVersion: "3" },
+        // v4 is the current Embedded Signup version (v2 deprecates 2026-10-15,
+        // per Meta's official docs). Its documented `extras` is empty besides
+        // `setup` — `featureType`/`sessionInfoVersion` were v2-only fields (v2
+        // required `sessionInfoVersion` to get phone_number_id/waba_id on the
+        // FINISH message; v4 sends full session info for every flow by
+        // default, so the field is retired rather than bumped to a new
+        // value). Which flow version actually runs is NOT selected here — it
+        // is determined by `configId` itself: a Facebook Login for Business
+        // Configuration created in the Meta App Dashboard (App Dashboard >
+        // Facebook Login for Business > Configurations > "Embedded Signup" >
+        // select products). See GUIA_CREDENCIAIS_META_EMBEDDED_SIGNUP.md
+        // ("Versão do Embedded Signup", brain-api/docs) for sources.
+        extras: { setup: {} },
       },
     );
   });

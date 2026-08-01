@@ -28,9 +28,11 @@ import {
 // obvious at a glance instead of living in a separate lookup table.
 type DoctorNavItem = PortalNavItem & { product: "precheck" | "secretaria" | null };
 
-// Doctor sidebar nav (RBAC task 3C): Agenda · Pacientes · Anamneses (PreCheck) · Configurações.
-// Agenda/Pacientes/Configurações are secretarIA-backed (see /doctor/pacientes); Anamneses is
-// PreCheck-backed. Every item here is product-gated below once entitlements are known.
+// Doctor sidebar nav (RBAC task 3C): Agenda · Pacientes · Anamneses (PreCheck) ·
+// Configurações · Meu Perfil. Agenda/Pacientes/Configurações are secretarIA-backed (see
+// /doctor/pacientes); Anamneses is PreCheck-backed. Every product-gated item is filtered
+// below once entitlements are known; `product: null` (Meu Perfil) is account-level, not
+// product-gated, so it always shows regardless of which products the tenant has.
 const DOCTOR_NAV: DoctorNavItem[] = [
   { href: "/secretaria/agenda", label: "Agenda", icon: "calendar", product: "secretaria" },
   { href: "/doctor/pacientes", label: "Pacientes", icon: "users", product: "secretaria" },
@@ -46,6 +48,7 @@ const DOCTOR_NAV: DoctorNavItem[] = [
     icon: "sliders",
     product: "secretaria",
   },
+  { href: "/doctor/perfil", label: "Meu Perfil", icon: "user", product: null },
 ];
 
 export default function DoctorLayout({ children }: { children: React.ReactNode }) {

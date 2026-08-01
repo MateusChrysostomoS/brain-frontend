@@ -16,6 +16,7 @@
 //   POST /tenants/me/calendar/blocks                           -> createBlock
 //   GET  /tenants/me/calendar/oauth/start                      -> startCalendarOauth
 //   POST /tenants/me/calendar/disconnect                       -> disconnectCalendar
+//   POST /tenants/me/professionals/{id}/calendar                -> createProfessionalCalendar
 
 import {
   getSecretariaHubToken,
@@ -102,15 +103,27 @@ function invalidateHubToken(session: Session): void {
 // ---------------------------------------------------------------------------
 
 // Error carrying the HTTP status, same shape as ManageApiError. `.message` is
-// FastAPI's `detail` string.
+// FastAPI's `detail` — normally a plain string, but a few endpoints (the
+// per-professional calendar creation errors below) send a structured
+// `{code, message}` object instead so callers can branch without parsing
+// prose. `.code` is only ever set for those; every other hub error keeps
+// working exactly as before (`.message` a plain string, `.code` undefined).
 export class HubApiError extends Error {
   status: number;
-  constructor(status: number, message: string) {
+  code?: string;
+  constructor(status: number, message: string, code?: string) {
     super(message);
     this.name = "HubApiError";
     this.status = status;
+    this.code = code;
   }
 }
+
+// Known structured error codes from POST .../professionals/{id}/calendar
+// (see createProfessionalCalendar below) — exported so callers can branch
+// on HubApiError.code without hardcoding the string twice.
+export const HUB_ERROR_CLINIC_CALENDAR_NOT_CONNECTED = "clinic_calendar_not_connected";
+export const HUB_ERROR_GOOGLE_RECONNECT_REQUIRED = "google_reconnect_required";
 
 async function rawHubFetch(
   path: string,
@@ -130,9 +143,25 @@ async function rawHubFetch(
 async function parseHubResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    const detail =
-      typeof body?.detail === "string" ? body.detail : res.statusText;
-    throw new HubApiError(res.status, detail);
+    const rawDetail: unknown = body?.detail;
+    let message: string;
+    let code: string | undefined;
+    if (typeof rawDetail === "string") {
+      // The common shape — every hub error except the two below.
+      message = rawDetail;
+    } else if (
+      rawDetail &&
+      typeof rawDetail === "object" &&
+      typeof (rawDetail as { message?: unknown }).message === "string"
+    ) {
+      // Structured {code, message} shape (calendar creation 422/409).
+      message = (rawDetail as { message: string }).message;
+      const rawCode = (rawDetail as { code?: unknown }).code;
+      code = typeof rawCode === "string" ? rawCode : undefined;
+    } else {
+      message = res.statusText;
+    }
+    throw new HubApiError(res.status, message, code);
   }
   // 204 (e.g. disconnect on some deployments) has no body.
   if (res.status === 204) return undefined as T;
@@ -168,6 +197,15 @@ export { ManageApiError };
 
 export type TimeWindowWire = { start: string; end: string }; // "HH:MM"
 
+// Google Calendar integration mode (Onboarding & Multi-Professional follow-up).
+// "per_professional" (default): each professional may connect their own Google
+// account — unchanged single-professional-era behavior. "shared_account": the
+// clinic connects ONE Google account and every professional gets a secondary
+// calendar CREATED by the backend inside that account (see
+// createProfessionalCalendar below). Switching modes is non-destructive on the
+// backend — it only changes which flow is offered going forward.
+export type GoogleCalendarMode = "per_professional" | "shared_account";
+
 export type AppointmentTypeWire = {
   name: string;
   description: string | null;
@@ -193,11 +231,18 @@ export type AddressWire = {
 };
 
 // GET/PUT /tenants/me/config response (schemas/config.py::TenantConfigRead).
+//
+// `greeting_buttons` REMOVED (2026-08 round): the WhatsApp first-contact
+// buttons are no longer clinic-editable text. secretarIA now ships a FIXED
+// product-level set — [Agendar] [Remarcar] [Cancelar] — routed
+// deterministically server-side. GET no longer returns the field at all, and
+// PUT silently ignores it if a caller still sends it (never persisted). See
+// FIXED_GREETING_BUTTONS in configuracao/components/MessagesSection.tsx for
+// the local, read-only display of this fixed set.
 export type TenantConfigWire = {
   clinic_name: string;
-  greeting_message: string | null;
-  returning_greeting_message: string | null;
-  greeting_buttons: string[];
+  greeting_message: string | null; // capped at 1024 chars server-side
+  returning_greeting_message: string | null; // capped at 1024 chars server-side
   // Ready-made message the secretary sends/uses right after a patient's
   // consult (send automation comes later; today it is stored + surfaced).
   post_consult_message: string | null;
@@ -215,6 +260,9 @@ export type TenantConfigWire = {
   is_active: boolean;
   // True when a Google Calendar refresh token is stored for this tenant.
   calendar_connected: boolean;
+  // Which Google Calendar integration flow this tenant uses — see
+  // GoogleCalendarMode above. Defaults to "per_professional" server-side.
+  google_calendar_mode: GoogleCalendarMode;
   // Structured clinic address (Feature 1) — null when never filled in.
   address: AddressWire | null;
   // Accepted health-insurance plan names (Feature 3).
@@ -242,7 +290,6 @@ export type TenantConfigWire = {
 export type TenantConfigUpdatePayload = Partial<{
   greeting_message: string | null;
   returning_greeting_message: string | null;
-  greeting_buttons: string[];
   post_consult_message: string | null;
   post_consult_knowledge: string | null;
   language: string;
@@ -262,6 +309,7 @@ export type TenantConfigUpdatePayload = Partial<{
   pix_retention_policy: "total" | "partial";
   pix_partial_refund_percent: number;
   pix_reschedule_limit: number;
+  google_calendar_mode: GoogleCalendarMode;
   // asaas_connected is READ-ONLY (TenantConfigWire only) — intentionally
   // absent here; it can never be part of a PUT body.
 }>;
@@ -513,6 +561,35 @@ export function disconnectProfessionalCalendar(
   return hubFetch<{ status: string }>(
     session,
     `/tenants/me/professionals/${professionalId}/calendar/disconnect`,
+    { method: "POST" },
+  );
+}
+
+// POST /tenants/me/professionals/{id}/calendar — "shared_account" mode only.
+// Creates (idempotently — 200 either way, `created` tells the two cases apart)
+// a secondary Google Calendar for this professional INSIDE the clinic's own
+// connected Google account; the backend always uses the clinic's credentials
+// for this call, never the professional's own. No body.
+export type CreateProfessionalCalendarResult = {
+  professional_id: string;
+  google_calendar_id: string;
+  created: boolean;
+};
+
+// Throws HubApiError with `.code`:
+//   422 HUB_ERROR_CLINIC_CALENDAR_NOT_CONNECTED — the clinic hasn't connected
+//     Google yet (point the caller at GoogleSection's connect flow).
+//   409 HUB_ERROR_GOOGLE_RECONNECT_REQUIRED — the clinic's stored token
+//     predates the calendar-creation scope (point the caller at "Reconectar").
+// Callers should branch on `.code`, not `.message` — the message is
+// display-ready pt-BR copy from the backend, but the code is what's stable.
+export function createProfessionalCalendar(
+  session: Session,
+  professionalId: string,
+): Promise<CreateProfessionalCalendarResult> {
+  return hubFetch<CreateProfessionalCalendarResult>(
+    session,
+    `/tenants/me/professionals/${professionalId}/calendar`,
     { method: "POST" },
   );
 }

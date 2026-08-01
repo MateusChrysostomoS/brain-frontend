@@ -1,18 +1,34 @@
 "use client";
-// MessagesSection — Section 02 "Mensagens". Every field here already existed
-// on secretarIA's wire (TenantConfigWire) — this is the first UI for them.
-// greeting_message/returning_greeting_message/language were silently unused
-// by the old UI; greeting_buttons is capped at 3 short labels (WhatsApp
-// quick-reply buttons). The old free-text tone/behavior-rules field was
-// removed from this UI — a hardcoded safety layer now lives in the backend
-// prompt instead of a clinic-editable field.
+// MessagesSection — Section 02 "Mensagens". greeting_message/
+// returning_greeting_message/language are real fields on secretarIA's wire
+// (TenantConfigWire) — editable here, capped at 1024 chars server-side (see
+// GREETING_MESSAGE_MAX_LENGTH below). The old free-text tone/behavior-rules
+// field was removed from this UI — a hardcoded safety layer now lives in the
+// backend prompt instead of a clinic-editable field.
+//
+// Greeting buttons (2026-08 round): the WhatsApp first-contact buttons are no
+// longer clinic-editable text. secretarIA now ships a FIXED product-level
+// set — [Agendar] [Remarcar] [Cancelar] — routed deterministically
+// server-side (the LLM is never the default path). `greeting_buttons` was
+// REMOVED from TenantConfigWire (GET no longer returns it) and
+// TenantConfigUpdatePayload (PUT ignores it silently if sent) — see
+// lib/secretaria-hub.ts. FIXED_GREETING_BUTTONS below is purely local
+// display copy, not a wire value — there is no endpoint to fetch it from, so
+// it is rendered read-only with no edit control at all.
 
-import { Icon, Field, TextInput, TextArea } from "../../_shared/ui";
+import { Icon, Field, TextArea } from "../../_shared/ui";
 import { Section } from "./Section";
 import { CSelect } from "./CSelect";
 import type { Messages } from "../lib/types";
 
-const MAX_GREETING_BUTTONS = 3;
+// Server-side cap on greeting_message/returning_greeting_message
+// (secretarIA schemas/config.py) — mirrored client-side so the doctor sees
+// the limit before hitting a 422 on save.
+const GREETING_MESSAGE_MAX_LENGTH = 1024;
+
+// Fixed product-level WhatsApp greeting buttons — see header comment. Order
+// matches the deterministic routing the backend documents.
+const FIXED_GREETING_BUTTONS = ["Agendar", "Remarcar", "Cancelar"];
 
 const LANGUAGE_OPTIONS: { value: string; label: string }[] = [
   { value: "pt-BR", label: "Português (Brasil)" },
@@ -28,24 +44,47 @@ type MessagesSectionProps = {
   readOnly?: boolean;
 };
 
+// ---------------------------------------------------------------------------
+// GreetingButtonsPreview — internal: read-only display of the fixed product
+// buttons. There is no input anywhere here by design (mirrors PixSection's
+// AsaasStatusPill pattern for showing fixed/derived state without inventing
+// an editable control for something that can't actually be changed).
+// ---------------------------------------------------------------------------
+
+function GreetingButtonsPreview() {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+      <span style={{
+        fontSize: 12.5, fontWeight: 600, color: "var(--ink-soft)", letterSpacing: ".01em",
+      }}>
+        Botões da primeira mensagem
+      </span>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+        {FIXED_GREETING_BUTTONS.map(label => (
+          <span
+            key={label}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "6px 14px", borderRadius: 999,
+              background: "var(--brand-tint)", color: "var(--brand)",
+              border: "1px solid var(--line)",
+              fontSize: 13, fontWeight: 700,
+            }}
+          >
+            <Icon name="whatsapp" size={13} />
+            {label}
+          </span>
+        ))}
+      </div>
+      <span style={{ fontSize: 11.5, color: "var(--ink-faint)", lineHeight: 1.5 }}>
+        Estes são os botões que seus pacientes veem na primeira mensagem — cada um inicia o
+        fluxo correspondente automaticamente.
+      </span>
+    </div>
+  );
+}
+
 export function MessagesSection({ v, set, readOnly }: MessagesSectionProps) {
-  const updateButton = (i: number, text: string) =>
-    set(
-      "greetingButtons",
-      v.greetingButtons.map((b, j) => (j === i ? text : b)),
-    );
-
-  const removeButton = (i: number) =>
-    set(
-      "greetingButtons",
-      v.greetingButtons.filter((_, j) => j !== i),
-    );
-
-  const addButton = () => {
-    if (v.greetingButtons.length >= MAX_GREETING_BUTTONS) return;
-    set("greetingButtons", [...v.greetingButtons, ""]);
-  };
-
   return (
     <Section
       id="msg"
@@ -58,11 +97,13 @@ export function MessagesSection({ v, set, readOnly }: MessagesSectionProps) {
         <Field
           label="Mensagem de boas-vindas"
           tip="Enviada quando um paciente escreve pela primeira vez (ou depois de muito tempo sem conversar)."
+          hint={`Até ${GREETING_MESSAGE_MAX_LENGTH} caracteres.`}
         >
           <TextArea
             value={v.greetingMessage}
             onChange={e => set("greetingMessage", e.target.value)}
             rows={3}
+            maxLength={GREETING_MESSAGE_MAX_LENGTH}
             placeholder='Ex.: "Olá! Aqui é a secretária do Dr. Aurélio Lima. Como posso ajudar você hoje?"'
             disabled={readOnly}
           />
@@ -71,68 +112,19 @@ export function MessagesSection({ v, set, readOnly }: MessagesSectionProps) {
         <Field
           label="Mensagem para paciente recorrente"
           tip="Enviada quando o paciente já conversou com a secretarIA antes — pode ser mais direta e pessoal."
+          hint={`Até ${GREETING_MESSAGE_MAX_LENGTH} caracteres.`}
         >
           <TextArea
             value={v.returningGreetingMessage}
             onChange={e => set("returningGreetingMessage", e.target.value)}
             rows={3}
+            maxLength={GREETING_MESSAGE_MAX_LENGTH}
             placeholder='Ex.: "Oi de novo! Em que posso ajudar dessa vez?"'
             disabled={readOnly}
           />
         </Field>
 
-        <Field
-          label="Botões rápidos"
-          tip="Até 3 opções curtas mostradas como botões do WhatsApp junto com a mensagem de boas-vindas — ex.: “Agendar consulta”, “Ver endereço”."
-        >
-          <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-            {v.greetingButtons.map((text, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 9 }}>
-                <TextInput
-                  value={text}
-                  onChange={e => updateButton(i, e.target.value)}
-                  placeholder="Ex.: Agendar consulta"
-                  maxLength={20}
-                  style={{ flex: 1 }}
-                  disabled={readOnly}
-                />
-                {!readOnly && (
-                  <button
-                    type="button"
-                    onClick={() => removeButton(i)}
-                    title="Remover botão"
-                    aria-label="Remover botão"
-                    style={{
-                      width: 34, height: 34, borderRadius: 9, flexShrink: 0,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      color: "var(--ink-faint)",
-                      background: "var(--surface-2)", border: "1px solid var(--line)",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <Icon name="x" size={15} />
-                  </button>
-                )}
-              </div>
-            ))}
-            {!readOnly && v.greetingButtons.length < MAX_GREETING_BUTTONS && (
-              <button
-                type="button"
-                onClick={addButton}
-                style={{
-                  alignSelf: "flex-start",
-                  display: "inline-flex", alignItems: "center", gap: 6,
-                  fontSize: 13, fontWeight: 600, color: "var(--brand)",
-                  padding: "5px 2px",
-                  background: "none", border: "none", cursor: "pointer",
-                }}
-              >
-                <Icon name="plus" size={15} />
-                Adicionar botão ({v.greetingButtons.length}/{MAX_GREETING_BUTTONS})
-              </button>
-            )}
-          </div>
-        </Field>
+        <GreetingButtonsPreview />
 
         <Field label="Idioma de atendimento">
           <CSelect

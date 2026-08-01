@@ -1,14 +1,14 @@
 "use client";
 // GoogleSection — Section 08 "Integração com o Google Calendar".
-// Shows an OAuth connect card when disconnected, and a connected state card
+// Shows the tenant-wide mode selector (per_professional vs. shared_account),
+// then an OAuth connect card when disconnected, and a connected state card
 // when gcal.connected is true.
 // When `onConnect`/`onDisconnect` are provided (hubReady in the parent page),
 // they drive the real secretarIA hub OAuth handoff. When either is
 // undefined, the corresponding action is genuinely unavailable — the button
 // renders disabled with an explanatory hint, never a fabricated result.
 //
-// `connected` is the ONLY field GcalState carries, because it is the ONLY
-// one secretarIA's wire actually backs (TenantConfigWire.calendar_connected).
+// `connected` is the only field mirroring TenantConfigWire.calendar_connected.
 // There is no account email, named-calendar list, or two-way-sync
 // preference on the wire today, so none of that is rendered or editable
 // here — inventing values for them would be exactly the kind of fake data
@@ -17,19 +17,27 @@
 // Onboarding & Multi-Professional pass: this stays the TENANT-level connect
 // (unchanged single-professional path, per spec) — multi-professional clinics
 // additionally get a per-professional "Conectar Google Calendar" button in
-// ProfessionalsSection (Section 05).
+// ProfessionalsSection (Section 05), whose exact meaning now depends on
+// `gcal.mode` (see the mode selector below and ProfessionalsSection).
+//
+// Google Calendar modes round (2026-08): added `mode` (google_calendar_mode)
+// — a tenant-wide, non-destructive choice of HOW professionals get a Google
+// Calendar. Read/write follows the exact same batched-save path as every
+// other field on this page (see page.tsx's handleSave/buildConfigUpdatePayload)
+// — the selector only updates local state; `onModeChange` is a plain setter,
+// not its own save action.
 
 import { useState } from "react";
-import { Icon, Btn } from "../../_shared/ui";
+import { Icon, Btn, Segmented } from "../../_shared/ui";
 import { Section } from "./Section";
 import { GoogleGlyph } from "./GoogleGlyph";
-import type { GcalState } from "../lib/types";
+import type { GcalState, GoogleCalendarMode } from "../lib/types";
 
 type GoogleSectionProps = {
-  // Read-only display state — the real `connected` flag is owned and
-  // updated by the parent page (hydration on load, onDisconnect on
-  // success). GoogleSection has no local mutation path for it anymore: the
-  // old fake-connect/demo-edit branches that needed a setter are gone.
+  // Read-only display state — `connected` is owned and updated by the parent
+  // page (hydration on load, onDisconnect on success). `mode` is writable
+  // (see onModeChange) but ALSO parent-owned state, same as every other form
+  // field on this page — GoogleSection never mutates it directly.
   gcal: GcalState;
   // Real hub handoff (see lib/secretaria-hub.ts). undefined => genuinely
   // unavailable right now (not logged in, or the hub isn't reachable) — the
@@ -40,6 +48,13 @@ type GoogleSectionProps = {
   // so the parent can explain WHY (not logged in vs. hub temporarily
   // unreachable) instead of one generic message.
   connectHint?: string;
+  // Local setter for gcal.mode — batched into the main "Salvar configuração"
+  // PUT like every other field, not an immediate save (mirrors ToggleRow's
+  // `set` pattern used by ContextSection/PixSection).
+  onModeChange: (mode: GoogleCalendarMode) => void;
+  // True when the secretarIA hub is unreachable right now — disables the
+  // selector, same convention as every other section on this page.
+  readOnly?: boolean;
 };
 
 // Section 08 — Google Calendar OAuth connect/disconnect + real connected status.
@@ -48,6 +63,8 @@ export function GoogleSection({
   onConnect,
   onDisconnect,
   connectHint = "Conecte-se após entrar na sua conta para ativar a integração.",
+  onModeChange,
+  readOnly,
 }: GoogleSectionProps) {
   // Local loading state for the connect flow
   const [connecting, setConnecting] = useState(false);
@@ -89,6 +106,36 @@ export function GoogleSection({
       title="Integração com o Google Calendar"
       desc="Autorize o acesso para a secretarIA criar, mover e cancelar eventos na sua agenda do Google em tempo real — sem choque de horários."
     >
+      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        {/* --- mode selector: how professionals get a Google Calendar --- */}
+        <div style={{
+          display: "flex", flexDirection: "column", gap: 10,
+          padding: 18, borderRadius: 14,
+          background: "var(--surface-2)", border: "1px solid var(--line)",
+        }}>
+          <span style={{ fontSize: 13.5, fontWeight: 700, color: "var(--ink)" }}>
+            Como as agendas do Google funcionam nesta clínica
+          </span>
+          <Segmented<GoogleCalendarMode>
+            value={gcal.mode}
+            onChange={onModeChange}
+            disabled={readOnly}
+            options={[
+              { value: "per_professional", label: "Por profissional" },
+              { value: "shared_account", label: "Conta única da clínica" },
+            ]}
+          />
+          <p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.5, margin: 0 }}>
+            {gcal.mode === "shared_account"
+              ? "Só a clínica conecta uma conta do Google (abaixo). A secretarIA cria automaticamente uma agenda própria para cada profissional dentro dessa conta — cada uma aparece na lista lateral do Google Calendar, com seu próprio checkbox. Use uma conta institucional da clínica, não o Gmail pessoal de um funcionário: ela passa a ser dona das agendas de todos os profissionais."
+              : "Cada profissional conecta a própria conta do Google e usa sua agenda pessoal para os atendimentos. É o comportamento padrão — nada muda se você não mexer aqui."}
+          </p>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 7, fontSize: 12, color: "var(--ink-faint)", lineHeight: 1.45 }}>
+            <Icon name="checkCircle" size={13} style={{ marginTop: 1, flexShrink: 0 }} />
+            <span>Trocar de modo agora não desconecta nada — só muda o fluxo de conexão oferecido daqui pra frente.</span>
+          </div>
+        </div>
+
       {!gcal.connected ? (
         // --- disconnected state ---
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
@@ -113,6 +160,13 @@ export function GoogleSection({
               <div style={{ fontSize: 13, color: "var(--ink-soft)", marginTop: 2 }}>
                 Conecte para sincronizar a agenda de atendimentos.
               </div>
+              {/* shared_account mode: reinforce the institutional-account
+                  recommendation right where the connect action happens. */}
+              {gcal.mode === "shared_account" && (
+                <div style={{ fontSize: 12.5, color: "var(--ink-faint)", marginTop: 6 }}>
+                  Conecte a conta institucional da clínica — os profissionais ganham agendas próprias automaticamente.
+                </div>
+              )}
               {/* real "can't connect right now" state — never a fabricated success */}
               {!onConnect && (
                 <div style={{ fontSize: 12.5, color: "var(--ink-faint)", marginTop: 6 }}>
@@ -187,6 +241,7 @@ export function GoogleSection({
           )}
         </div>
       )}
+      </div>
     </Section>
   );
 }

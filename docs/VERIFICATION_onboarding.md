@@ -9,6 +9,13 @@ also verified green (all 29 static routes, including `/cadastro`, `/app/onboardi
 `/convite`, `/calendar/connected`, `/secretaria/configuracao`). This note is the
 user-facing pass — run it against a dev mesh before calling the round shipped.
 
+> **Meu Perfil + Google Calendar modes update (2026-08-01).** Per-professional
+> Configuração (§10) gained a second entry point: `/doctor/perfil`'s "Configuração da
+> secretaria" card, self-scoped to the logged-in user via the same
+> `session.professionalId`/`linked_user_email` resolution this doc's Profissionais section
+> already used. GoogleSection also gained a tenant-wide `google_calendar_mode` selector.
+> See `docs/CHECKPOINT_perfil_gcal_modes.md`.
+
 ## Environment
 
 ```
@@ -270,12 +277,17 @@ invite one).
 ## 5. Mensagens + address/convênios
 
 1. "Mensagens" section (tenant-level, editable by owner only): greeting message,
-   returning-patient greeting, up to 3 quick-reply buttons (20 chars each, "Adicionar
-   botão (n/3)" hides once full, each has its own remove ✕), tom de voz / persona notes,
-   idioma (Português (Brasil) / English (US)). Save → these round-trip via
-   `greeting_message`/`returning_greeting_message`/`greeting_buttons`/`persona_notes`/
-   `language` on `PUT /tenants/me/config` — reload the page and confirm they persist
-   (this is genuinely wired, not demo state).
+   returning-patient greeting (both capped at 1024 chars, client `maxLength` +
+   `hint` mirroring the server-side cap), tom de voz / persona notes, idioma
+   (Português (Brasil) / English (US)). Save → these round-trip via
+   `greeting_message`/`returning_greeting_message`/`persona_notes`/`language` on
+   `PUT /tenants/me/config` — reload the page and confirm they persist (this is
+   genuinely wired, not demo state). Below the two greeting fields, a **read-only**
+   "Botões da primeira mensagem" preview shows the three FIXED product buttons
+   (Agendar/Remarcar/Cancelar, 2026-08 round) — no input, no add/remove control;
+   `greeting_buttons` no longer exists on the wire at all (removed from
+   `TenantConfigWire`/`TenantConfigUpdatePayload` — GET omits it, PUT ignores it
+   silently if sent).
 2. "Contexto da clínica" → structured address block (Endereço/Complemento/Bairro/
    Cidade/UF max 2 chars/CEP) — also genuinely wired (`address` object on the same PUT).
    Leave every address field blank and save: **Expected:** `address` is sent as `null`
@@ -285,8 +297,10 @@ invite one).
    `string[]` (blank input → `null`, not `[]`). "Coletar convênio do paciente" toggle
    (LGPD-framed copy: "Ative apenas se for usar essa informação").
 4. Confirm `readOnly` staff view: Mensagens and Contexto/address/convênios all render
-   disabled with the amber "somente o proprietário" notice; the toggle and button-add/
-   remove controls are hidden entirely rather than shown-disabled.
+   disabled with the amber "somente o proprietário" notice; the toggle is hidden
+   entirely rather than shown-disabled. (N/A for greeting buttons since the 2026-08
+   round — the fixed-button preview has no control to hide or disable in the first
+   place, under any `readOnly` state.)
 
 ## 6. `/calendar/connected` (Google OAuth landing)
 
@@ -312,7 +326,7 @@ consent screen.
 | `/app/onboarding` | Full state timeline, all 5 blocker copies + resolve-blocker, last-attempt line, pause toggles, Embedded Signup attempt posting | The real Embedded Signup button itself is environment-dependent, not code-dependent — it silently degrades to "ainda não configurada" until brain-api's `META_APP_ID`/`META_APP_SECRET`/`META_ES_CONFIG_ID` are set (external wiring, not a frontend gap) |
 | Professional invite/self-bind | `/doctor/professionals/invites` + `/self`, copyable link, roster completeness chips, `/convite` → set password → scoped view | — |
 | Per-professional config | Hours/services/specialty/about/context per professional, per-professional Calendar OAuth, two-PUT save split | Agenda has **no professional filter** — `secretaria/agenda/*` has zero references to a professional field; `CalendarEventRead`/appointment wire data carries no `professional_id` yet, so a multi-professional tenant's `/secretaria/agenda` still shows one unfiltered week for the whole clinic |
-| Mensagens section | greeting/returning-greeting/buttons/persona_notes/language, all round-trip on `PUT /tenants/me/config` | — |
+| Mensagens section | greeting/returning-greeting/persona_notes/language, all round-trip on `PUT /tenants/me/config`; greeting buttons are a fixed read-only product preview (Agendar/Remarcar/Cancelar), not a wire field | — |
 | Address / convênios | Structured address + insurances + collect_insurance, all round-trip on the same PUT, null-safe on blank | Clinic **phone** stays demo-only — no wire field for it yet (pre-existing gap, unrelated to this round) |
 | Header | De-demoed: real name/role/clinic from `GET /auth/me` once a session exists, falls back to demo constants only while logged out | — |
 | `/calendar/connected` | Both tenant-level and per-professional OAuth flows land here | — |

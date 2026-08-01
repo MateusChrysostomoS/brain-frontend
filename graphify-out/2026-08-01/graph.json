@@ -200,7 +200,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_signin_dashboard_components_patientcard",
-      "community": 7,
+      "community": 42,
       "norm_label": "patientcard.tsx"
     },
     {
@@ -210,7 +210,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "app_signin_dashboard_components_patientcard_patientcardprops",
-      "community": 7,
+      "community": 42,
       "norm_label": "patientcardprops"
     },
     {
@@ -220,7 +220,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "app_signin_dashboard_components_patientcard_status_class",
-      "community": 7,
+      "community": 42,
       "norm_label": "status_class"
     },
     {
@@ -230,7 +230,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "app_signin_dashboard_components_patientcard_dotclass",
-      "community": 7,
+      "community": 42,
       "norm_label": "dotclass()"
     },
     {
@@ -240,7 +240,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "app_signin_dashboard_components_patientcard_patientcard",
-      "community": 7,
+      "community": 6,
       "norm_label": "patientcard()"
     },
     {
@@ -500,7 +500,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_signin_summary_components_patientheader",
-      "community": 7,
+      "community": 6,
       "norm_label": "patientheader.tsx"
     },
     {
@@ -510,7 +510,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "app_signin_summary_components_patientheader_metachip",
-      "community": 7,
+      "community": 6,
       "norm_label": "metachip"
     },
     {
@@ -520,7 +520,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "app_signin_summary_components_patientheader_patientheaderprops",
-      "community": 7,
+      "community": 6,
       "norm_label": "patientheaderprops"
     },
     {
@@ -530,7 +530,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "app_signin_summary_components_patientheader_status_class",
-      "community": 7,
+      "community": 6,
       "norm_label": "status_class"
     },
     {
@@ -540,7 +540,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "app_signin_summary_components_patientheader_patientheader",
-      "community": 7,
+      "community": 6,
       "norm_label": "patientheader()"
     },
     {
@@ -550,7 +550,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_signin_summary_components_patientimages",
-      "community": 37,
+      "community": 22,
       "norm_label": "patientimages.tsx"
     },
     {
@@ -560,7 +560,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "app_signin_summary_components_patientimages_usesignedurl",
-      "community": 37,
+      "community": 22,
       "norm_label": "usesignedurl()"
     },
     {
@@ -570,7 +570,7 @@
       "source_location": "L85",
       "_origin": "ast",
       "id": "app_signin_summary_components_patientimages_mediathumb",
-      "community": 37,
+      "community": 22,
       "norm_label": "mediathumb()"
     },
     {
@@ -580,7 +580,7 @@
       "source_location": "L119",
       "_origin": "ast",
       "id": "app_signin_summary_components_patientimages_lightbox",
-      "community": 37,
+      "community": 22,
       "norm_label": "lightbox()"
     },
     {
@@ -590,7 +590,7 @@
       "source_location": "L219",
       "_origin": "ast",
       "id": "app_signin_summary_components_patientimages_patientimages",
-      "community": 37,
+      "community": 22,
       "norm_label": "patientimages()"
     },
     {
@@ -670,7 +670,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "app_signin_summary_components_summarydetail_astext",
-      "community": 58,
+      "community": 6,
       "norm_label": "astext()"
     },
     {
@@ -700,7 +700,7 @@
       "source_location": "L171",
       "_origin": "ast",
       "id": "app_signin_summary_components_summarydetail_summarycontent",
-      "community": 58,
+      "community": 6,
       "norm_label": "summarycontent()"
     },
     {
@@ -710,7 +710,7 @@
       "source_location": "L273",
       "_origin": "ast",
       "id": "app_signin_summary_components_summarydetail_buildchips",
-      "community": 7,
+      "community": 6,
       "norm_label": "buildchips()"
     },
     {
@@ -720,7 +720,7 @@
       "source_location": "L295",
       "_origin": "ast",
       "id": "app_signin_summary_components_summarydetail_buildclassicsections",
-      "community": 58,
+      "community": 6,
       "norm_label": "buildclassicsections()"
     },
     {
@@ -730,7 +730,7 @@
       "source_location": "L347",
       "_origin": "ast",
       "id": "app_signin_summary_components_summarydetail_buildantro",
-      "community": 58,
+      "community": 6,
       "norm_label": "buildantro()"
     },
     {
@@ -740,7 +740,7 @@
       "source_location": "L368",
       "_origin": "ast",
       "id": "app_signin_summary_components_summarydetail_buildsoapsections",
-      "community": 58,
+      "community": 6,
       "norm_label": "buildsoapsections()"
     },
     {
@@ -750,7 +750,7 @@
       "source_location": "L441",
       "_origin": "ast",
       "id": "app_signin_summary_components_summarydetail_buildtailsections",
-      "community": 58,
+      "community": 6,
       "norm_label": "buildtailsections()"
     },
     {
@@ -980,7 +980,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "app_signin_summary_components_icons_xicon",
-      "community": 37,
+      "community": 22,
       "norm_label": "xicon()"
     },
     {
@@ -1060,7 +1060,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_signin_summary_page",
-      "community": 67,
+      "community": 6,
       "norm_label": "page.tsx"
     },
     {
@@ -1070,7 +1070,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "app_signin_summary_page_summarypage",
-      "community": 67,
+      "community": 6,
       "norm_label": "summarypage()"
     },
     {
@@ -1440,7 +1440,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_components_brandfooter",
-      "community": 40,
+      "community": 23,
       "norm_label": "brandfooter.tsx"
     },
     {
@@ -1450,7 +1450,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "app_site_components_brandfooter_brandfooterprops",
-      "community": 40,
+      "community": 23,
       "norm_label": "brandfooterprops"
     },
     {
@@ -1460,7 +1460,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "app_site_components_brandfooter_brandfooter",
-      "community": 40,
+      "community": 23,
       "norm_label": "brandfooter()"
     },
     {
@@ -1500,7 +1500,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_components_brandheader",
-      "community": 23,
+      "community": 40,
       "norm_label": "brandheader.tsx"
     },
     {
@@ -1510,7 +1510,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "app_site_components_brandheader_navlink",
-      "community": 23,
+      "community": 40,
       "norm_label": "navlink"
     },
     {
@@ -1520,7 +1520,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "app_site_components_brandheader_brandheaderprops",
-      "community": 23,
+      "community": 40,
       "norm_label": "brandheaderprops"
     },
     {
@@ -1530,7 +1530,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "app_site_components_brandheader_brandheader",
-      "community": 23,
+      "community": 40,
       "norm_label": "brandheader()"
     },
     {
@@ -1540,7 +1540,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_components_brandicon",
-      "community": 23,
+      "community": 7,
       "norm_label": "brandicon.tsx"
     },
     {
@@ -1550,7 +1550,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "app_site_components_brandicon_iconname",
-      "community": 23,
+      "community": 7,
       "norm_label": "iconname"
     },
     {
@@ -1560,7 +1560,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "app_site_components_brandicon_paths",
-      "community": 23,
+      "community": 7,
       "norm_label": "paths"
     },
     {
@@ -1570,7 +1570,7 @@
       "source_location": "L84",
       "_origin": "ast",
       "id": "app_site_components_brandicon_filled",
-      "community": 23,
+      "community": 7,
       "norm_label": "filled"
     },
     {
@@ -1580,7 +1580,7 @@
       "source_location": "L86",
       "_origin": "ast",
       "id": "app_site_components_brandicon_brandiconprops",
-      "community": 23,
+      "community": 7,
       "norm_label": "brandiconprops"
     },
     {
@@ -1590,7 +1590,7 @@
       "source_location": "L94",
       "_origin": "ast",
       "id": "app_site_components_brandicon_brandicon",
-      "community": 23,
+      "community": 9,
       "norm_label": "brandicon()"
     },
     {
@@ -1600,7 +1600,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_components_checkouttrialnotice",
-      "community": 32,
+      "community": 21,
       "norm_label": "checkouttrialnotice.tsx"
     },
     {
@@ -1610,7 +1610,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "app_site_components_checkouttrialnotice_checkouttrialnoticeprops",
-      "community": 32,
+      "community": 21,
       "norm_label": "checkouttrialnoticeprops"
     },
     {
@@ -1620,7 +1620,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "app_site_components_checkouttrialnotice_loadtrialdays",
-      "community": 32,
+      "community": 21,
       "norm_label": "loadtrialdays()"
     },
     {
@@ -1630,7 +1630,7 @@
       "source_location": "L60",
       "_origin": "ast",
       "id": "app_site_components_checkouttrialnotice_noticestyle",
-      "community": 32,
+      "community": 21,
       "norm_label": "noticestyle"
     },
     {
@@ -1640,7 +1640,7 @@
       "source_location": "L66",
       "_origin": "ast",
       "id": "app_site_components_checkouttrialnotice_checkouttrialnotice",
-      "community": 32,
+      "community": 21,
       "norm_label": "checkouttrialnotice()"
     },
     {
@@ -1780,7 +1780,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_components_onboardingbanner",
-      "community": 43,
+      "community": 64,
       "norm_label": "onboardingbanner.tsx"
     },
     {
@@ -1790,7 +1790,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "app_site_components_onboardingbanner_state_label",
-      "community": 43,
+      "community": 64,
       "norm_label": "state_label"
     },
     {
@@ -1800,7 +1800,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "app_site_components_onboardingbanner_onboardingbanner",
-      "community": 43,
+      "community": 64,
       "norm_label": "onboardingbanner()"
     },
     {
@@ -1810,7 +1810,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_components_phone",
-      "community": 23,
+      "community": 7,
       "norm_label": "phone.tsx"
     },
     {
@@ -1820,7 +1820,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "app_site_components_phone_wastep",
-      "community": 23,
+      "community": 7,
       "norm_label": "wastep"
     },
     {
@@ -1830,7 +1830,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "app_site_components_phone_phonefloatcard",
-      "community": 23,
+      "community": 7,
       "norm_label": "phonefloatcard"
     },
     {
@@ -1840,7 +1840,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "app_site_components_phone_phoneprops",
-      "community": 23,
+      "community": 7,
       "norm_label": "phoneprops"
     },
     {
@@ -1850,7 +1850,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "app_site_components_phone_phone",
-      "community": 23,
+      "community": 7,
       "norm_label": "phone()"
     },
     {
@@ -1860,7 +1860,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_components_plancheckoutcta",
-      "community": 32,
+      "community": 23,
       "norm_label": "plancheckoutcta.tsx"
     },
     {
@@ -1870,7 +1870,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "app_site_components_plancheckoutcta_plancheckoutctaprops",
-      "community": 32,
+      "community": 23,
       "norm_label": "plancheckoutctaprops"
     },
     {
@@ -1880,7 +1880,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "app_site_components_plancheckoutcta_alertstyle",
-      "community": 32,
+      "community": 23,
       "norm_label": "alertstyle"
     },
     {
@@ -1890,7 +1890,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "app_site_components_plancheckoutcta_plancheckoutcta",
-      "community": 32,
+      "community": 23,
       "norm_label": "plancheckoutcta()"
     },
     {
@@ -1900,7 +1900,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_components_portalshell",
-      "community": 33,
+      "community": 9,
       "norm_label": "portalshell.tsx"
     },
     {
@@ -1910,7 +1910,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "app_site_components_portalshell_portalnavitem",
-      "community": 33,
+      "community": 9,
       "norm_label": "portalnavitem"
     },
     {
@@ -1920,7 +1920,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "app_site_components_portalshell_portalshellprops",
-      "community": 33,
+      "community": 9,
       "norm_label": "portalshellprops"
     },
     {
@@ -1930,7 +1930,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "app_site_components_portalshell_isactive",
-      "community": 33,
+      "community": 9,
       "norm_label": "isactive()"
     },
     {
@@ -1940,7 +1940,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "app_site_components_portalshell_portalshell",
-      "community": 33,
+      "community": 9,
       "norm_label": "portalshell()"
     },
     {
@@ -2050,7 +2050,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_components_themetoggle",
-      "community": 33,
+      "community": 27,
       "norm_label": "themetoggle.tsx"
     },
     {
@@ -2060,7 +2060,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "app_site_components_themetoggle_themetoggleprops",
-      "community": 33,
+      "community": 27,
       "norm_label": "themetoggleprops"
     },
     {
@@ -2070,7 +2070,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "app_site_components_themetoggle_themetoggle",
-      "community": 33,
+      "community": 27,
       "norm_label": "themetoggle()"
     },
     {
@@ -2080,7 +2080,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_components_usebrandtheme",
-      "community": 33,
+      "community": 27,
       "norm_label": "usebrandtheme.ts"
     },
     {
@@ -2090,7 +2090,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "app_site_components_usebrandtheme_theme",
-      "community": 33,
+      "community": 27,
       "norm_label": "theme"
     },
     {
@@ -2100,7 +2100,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "app_site_components_usebrandtheme_usebrandtheme",
-      "community": 33,
+      "community": 27,
       "norm_label": "usebrandtheme()"
     },
     {
@@ -2150,7 +2150,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_lib_pricing",
-      "community": 66,
+      "community": 23,
       "norm_label": "pricing.ts"
     },
     {
@@ -2160,7 +2160,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "app_site_lib_pricing_pricingplankey",
-      "community": 66,
+      "community": 23,
       "norm_label": "pricingplankey"
     },
     {
@@ -2170,7 +2170,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "app_site_lib_pricing_pricingplan",
-      "community": 66,
+      "community": 23,
       "norm_label": "pricingplan"
     },
     {
@@ -2180,7 +2180,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "app_site_lib_pricing_pricing",
-      "community": 66,
+      "community": 23,
       "norm_label": "pricing"
     },
     {
@@ -2190,7 +2190,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_admin_dashboard_page",
-      "community": 29,
+      "community": 32,
       "norm_label": "page.tsx"
     },
     {
@@ -2200,7 +2200,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "app_site_admin_dashboard_page_stats",
-      "community": 29,
+      "community": 32,
       "norm_label": "stats"
     },
     {
@@ -2210,7 +2210,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "app_site_admin_dashboard_page_statcard",
-      "community": 29,
+      "community": 32,
       "norm_label": "statcard()"
     },
     {
@@ -2220,7 +2220,7 @@
       "source_location": "L50",
       "_origin": "ast",
       "id": "app_site_admin_dashboard_page_admindashboardpage",
-      "community": 29,
+      "community": 32,
       "norm_label": "admindashboardpage()"
     },
     {
@@ -2390,7 +2390,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_admin_tenants_page",
-      "community": 35,
+      "community": 29,
       "norm_label": "page.tsx"
     },
     {
@@ -2400,7 +2400,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "app_site_admin_tenants_page_status_tone",
-      "community": 35,
+      "community": 29,
       "norm_label": "status_tone"
     },
     {
@@ -2410,7 +2410,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "app_site_admin_tenants_page_statusbadge",
-      "community": 35,
+      "community": 29,
       "norm_label": "statusbadge()"
     },
     {
@@ -2420,7 +2420,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "app_site_admin_tenants_page_formatdate",
-      "community": 35,
+      "community": 29,
       "norm_label": "formatdate()"
     },
     {
@@ -2430,7 +2430,7 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "app_site_admin_tenants_page_tenantspage",
-      "community": 35,
+      "community": 29,
       "norm_label": "tenantspage()"
     },
     {
@@ -2450,7 +2450,7 @@
       "source_location": "L80",
       "_origin": "ast",
       "id": "app_site_admin_tenants_page_tenantstable",
-      "community": 35,
+      "community": 29,
       "norm_label": "tenantstable()"
     },
     {
@@ -2460,7 +2460,7 @@
       "source_location": "L216",
       "_origin": "ast",
       "id": "app_site_admin_tenants_page_deletetenantmodal",
-      "community": 35,
+      "community": 29,
       "norm_label": "deletetenantmodal()"
     },
     {
@@ -2470,7 +2470,7 @@
       "source_location": "L302",
       "_origin": "ast",
       "id": "app_site_admin_tenants_page_tenantdetail",
-      "community": 35,
+      "community": 29,
       "norm_label": "tenantdetail()"
     },
     {
@@ -2480,7 +2480,7 @@
       "source_location": "L423",
       "_origin": "ast",
       "id": "app_site_admin_tenants_page_backlink",
-      "community": 35,
+      "community": 29,
       "norm_label": "backlink()"
     },
     {
@@ -2490,7 +2490,7 @@
       "source_location": "L436",
       "_origin": "ast",
       "id": "app_site_admin_tenants_page_producttoggle",
-      "community": 35,
+      "community": 29,
       "norm_label": "producttoggle()"
     },
     {
@@ -2560,7 +2560,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_app_components_panelstates",
-      "community": 17,
+      "community": 7,
       "norm_label": "panelstates.tsx"
     },
     {
@@ -2580,7 +2580,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "app_site_app_components_panelstates_panelmessageprops",
-      "community": 17,
+      "community": 7,
       "norm_label": "panelmessageprops"
     },
     {
@@ -2690,7 +2690,7 @@
       "source_location": "L72",
       "_origin": "ast",
       "id": "app_site_app_components_precheckpanel_precheckpanel",
-      "community": 44,
+      "community": 17,
       "norm_label": "precheckpanel()"
     },
     {
@@ -2790,7 +2790,7 @@
       "source_location": "L101",
       "_origin": "ast",
       "id": "app_site_app_components_secretariapanel_secretariapanel",
-      "community": 44,
+      "community": 17,
       "norm_label": "secretariapanel()"
     },
     {
@@ -2910,7 +2910,7 @@
       "source_location": "L111",
       "_origin": "ast",
       "id": "app_site_app_components_format_pluralize",
-      "community": 44,
+      "community": 17,
       "norm_label": "pluralize()"
     },
     {
@@ -2990,7 +2990,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_app_onboarding_components_activatebutton",
-      "community": 76,
+      "community": 64,
       "norm_label": "activatebutton.tsx"
     },
     {
@@ -3000,7 +3000,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "app_site_app_onboarding_components_activatebutton_activatebuttonprops",
-      "community": 76,
+      "community": 64,
       "norm_label": "activatebuttonprops"
     },
     {
@@ -3010,7 +3010,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "app_site_app_onboarding_components_activatebutton_activatebutton",
-      "community": 76,
+      "community": 64,
       "norm_label": "activatebutton()"
     },
     {
@@ -3100,67 +3100,67 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_app_onboarding_lib_meta_embedded_signup",
-      "community": 76,
+      "community": 64,
       "norm_label": "meta-embedded-signup.ts"
     },
     {
       "label": "TRUSTED_MESSAGE_ORIGINS",
       "file_type": "code",
       "source_file": "app/(site)/app/onboarding/lib/meta-embedded-signup.ts",
-      "source_location": "L26",
+      "source_location": "L21",
       "_origin": "ast",
       "id": "app_site_app_onboarding_lib_meta_embedded_signup_trusted_message_origins",
-      "community": 76,
+      "community": 64,
       "norm_label": "trusted_message_origins"
     },
     {
       "label": "FacebookLoginResponse",
       "file_type": "code",
       "source_file": "app/(site)/app/onboarding/lib/meta-embedded-signup.ts",
-      "source_location": "L31",
+      "source_location": "L26",
       "_origin": "ast",
       "id": "app_site_app_onboarding_lib_meta_embedded_signup_facebookloginresponse",
-      "community": 76,
+      "community": 64,
       "norm_label": "facebookloginresponse"
     },
     {
       "label": "Window",
       "file_type": "code",
       "source_file": "app/(site)/app/onboarding/lib/meta-embedded-signup.ts",
-      "source_location": "L36",
+      "source_location": "L31",
       "_origin": "ast",
       "id": "app_site_app_onboarding_lib_meta_embedded_signup_window",
-      "community": 76,
+      "community": 64,
       "norm_label": "window"
     },
     {
       "label": "loadFacebookSdk()",
       "file_type": "code",
       "source_file": "app/(site)/app/onboarding/lib/meta-embedded-signup.ts",
-      "source_location": "L53",
+      "source_location": "L48",
       "_origin": "ast",
       "id": "app_site_app_onboarding_lib_meta_embedded_signup_loadfacebooksdk",
-      "community": 76,
+      "community": 64,
       "norm_label": "loadfacebooksdk()"
     },
     {
       "label": "EmbeddedSignupOutcome",
       "file_type": "code",
       "source_file": "app/(site)/app/onboarding/lib/meta-embedded-signup.ts",
-      "source_location": "L73",
+      "source_location": "L68",
       "_origin": "ast",
       "id": "app_site_app_onboarding_lib_meta_embedded_signup_embeddedsignupoutcome",
-      "community": 76,
+      "community": 64,
       "norm_label": "embeddedsignupoutcome"
     },
     {
       "label": "runEmbeddedSignup()",
       "file_type": "code",
       "source_file": "app/(site)/app/onboarding/lib/meta-embedded-signup.ts",
-      "source_location": "L80",
+      "source_location": "L75",
       "_origin": "ast",
       "id": "app_site_app_onboarding_lib_meta_embedded_signup_runembeddedsignup",
-      "community": 76,
+      "community": 64,
       "norm_label": "runembeddedsignup()"
     },
     {
@@ -3230,7 +3230,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_app_page",
-      "community": 44,
+      "community": 27,
       "norm_label": "page.tsx"
     },
     {
@@ -3240,7 +3240,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "app_site_app_page_noentitlementspanel",
-      "community": 44,
+      "community": 27,
       "norm_label": "noentitlementspanel()"
     },
     {
@@ -3250,7 +3250,7 @@
       "source_location": "L59",
       "_origin": "ast",
       "id": "app_site_app_page_apppage",
-      "community": 44,
+      "community": 27,
       "norm_label": "apppage()"
     },
     {
@@ -3260,7 +3260,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_app_reativar_components_restartbutton",
-      "community": 71,
+      "community": 76,
       "norm_label": "restartbutton.tsx"
     },
     {
@@ -3270,7 +3270,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "app_site_app_reativar_components_restartbutton_restartbuttonprops",
-      "community": 71,
+      "community": 76,
       "norm_label": "restartbuttonprops"
     },
     {
@@ -3280,7 +3280,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "app_site_app_reativar_components_restartbutton_restartbutton",
-      "community": 71,
+      "community": 76,
       "norm_label": "restartbutton()"
     },
     {
@@ -3330,7 +3330,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_cadastro_components_addonsstep",
-      "community": 15,
+      "community": 72,
       "norm_label": "addonsstep.tsx"
     },
     {
@@ -3340,7 +3340,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "app_site_cadastro_components_addonsstep_addon_copy",
-      "community": 15,
+      "community": 72,
       "norm_label": "addon_copy"
     },
     {
@@ -3350,7 +3350,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "app_site_cadastro_components_addonsstep_addonsstepprops",
-      "community": 15,
+      "community": 72,
       "norm_label": "addonsstepprops"
     },
     {
@@ -3360,7 +3360,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "app_site_cadastro_components_addonsstep_addonsstep",
-      "community": 15,
+      "community": 72,
       "norm_label": "addonsstep()"
     },
     {
@@ -3370,7 +3370,7 @@
       "source_location": "L168",
       "_origin": "ast",
       "id": "app_site_cadastro_components_addonsstep_addontogglecard",
-      "community": 15,
+      "community": 72,
       "norm_label": "addontogglecard()"
     },
     {
@@ -3380,7 +3380,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_cadastro_components_cadastrowizard",
-      "community": 36,
+      "community": 15,
       "norm_label": "cadastrowizard.tsx"
     },
     {
@@ -3390,7 +3390,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "app_site_cadastro_components_cadastrowizard_progress",
-      "community": 36,
+      "community": 15,
       "norm_label": "progress"
     },
     {
@@ -3400,7 +3400,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "app_site_cadastro_components_cadastrowizard_progress_label",
-      "community": 36,
+      "community": 15,
       "norm_label": "progress_label"
     },
     {
@@ -3410,7 +3410,7 @@
       "source_location": "L63",
       "_origin": "ast",
       "id": "app_site_cadastro_components_cadastrowizard_nextstepid",
-      "community": 36,
+      "community": 15,
       "norm_label": "nextstepid()"
     },
     {
@@ -3420,7 +3420,7 @@
       "source_location": "L89",
       "_origin": "ast",
       "id": "app_site_cadastro_components_cadastrowizard_nextaftereligibility",
-      "community": 36,
+      "community": 15,
       "norm_label": "nextaftereligibility()"
     },
     {
@@ -3430,7 +3430,7 @@
       "source_location": "L93",
       "_origin": "ast",
       "id": "app_site_cadastro_components_cadastrowizard_cadastrowizardprops",
-      "community": 36,
+      "community": 15,
       "norm_label": "cadastrowizardprops"
     },
     {
@@ -3490,7 +3490,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_cadastro_components_dedicatednumberguide",
-      "community": 36,
+      "community": 34,
       "norm_label": "dedicatednumberguide.tsx"
     },
     {
@@ -3500,7 +3500,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "app_site_cadastro_components_dedicatednumberguide_steps",
-      "community": 36,
+      "community": 34,
       "norm_label": "steps"
     },
     {
@@ -3510,7 +3510,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "app_site_cadastro_components_dedicatednumberguide_dedicatednumberguideprops",
-      "community": 36,
+      "community": 34,
       "norm_label": "dedicatednumberguideprops"
     },
     {
@@ -3520,7 +3520,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "app_site_cadastro_components_dedicatednumberguide_dedicatednumberguide",
-      "community": 36,
+      "community": 34,
       "norm_label": "dedicatednumberguide()"
     },
     {
@@ -3610,7 +3610,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_cadastro_components_priorapistep",
-      "community": 34,
+      "community": 77,
       "norm_label": "priorapistep.tsx"
     },
     {
@@ -3620,7 +3620,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "app_site_cadastro_components_priorapistep_options",
-      "community": 34,
+      "community": 77,
       "norm_label": "options"
     },
     {
@@ -3630,7 +3630,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "app_site_cadastro_components_priorapistep_priorapistepprops",
-      "community": 34,
+      "community": 77,
       "norm_label": "priorapistepprops"
     },
     {
@@ -3640,7 +3640,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "app_site_cadastro_components_priorapistep_priorapistep",
-      "community": 34,
+      "community": 77,
       "norm_label": "priorapistep()"
     },
     {
@@ -3960,7 +3960,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "app_site_cadastro_lib_types_signupaddonid",
-      "community": 15,
+      "community": 72,
       "norm_label": "signupaddonid"
     },
     {
@@ -3990,7 +3990,7 @@
       "source_location": "L60",
       "_origin": "ast",
       "id": "app_site_cadastro_lib_types_wizardanswers",
-      "community": 21,
+      "community": 15,
       "norm_label": "wizardanswers"
     },
     {
@@ -4200,7 +4200,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_convite_components_setpasswordform",
-      "community": 76,
+      "community": 26,
       "norm_label": "setpasswordform.tsx"
     },
     {
@@ -4210,7 +4210,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "app_site_convite_components_setpasswordform_setpasswordformprops",
-      "community": 76,
+      "community": 26,
       "norm_label": "setpasswordformprops"
     },
     {
@@ -4220,7 +4220,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "app_site_convite_components_setpasswordform_setpasswordform",
-      "community": 76,
+      "community": 26,
       "norm_label": "setpasswordform()"
     },
     {
@@ -4230,7 +4230,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_convite_page",
-      "community": 76,
+      "community": 26,
       "norm_label": "page.tsx"
     },
     {
@@ -4240,7 +4240,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "app_site_convite_page_viewstate",
-      "community": 76,
+      "community": 26,
       "norm_label": "viewstate"
     },
     {
@@ -4250,7 +4250,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "app_site_convite_page_convitepage",
-      "community": 76,
+      "community": 26,
       "norm_label": "convitepage()"
     },
     {
@@ -4260,7 +4260,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "app_site_convite_page_conviteinner",
-      "community": 76,
+      "community": 26,
       "norm_label": "conviteinner()"
     },
     {
@@ -4270,7 +4270,7 @@
       "source_location": "L147",
       "_origin": "ast",
       "id": "app_site_convite_page_conviteshell",
-      "community": 76,
+      "community": 26,
       "norm_label": "conviteshell()"
     },
     {
@@ -4280,7 +4280,7 @@
       "source_location": "L163",
       "_origin": "ast",
       "id": "app_site_convite_page_spinner",
-      "community": 76,
+      "community": 26,
       "norm_label": "spinner()"
     },
     {
@@ -4350,7 +4350,7 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "app_site_doctor_anamneses_page_anamnesesinner",
-      "community": 3,
+      "community": 29,
       "norm_label": "anamnesesinner()"
     },
     {
@@ -4480,7 +4480,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_doctor_perfil_secretariaconfigsection",
-      "community": 75,
+      "community": 63,
       "norm_label": "secretariaconfigsection.tsx"
     },
     {
@@ -4490,7 +4490,7 @@
       "source_location": "L81",
       "_origin": "ast",
       "id": "app_site_doctor_perfil_secretariaconfigsection_weekdays",
-      "community": 75,
+      "community": 63,
       "norm_label": "weekdays"
     },
     {
@@ -4520,7 +4520,7 @@
       "source_location": "L528",
       "_origin": "ast",
       "id": "app_site_doctor_perfil_secretariaconfigsection_timeinputstyle",
-      "community": 75,
+      "community": 63,
       "norm_label": "timeinputstyle"
     },
     {
@@ -4530,7 +4530,7 @@
       "source_location": "L538",
       "_origin": "ast",
       "id": "app_site_doctor_perfil_secretariaconfigsection_hourseditor",
-      "community": 75,
+      "community": 63,
       "norm_label": "hourseditor()"
     },
     {
@@ -4540,7 +4540,7 @@
       "source_location": "L549",
       "_origin": "ast",
       "id": "app_site_doctor_perfil_secretariaconfigsection_hoursdayrow",
-      "community": 75,
+      "community": 63,
       "norm_label": "hoursdayrow()"
     },
     {
@@ -5050,7 +5050,7 @@
       "source_location": "L305",
       "_origin": "ast",
       "id": "app_site_secretaria_shared_ui_helptip",
-      "community": 60,
+      "community": 11,
       "norm_label": "helptip()"
     },
     {
@@ -5090,7 +5090,7 @@
       "source_location": "L423",
       "_origin": "ast",
       "id": "app_site_secretaria_shared_ui_textarea",
-      "community": 26,
+      "community": 57,
       "norm_label": "textarea()"
     },
     {
@@ -5550,7 +5550,7 @@
       "source_location": "L951",
       "_origin": "ast",
       "id": "app_site_secretaria_agenda_modals_blockmodal",
-      "community": 61,
+      "community": 19,
       "norm_label": "blockmodal()"
     },
     {
@@ -5790,7 +5790,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_ctoggle",
-      "community": 57,
+      "community": 60,
       "norm_label": "ctoggle.tsx"
     },
     {
@@ -5800,7 +5800,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_ctoggle_ctoggleprops",
-      "community": 57,
+      "community": 60,
       "norm_label": "ctoggleprops"
     },
     {
@@ -5810,7 +5810,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_ctoggle_ctoggle",
-      "community": 57,
+      "community": 60,
       "norm_label": "ctoggle()"
     },
     {
@@ -5900,7 +5900,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_inviteprofessionalmodal",
-      "community": 57,
+      "community": 35,
       "norm_label": "inviteprofessionalmodal.tsx"
     },
     {
@@ -5910,7 +5910,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_inviteprofessionalmodal_inviteprofessionalmodalprops",
-      "community": 57,
+      "community": 35,
       "norm_label": "inviteprofessionalmodalprops"
     },
     {
@@ -5920,7 +5920,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_inviteprofessionalmodal_inviteprofessionalmodal",
-      "community": 57,
+      "community": 35,
       "norm_label": "inviteprofessionalmodal()"
     },
     {
@@ -5930,57 +5930,37 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_messagessection",
-      "community": 26,
+      "community": 57,
       "norm_label": "messagessection.tsx"
-    },
-    {
-      "label": "FIXED_GREETING_BUTTONS",
-      "file_type": "code",
-      "source_file": "app/(site)/secretaria/configuracao/components/MessagesSection.tsx",
-      "source_location": "L31",
-      "_origin": "ast",
-      "id": "app_site_secretaria_configuracao_components_messagessection_fixed_greeting_buttons",
-      "community": 26,
-      "norm_label": "fixed_greeting_buttons"
     },
     {
       "label": "LANGUAGE_OPTIONS",
       "file_type": "code",
       "source_file": "app/(site)/secretaria/configuracao/components/MessagesSection.tsx",
-      "source_location": "L33",
+      "source_location": "L17",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_messagessection_language_options",
-      "community": 26,
+      "community": 57,
       "norm_label": "language_options"
     },
     {
       "label": "MessagesSectionProps",
       "file_type": "code",
       "source_file": "app/(site)/secretaria/configuracao/components/MessagesSection.tsx",
-      "source_location": "L38",
+      "source_location": "L22",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_messagessection_messagessectionprops",
-      "community": 26,
+      "community": 57,
       "norm_label": "messagessectionprops"
-    },
-    {
-      "label": "GreetingButtonsPreview()",
-      "file_type": "code",
-      "source_file": "app/(site)/secretaria/configuracao/components/MessagesSection.tsx",
-      "source_location": "L54",
-      "_origin": "ast",
-      "id": "app_site_secretaria_configuracao_components_messagessection_greetingbuttonspreview",
-      "community": 26,
-      "norm_label": "greetingbuttonspreview()"
     },
     {
       "label": "MessagesSection()",
       "file_type": "code",
       "source_file": "app/(site)/secretaria/configuracao/components/MessagesSection.tsx",
-      "source_location": "L87",
+      "source_location": "L31",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_messagessection_messagessection",
-      "community": 26,
+      "community": 57,
       "norm_label": "messagessection()"
     },
     {
@@ -6050,7 +6030,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_postconsultsection",
-      "community": 26,
+      "community": 57,
       "norm_label": "postconsultsection.tsx"
     },
     {
@@ -6060,7 +6040,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_postconsultsection_postconsultsectionprops",
-      "community": 26,
+      "community": 57,
       "norm_label": "postconsultsectionprops"
     },
     {
@@ -6070,7 +6050,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_postconsultsection_postconsultsection",
-      "community": 26,
+      "community": 57,
       "norm_label": "postconsultsection()"
     },
     {
@@ -6140,7 +6120,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_section",
-      "community": 26,
+      "community": 57,
       "norm_label": "section.tsx"
     },
     {
@@ -6150,7 +6130,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_section_sectionprops",
-      "community": 26,
+      "community": 57,
       "norm_label": "sectionprops"
     },
     {
@@ -6160,7 +6140,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_section_section",
-      "community": 26,
+      "community": 57,
       "norm_label": "section()"
     },
     {
@@ -6170,7 +6150,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_servicecard",
-      "community": 4,
+      "community": 60,
       "norm_label": "servicecard.tsx"
     },
     {
@@ -6180,7 +6160,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_servicecard_duration_options",
-      "community": 4,
+      "community": 60,
       "norm_label": "duration_options"
     },
     {
@@ -6190,7 +6170,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_servicecard_requirementrowprops",
-      "community": 4,
+      "community": 60,
       "norm_label": "requirementrowprops"
     },
     {
@@ -6200,7 +6180,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_servicecard_requirementrow",
-      "community": 4,
+      "community": 60,
       "norm_label": "requirementrow()"
     },
     {
@@ -6210,7 +6190,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_servicecard_servicecardprops",
-      "community": 4,
+      "community": 60,
       "norm_label": "servicecardprops"
     },
     {
@@ -6220,7 +6200,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_servicecard_servicecard",
-      "community": 4,
+      "community": 60,
       "norm_label": "servicecard()"
     },
     {
@@ -6230,7 +6210,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_servicessection",
-      "community": 4,
+      "community": 60,
       "norm_label": "servicessection.tsx"
     },
     {
@@ -6240,7 +6220,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_servicessection_servicessectionprops",
-      "community": 4,
+      "community": 60,
       "norm_label": "servicessectionprops"
     },
     {
@@ -6250,7 +6230,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_servicessection_servicessection",
-      "community": 4,
+      "community": 60,
       "norm_label": "servicessection()"
     },
     {
@@ -6370,7 +6350,7 @@
       "source_location": "L47",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_lib_hub_mapping_hhmmtominutes",
-      "community": 75,
+      "community": 63,
       "norm_label": "hhmmtominutes()"
     },
     {
@@ -6380,7 +6360,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_lib_hub_mapping_minutestohhmm",
-      "community": 75,
+      "community": 63,
       "norm_label": "minutestohhmm()"
     },
     {
@@ -6390,7 +6370,7 @@
       "source_location": "L62",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_lib_hub_mapping_applywirebusinesshours",
-      "community": 75,
+      "community": 28,
       "norm_label": "applywirebusinesshours()"
     },
     {
@@ -6487,7 +6467,7 @@
       "label": "applyWirePostConsult()",
       "file_type": "code",
       "source_file": "app/(site)/secretaria/configuracao/lib/hub-mapping.ts",
-      "source_location": "L200",
+      "source_location": "L201",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_lib_hub_mapping_applywirepostconsult",
       "community": 28,
@@ -6497,7 +6477,7 @@
       "label": "applyWirePixDeposit()",
       "file_type": "code",
       "source_file": "app/(site)/secretaria/configuracao/lib/hub-mapping.ts",
-      "source_location": "L214",
+      "source_location": "L215",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_lib_hub_mapping_applywirepixdeposit",
       "community": 28,
@@ -6507,7 +6487,7 @@
       "label": "applyWireGcal()",
       "file_type": "code",
       "source_file": "app/(site)/secretaria/configuracao/lib/hub-mapping.ts",
-      "source_location": "L232",
+      "source_location": "L233",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_lib_hub_mapping_applywiregcal",
       "community": 28,
@@ -6517,17 +6497,17 @@
       "label": "applyWireProfessionalProfile()",
       "file_type": "code",
       "source_file": "app/(site)/secretaria/configuracao/lib/hub-mapping.ts",
-      "source_location": "L244",
+      "source_location": "L245",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_lib_hub_mapping_applywireprofessionalprofile",
-      "community": 75,
+      "community": 28,
       "norm_label": "applywireprofessionalprofile()"
     },
     {
       "label": "buildConfigUpdatePayload()",
       "file_type": "code",
       "source_file": "app/(site)/secretaria/configuracao/lib/hub-mapping.ts",
-      "source_location": "L265",
+      "source_location": "L266",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_lib_hub_mapping_buildconfigupdatepayload",
       "community": 28,
@@ -6537,7 +6517,7 @@
       "label": "buildProfessionalConfigPayload()",
       "file_type": "code",
       "source_file": "app/(site)/secretaria/configuracao/lib/hub-mapping.ts",
-      "source_location": "L296",
+      "source_location": "L298",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_lib_hub_mapping_buildprofessionalconfigpayload",
       "community": 28,
@@ -6550,7 +6530,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_lib_types",
-      "community": 4,
+      "community": 60,
       "norm_label": "types.ts"
     },
     {
@@ -6567,97 +6547,97 @@
       "label": "Messages",
       "file_type": "code",
       "source_file": "app/(site)/secretaria/configuracao/lib/types.ts",
-      "source_location": "L42",
+      "source_location": "L37",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_lib_types_messages",
-      "community": 26,
+      "community": 28,
       "norm_label": "messages"
     },
     {
       "label": "PostConsult",
       "file_type": "code",
       "source_file": "app/(site)/secretaria/configuracao/lib/types.ts",
-      "source_location": "L55",
+      "source_location": "L52",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_lib_types_postconsult",
-      "community": 26,
+      "community": 28,
       "norm_label": "postconsult"
     },
     {
       "label": "PixDeposit",
       "file_type": "code",
       "source_file": "app/(site)/secretaria/configuracao/lib/types.ts",
-      "source_location": "L74",
+      "source_location": "L71",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_lib_types_pixdeposit",
-      "community": 57,
+      "community": 28,
       "norm_label": "pixdeposit"
     },
     {
       "label": "DEFAULT_PIX_DEPOSIT",
       "file_type": "code",
       "source_file": "app/(site)/secretaria/configuracao/lib/types.ts",
-      "source_location": "L91",
+      "source_location": "L88",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_lib_types_default_pix_deposit",
-      "community": 4,
+      "community": 28,
       "norm_label": "default_pix_deposit"
     },
     {
       "label": "ProfessionalProfile",
       "file_type": "code",
       "source_file": "app/(site)/secretaria/configuracao/lib/types.ts",
-      "source_location": "L108",
+      "source_location": "L105",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_lib_types_professionalprofile",
-      "community": 4,
+      "community": 28,
       "norm_label": "professionalprofile"
     },
     {
       "label": "EMPTY_PROFESSIONAL_PROFILE",
       "file_type": "code",
       "source_file": "app/(site)/secretaria/configuracao/lib/types.ts",
-      "source_location": "L114",
+      "source_location": "L111",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_lib_types_empty_professional_profile",
-      "community": 4,
+      "community": 63,
       "norm_label": "empty_professional_profile"
     },
     {
       "label": "Requirement",
       "file_type": "code",
       "source_file": "app/(site)/secretaria/configuracao/lib/types.ts",
-      "source_location": "L127",
+      "source_location": "L124",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_lib_types_requirement",
-      "community": 4,
+      "community": 60,
       "norm_label": "requirement"
     },
     {
       "label": "Service",
       "file_type": "code",
       "source_file": "app/(site)/secretaria/configuracao/lib/types.ts",
-      "source_location": "L132",
+      "source_location": "L129",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_lib_types_service",
-      "community": 4,
+      "community": 60,
       "norm_label": "service"
     },
     {
       "label": "TimeRange",
       "file_type": "code",
       "source_file": "app/(site)/secretaria/configuracao/lib/types.ts",
-      "source_location": "L146",
+      "source_location": "L143",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_lib_types_timerange",
-      "community": 4,
+      "community": 63,
       "norm_label": "timerange"
     },
     {
       "label": "DayConfig",
       "file_type": "code",
       "source_file": "app/(site)/secretaria/configuracao/lib/types.ts",
-      "source_location": "L151",
+      "source_location": "L148",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_lib_types_dayconfig",
       "community": 60,
@@ -6667,7 +6647,7 @@
       "label": "Prefs",
       "file_type": "code",
       "source_file": "app/(site)/secretaria/configuracao/lib/types.ts",
-      "source_location": "L158",
+      "source_location": "L155",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_lib_types_prefs",
       "community": 60,
@@ -6677,7 +6657,7 @@
       "label": "GoogleCalendarMode",
       "file_type": "code",
       "source_file": "app/(site)/secretaria/configuracao/lib/types.ts",
-      "source_location": "L180",
+      "source_location": "L177",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_lib_types_googlecalendarmode",
       "community": 4,
@@ -6687,10 +6667,10 @@
       "label": "GcalState",
       "file_type": "code",
       "source_file": "app/(site)/secretaria/configuracao/lib/types.ts",
-      "source_location": "L182",
+      "source_location": "L179",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_lib_types_gcalstate",
-      "community": 4,
+      "community": 28,
       "norm_label": "gcalstate"
     },
     {
@@ -7270,7 +7250,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "lib_tests_manage_api_test",
-      "community": 76,
+      "community": 36,
       "norm_label": "manage-api.test.ts"
     },
     {
@@ -7280,7 +7260,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "lib_tests_manage_api_test_manageapimodule",
-      "community": 76,
+      "community": 36,
       "norm_label": "manageapimodule"
     },
     {
@@ -7290,7 +7270,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "lib_tests_manage_api_test_makesessionstorage",
-      "community": 76,
+      "community": 36,
       "norm_label": "makesessionstorage()"
     },
     {
@@ -7300,7 +7280,7 @@
       "source_location": "L55",
       "_origin": "ast",
       "id": "lib_tests_manage_api_test_mockresponse",
-      "community": 76,
+      "community": 36,
       "norm_label": "mockresponse()"
     },
     {
@@ -7310,7 +7290,7 @@
       "source_location": "L64",
       "_origin": "ast",
       "id": "lib_tests_manage_api_test_b64url",
-      "community": 76,
+      "community": 36,
       "norm_label": "b64url()"
     },
     {
@@ -7320,7 +7300,7 @@
       "source_location": "L72",
       "_origin": "ast",
       "id": "lib_tests_manage_api_test_makejwt",
-      "community": 76,
+      "community": 36,
       "norm_label": "makejwt()"
     },
     {
@@ -7330,7 +7310,7 @@
       "source_location": "L78",
       "_origin": "ast",
       "id": "lib_tests_manage_api_test_makesession",
-      "community": 76,
+      "community": 36,
       "norm_label": "makesession()"
     },
     {
@@ -7340,7 +7320,7 @@
       "source_location": "L89",
       "_origin": "ast",
       "id": "lib_tests_manage_api_test_entitlementbody",
-      "community": 76,
+      "community": 36,
       "norm_label": "entitlementbody()"
     },
     {
@@ -7350,7 +7330,7 @@
       "source_location": "L103",
       "_origin": "ast",
       "id": "lib_tests_manage_api_test_expectmanageerror",
-      "community": 76,
+      "community": 36,
       "norm_label": "expectmanageerror()"
     },
     {
@@ -7540,7 +7520,7 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "lib_api_getsummarymedia",
-      "community": 37,
+      "community": 24,
       "norm_label": "getsummarymedia()"
     },
     {
@@ -7550,7 +7530,7 @@
       "source_location": "L73",
       "_origin": "ast",
       "id": "lib_api_getmediaurl",
-      "community": 37,
+      "community": 22,
       "norm_label": "getmediaurl()"
     },
     {
@@ -7570,7 +7550,7 @@
       "source_location": "L89",
       "_origin": "ast",
       "id": "lib_api_requestpasswordreset",
-      "community": 8,
+      "community": 24,
       "norm_label": "requestpasswordreset()"
     },
     {
@@ -7580,7 +7560,7 @@
       "source_location": "L98",
       "_origin": "ast",
       "id": "lib_api_verifyresettoken",
-      "community": 8,
+      "community": 24,
       "norm_label": "verifyresettoken()"
     },
     {
@@ -7690,7 +7670,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "lib_constants",
-      "community": 64,
+      "community": 42,
       "norm_label": "constants.ts"
     },
     {
@@ -7700,7 +7680,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "lib_format",
-      "community": 7,
+      "community": 6,
       "norm_label": "format.ts"
     },
     {
@@ -7710,7 +7690,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "lib_format_fmtdate",
-      "community": 7,
+      "community": 6,
       "norm_label": "fmtdate()"
     },
     {
@@ -7720,7 +7700,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "lib_format_fmtbirth",
-      "community": 7,
+      "community": 6,
       "norm_label": "fmtbirth()"
     },
     {
@@ -7730,7 +7710,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "lib_format_status_labels",
-      "community": 7,
+      "community": 6,
       "norm_label": "status_labels"
     },
     {
@@ -7740,7 +7720,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "lib_format_statuslabel",
-      "community": 7,
+      "community": 6,
       "norm_label": "statuslabel()"
     },
     {
@@ -7780,7 +7760,7 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "lib_manage_api_entitlements",
-      "community": 44,
+      "community": 27,
       "norm_label": "entitlements"
     },
     {
@@ -7860,7 +7840,7 @@
       "source_location": "L127",
       "_origin": "ast",
       "id": "lib_manage_api_savesession",
-      "community": 30,
+      "community": 0,
       "norm_label": "savesession()"
     },
     {
@@ -7890,7 +7870,7 @@
       "source_location": "L159",
       "_origin": "ast",
       "id": "lib_manage_api_manageapierror",
-      "community": 21,
+      "community": 72,
       "norm_label": "manageapierror"
     },
     {
@@ -7900,7 +7880,7 @@
       "source_location": "L161",
       "_origin": "ast",
       "id": "lib_manage_api_manageapierror_constructor",
-      "community": 21,
+      "community": 72,
       "norm_label": ".constructor()"
     },
     {
@@ -7910,7 +7890,7 @@
       "source_location": "L168",
       "_origin": "ast",
       "id": "lib_manage_api_rawmanagefetch",
-      "community": 30,
+      "community": 0,
       "norm_label": "rawmanagefetch()"
     },
     {
@@ -7920,7 +7900,7 @@
       "source_location": "L183",
       "_origin": "ast",
       "id": "lib_manage_api_parsemanageresponse",
-      "community": 0,
+      "community": 32,
       "norm_label": "parsemanageresponse()"
     },
     {
@@ -7930,7 +7910,7 @@
       "source_location": "L208",
       "_origin": "ast",
       "id": "lib_manage_api_redirecttologin",
-      "community": 30,
+      "community": 0,
       "norm_label": "redirecttologin()"
     },
     {
@@ -7940,7 +7920,7 @@
       "source_location": "L212",
       "_origin": "ast",
       "id": "lib_manage_api_dorefresh",
-      "community": 30,
+      "community": 0,
       "norm_label": "dorefresh()"
     },
     {
@@ -7950,7 +7930,7 @@
       "source_location": "L244",
       "_origin": "ast",
       "id": "lib_manage_api_refreshcurrentsession",
-      "community": 30,
+      "community": 0,
       "norm_label": "refreshcurrentsession()"
     },
     {
@@ -7970,7 +7950,7 @@
       "source_location": "L258",
       "_origin": "ast",
       "id": "lib_manage_api_managefetch",
-      "community": 0,
+      "community": 32,
       "norm_label": "managefetch()"
     },
     {
@@ -7980,7 +7960,7 @@
       "source_location": "L284",
       "_origin": "ast",
       "id": "lib_manage_api_decodejwtpayload",
-      "community": 30,
+      "community": 0,
       "norm_label": "decodejwtpayload()"
     },
     {
@@ -8000,7 +7980,7 @@
       "source_location": "L312",
       "_origin": "ast",
       "id": "lib_manage_api_login",
-      "community": 30,
+      "community": 0,
       "norm_label": "login()"
     },
     {
@@ -8010,7 +7990,7 @@
       "source_location": "L336",
       "_origin": "ast",
       "id": "lib_manage_api_readprofessionalidclaim",
-      "community": 30,
+      "community": 0,
       "norm_label": "readprofessionalidclaim()"
     },
     {
@@ -8020,7 +8000,7 @@
       "source_location": "L350",
       "_origin": "ast",
       "id": "lib_manage_api_logout",
-      "community": 9,
+      "community": 71,
       "norm_label": "logout()"
     },
     {
@@ -8030,7 +8010,7 @@
       "source_location": "L375",
       "_origin": "ast",
       "id": "lib_manage_api_getme",
-      "community": 0,
+      "community": 59,
       "norm_label": "getme()"
     },
     {
@@ -8080,7 +8060,7 @@
       "source_location": "L427",
       "_origin": "ast",
       "id": "lib_manage_api_submitdemorequest",
-      "community": 0,
+      "community": 10,
       "norm_label": "submitdemorequest()"
     },
     {
@@ -8130,7 +8110,7 @@
       "source_location": "L495",
       "_origin": "ast",
       "id": "lib_manage_api_getcheckouttrialdays",
-      "community": 32,
+      "community": 21,
       "norm_label": "getcheckouttrialdays()"
     },
     {
@@ -8150,7 +8130,7 @@
       "source_location": "L509",
       "_origin": "ast",
       "id": "lib_manage_api_signupintakepriorapi",
-      "community": 34,
+      "community": 77,
       "norm_label": "signupintakepriorapi"
     },
     {
@@ -8200,7 +8180,7 @@
       "source_location": "L544",
       "_origin": "ast",
       "id": "lib_manage_api_registersignup",
-      "community": 30,
+      "community": 0,
       "norm_label": "registersignup()"
     },
     {
@@ -8210,7 +8190,7 @@
       "source_location": "L576",
       "_origin": "ast",
       "id": "lib_manage_api_updatesignupintentcatalog",
-      "community": 0,
+      "community": 32,
       "norm_label": "updatesignupintentcatalog()"
     },
     {
@@ -8240,7 +8220,7 @@
       "source_location": "L608",
       "_origin": "ast",
       "id": "lib_manage_api_createpubliccheckoutsession",
-      "community": 0,
+      "community": 32,
       "norm_label": "createpubliccheckoutsession()"
     },
     {
@@ -8270,7 +8250,7 @@
       "source_location": "L643",
       "_origin": "ast",
       "id": "lib_manage_api_exchangeonboardingtoken",
-      "community": 30,
+      "community": 0,
       "norm_label": "exchangeonboardingtoken()"
     },
     {
@@ -8280,7 +8260,7 @@
       "source_location": "L674",
       "_origin": "ast",
       "id": "lib_manage_api_exchangeinvitetoken",
-      "community": 30,
+      "community": 0,
       "norm_label": "exchangeinvitetoken()"
     },
     {
@@ -8290,7 +8270,7 @@
       "source_location": "L699",
       "_origin": "ast",
       "id": "lib_manage_api_setpassword",
-      "community": 76,
+      "community": 26,
       "norm_label": "setpassword()"
     },
     {
@@ -8300,7 +8280,7 @@
       "source_location": "L725",
       "_origin": "ast",
       "id": "lib_manage_api_catalogplanid",
-      "community": 18,
+      "community": 23,
       "norm_label": "catalogplanid"
     },
     {
@@ -8310,7 +8290,7 @@
       "source_location": "L731",
       "_origin": "ast",
       "id": "lib_manage_api_catalogaddonid",
-      "community": 32,
+      "community": 23,
       "norm_label": "catalogaddonid"
     },
     {
@@ -8320,7 +8300,7 @@
       "source_location": "L750",
       "_origin": "ast",
       "id": "lib_manage_api_catalogrequireswhatsappcoexistence",
-      "community": 32,
+      "community": 21,
       "norm_label": "catalogrequireswhatsappcoexistence()"
     },
     {
@@ -8330,7 +8310,7 @@
       "source_location": "L762",
       "_origin": "ast",
       "id": "lib_manage_api_createcheckoutsession",
-      "community": 32,
+      "community": 23,
       "norm_label": "createcheckoutsession()"
     },
     {
@@ -8360,7 +8340,7 @@
       "source_location": "L800",
       "_origin": "ast",
       "id": "lib_manage_api_getprecheckssotoken",
-      "community": 44,
+      "community": 27,
       "norm_label": "getprecheckssotoken()"
     },
     {
@@ -8410,7 +8390,7 @@
       "source_location": "L854",
       "_origin": "ast",
       "id": "lib_manage_api_fetchimpersonationdoctor",
-      "community": 30,
+      "community": 0,
       "norm_label": "fetchimpersonationdoctor()"
     },
     {
@@ -8420,7 +8400,7 @@
       "source_location": "L876",
       "_origin": "ast",
       "id": "lib_manage_api_enterdoctormode",
-      "community": 30,
+      "community": 0,
       "norm_label": "enterdoctormode()"
     },
     {
@@ -8440,7 +8420,7 @@
       "source_location": "L902",
       "_origin": "ast",
       "id": "lib_manage_api_exitdoctormode",
-      "community": 30,
+      "community": 9,
       "norm_label": "exitdoctormode()"
     },
     {
@@ -8480,7 +8460,7 @@
       "source_location": "L963",
       "_origin": "ast",
       "id": "lib_manage_api_admintenantdetail",
-      "community": 35,
+      "community": 29,
       "norm_label": "admintenantdetail"
     },
     {
@@ -8560,7 +8540,7 @@
       "source_location": "L1039",
       "_origin": "ast",
       "id": "lib_manage_api_pagequery",
-      "community": 0,
+      "community": 32,
       "norm_label": "pagequery()"
     },
     {
@@ -8570,7 +8550,7 @@
       "source_location": "L1043",
       "_origin": "ast",
       "id": "lib_manage_api_adminlisttenants",
-      "community": 0,
+      "community": 32,
       "norm_label": "adminlisttenants()"
     },
     {
@@ -8580,7 +8560,7 @@
       "source_location": "L1055",
       "_origin": "ast",
       "id": "lib_manage_api_admingettenant",
-      "community": 35,
+      "community": 32,
       "norm_label": "admingettenant()"
     },
     {
@@ -8600,7 +8580,7 @@
       "source_location": "L1080",
       "_origin": "ast",
       "id": "lib_manage_api_admindeletetenant",
-      "community": 35,
+      "community": 32,
       "norm_label": "admindeletetenant()"
     },
     {
@@ -8610,7 +8590,7 @@
       "source_location": "L1091",
       "_origin": "ast",
       "id": "lib_manage_api_admingetentitlements",
-      "community": 0,
+      "community": 32,
       "norm_label": "admingetentitlements()"
     },
     {
@@ -8620,7 +8600,7 @@
       "source_location": "L1102",
       "_origin": "ast",
       "id": "lib_manage_api_adminpatchentitlements",
-      "community": 35,
+      "community": 32,
       "norm_label": "adminpatchentitlements()"
     },
     {
@@ -8630,7 +8610,7 @@
       "source_location": "L1114",
       "_origin": "ast",
       "id": "lib_manage_api_adminlistusers",
-      "community": 0,
+      "community": 32,
       "norm_label": "adminlistusers()"
     },
     {
@@ -8650,7 +8630,7 @@
       "source_location": "L1137",
       "_origin": "ast",
       "id": "lib_manage_api_adminlistdemorequests",
-      "community": 0,
+      "community": 32,
       "norm_label": "adminlistdemorequests()"
     },
     {
@@ -8720,7 +8700,7 @@
       "source_location": "L1214",
       "_origin": "ast",
       "id": "lib_manage_api_getdoctorme",
-      "community": 29,
+      "community": 9,
       "norm_label": "getdoctorme()"
     },
     {
@@ -8750,7 +8730,7 @@
       "source_location": "L1240",
       "_origin": "ast",
       "id": "lib_manage_api_listanamneses",
-      "community": 0,
+      "community": 32,
       "norm_label": "listanamneses()"
     },
     {
@@ -8790,7 +8770,7 @@
       "source_location": "L1294",
       "_origin": "ast",
       "id": "lib_manage_api_listdoctorappointments",
-      "community": 0,
+      "community": 32,
       "norm_label": "listdoctorappointments()"
     },
     {
@@ -8820,7 +8800,7 @@
       "source_location": "L1323",
       "_origin": "ast",
       "id": "lib_manage_api_listdoctorpatients",
-      "community": 0,
+      "community": 32,
       "norm_label": "listdoctorpatients()"
     },
     {
@@ -8880,7 +8860,7 @@
       "source_location": "L1375",
       "_origin": "ast",
       "id": "lib_manage_api_doctoronboarding",
-      "community": 43,
+      "community": 64,
       "norm_label": "doctoronboarding"
     },
     {
@@ -8890,7 +8870,7 @@
       "source_location": "L1392",
       "_origin": "ast",
       "id": "lib_manage_api_getdoctoronboarding",
-      "community": 43,
+      "community": 64,
       "norm_label": "getdoctoronboarding()"
     },
     {
@@ -8920,7 +8900,7 @@
       "source_location": "L1416",
       "_origin": "ast",
       "id": "lib_manage_api_postonboardingattempt",
-      "community": 0,
+      "community": 64,
       "norm_label": "postonboardingattempt()"
     },
     {
@@ -8950,7 +8930,7 @@
       "source_location": "L1449",
       "_origin": "ast",
       "id": "lib_manage_api_pauseonboarding",
-      "community": 0,
+      "community": 76,
       "norm_label": "pauseonboarding()"
     },
     {
@@ -8970,7 +8950,7 @@
       "source_location": "L1489",
       "_origin": "ast",
       "id": "lib_manage_api_gettestwindow",
-      "community": 71,
+      "community": 32,
       "norm_label": "gettestwindow()"
     },
     {
@@ -8980,7 +8960,7 @@
       "source_location": "L1493",
       "_origin": "ast",
       "id": "lib_manage_api_restarttestwindowresult",
-      "community": 71,
+      "community": 76,
       "norm_label": "restarttestwindowresult"
     },
     {
@@ -8990,7 +8970,7 @@
       "source_location": "L1506",
       "_origin": "ast",
       "id": "lib_manage_api_restarttestwindow",
-      "community": 71,
+      "community": 76,
       "norm_label": "restarttestwindow()"
     },
     {
@@ -9010,7 +8990,7 @@
       "source_location": "L1542",
       "_origin": "ast",
       "id": "lib_manage_api_getdoctorprofessionals",
-      "community": 75,
+      "community": 63,
       "norm_label": "getdoctorprofessionals()"
     },
     {
@@ -9040,7 +9020,7 @@
       "source_location": "L1570",
       "_origin": "ast",
       "id": "lib_manage_api_createprofessionalinvite",
-      "community": 0,
+      "community": 35,
       "norm_label": "createprofessionalinvite()"
     },
     {
@@ -9070,7 +9050,7 @@
       "source_location": "L1595",
       "_origin": "ast",
       "id": "lib_manage_api_createselfprofessional",
-      "community": 0,
+      "community": 63,
       "norm_label": "createselfprofessional()"
     },
     {
@@ -9130,7 +9110,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "lib_resumo",
-      "community": 64,
+      "community": 42,
       "norm_label": "resumo.ts"
     },
     {
@@ -9140,7 +9120,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "lib_resumo_buildresumotext",
-      "community": 64,
+      "community": 42,
       "norm_label": "buildresumotext()"
     },
     {
@@ -9150,7 +9130,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "lib_resumo_buildresumotextclassic",
-      "community": 64,
+      "community": 42,
       "norm_label": "buildresumotextclassic()"
     },
     {
@@ -9160,7 +9140,7 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "lib_resumo_buildresumotextsoap",
-      "community": 64,
+      "community": 42,
       "norm_label": "buildresumotextsoap()"
     },
     {
@@ -9320,7 +9300,7 @@
       "source_location": "L198",
       "_origin": "ast",
       "id": "lib_secretaria_hub_timewindowwire",
-      "community": 28,
+      "community": 5,
       "norm_label": "timewindowwire"
     },
     {
@@ -9330,7 +9310,7 @@
       "source_location": "L207",
       "_origin": "ast",
       "id": "lib_secretaria_hub_googlecalendarmode",
-      "community": 75,
+      "community": 63,
       "norm_label": "googlecalendarmode"
     },
     {
@@ -9350,14 +9330,14 @@
       "source_location": "L224",
       "_origin": "ast",
       "id": "lib_secretaria_hub_addresswire",
-      "community": 28,
+      "community": 5,
       "norm_label": "addresswire"
     },
     {
       "label": "TenantConfigWire",
       "file_type": "code",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L242",
+      "source_location": "L234",
       "_origin": "ast",
       "id": "lib_secretaria_hub_tenantconfigwire",
       "community": 28,
@@ -9367,27 +9347,27 @@
       "label": "TenantConfigUpdatePayload",
       "file_type": "code",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L290",
+      "source_location": "L283",
       "_origin": "ast",
       "id": "lib_secretaria_hub_tenantconfigupdatepayload",
-      "community": 28,
+      "community": 5,
       "norm_label": "tenantconfigupdatepayload"
     },
     {
       "label": "CalendarEventWire",
       "file_type": "code",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L318",
+      "source_location": "L312",
       "_origin": "ast",
       "id": "lib_secretaria_hub_calendareventwire",
-      "community": 5,
+      "community": 61,
       "norm_label": "calendareventwire"
     },
     {
       "label": "AppointmentStatusWire",
       "file_type": "code",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L326",
+      "source_location": "L320",
       "_origin": "ast",
       "id": "lib_secretaria_hub_appointmentstatuswire",
       "community": 5,
@@ -9397,7 +9377,7 @@
       "label": "AppointmentWire",
       "file_type": "code",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L335",
+      "source_location": "L329",
       "_origin": "ast",
       "id": "lib_secretaria_hub_appointmentwire",
       "community": 5,
@@ -9407,7 +9387,7 @@
       "label": "AppointmentCreatePayload",
       "file_type": "code",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L351",
+      "source_location": "L345",
       "_origin": "ast",
       "id": "lib_secretaria_hub_appointmentcreatepayload",
       "community": 5,
@@ -9417,7 +9397,7 @@
       "label": "BlockCreatePayload",
       "file_type": "code",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L360",
+      "source_location": "L354",
       "_origin": "ast",
       "id": "lib_secretaria_hub_blockcreatepayload",
       "community": 5,
@@ -9427,7 +9407,7 @@
       "label": "AppointmentCancelPayload",
       "file_type": "code",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L367",
+      "source_location": "L361",
       "_origin": "ast",
       "id": "lib_secretaria_hub_appointmentcancelpayload",
       "community": 5,
@@ -9437,7 +9417,7 @@
       "label": "AppointmentReschedulePayload",
       "file_type": "code",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L372",
+      "source_location": "L366",
       "_origin": "ast",
       "id": "lib_secretaria_hub_appointmentreschedulepayload",
       "community": 5,
@@ -9447,7 +9427,7 @@
       "label": "getTenantConfig()",
       "file_type": "code",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L383",
+      "source_location": "L377",
       "_origin": "ast",
       "id": "lib_secretaria_hub_gettenantconfig",
       "community": 5,
@@ -9457,7 +9437,7 @@
       "label": "updateTenantConfig()",
       "file_type": "code",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L388",
+      "source_location": "L382",
       "_origin": "ast",
       "id": "lib_secretaria_hub_updatetenantconfig",
       "community": 5,
@@ -9467,7 +9447,7 @@
       "label": "listCalendarEvents()",
       "file_type": "code",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L399",
+      "source_location": "L393",
       "_origin": "ast",
       "id": "lib_secretaria_hub_listcalendarevents",
       "community": 5,
@@ -9477,7 +9457,7 @@
       "label": "createAppointment()",
       "file_type": "code",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L409",
+      "source_location": "L403",
       "_origin": "ast",
       "id": "lib_secretaria_hub_createappointment",
       "community": 5,
@@ -9487,7 +9467,7 @@
       "label": "createBlock()",
       "file_type": "code",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L420",
+      "source_location": "L414",
       "_origin": "ast",
       "id": "lib_secretaria_hub_createblock",
       "community": 5,
@@ -9497,7 +9477,7 @@
       "label": "cancelAppointment()",
       "file_type": "code",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L431",
+      "source_location": "L425",
       "_origin": "ast",
       "id": "lib_secretaria_hub_cancelappointment",
       "community": 5,
@@ -9507,7 +9487,7 @@
       "label": "rescheduleAppointment()",
       "file_type": "code",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L444",
+      "source_location": "L438",
       "_origin": "ast",
       "id": "lib_secretaria_hub_rescheduleappointment",
       "community": 5,
@@ -9517,7 +9497,7 @@
       "label": "startCalendarOauth()",
       "file_type": "code",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L458",
+      "source_location": "L452",
       "_origin": "ast",
       "id": "lib_secretaria_hub_startcalendaroauth",
       "community": 5,
@@ -9527,7 +9507,7 @@
       "label": "disconnectCalendar()",
       "file_type": "code",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L468",
+      "source_location": "L462",
       "_origin": "ast",
       "id": "lib_secretaria_hub_disconnectcalendar",
       "community": 5,
@@ -9537,17 +9517,17 @@
       "label": "ProfessionalWire",
       "file_type": "code",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L489",
+      "source_location": "L483",
       "_origin": "ast",
       "id": "lib_secretaria_hub_professionalwire",
-      "community": 75,
+      "community": 28,
       "norm_label": "professionalwire"
     },
     {
       "label": "getProfessionals()",
       "file_type": "code",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L509",
+      "source_location": "L503",
       "_origin": "ast",
       "id": "lib_secretaria_hub_getprofessionals",
       "community": 5,
@@ -9557,17 +9537,17 @@
       "label": "ProfessionalConfigUpdatePayload",
       "file_type": "code",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L515",
+      "source_location": "L509",
       "_origin": "ast",
       "id": "lib_secretaria_hub_professionalconfigupdatepayload",
-      "community": 75,
+      "community": 63,
       "norm_label": "professionalconfigupdatepayload"
     },
     {
       "label": "updateProfessionalConfig()",
       "file_type": "code",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L527",
+      "source_location": "L521",
       "_origin": "ast",
       "id": "lib_secretaria_hub_updateprofessionalconfig",
       "community": 5,
@@ -9577,7 +9557,7 @@
       "label": "startProfessionalCalendarOauth()",
       "file_type": "code",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L543",
+      "source_location": "L537",
       "_origin": "ast",
       "id": "lib_secretaria_hub_startprofessionalcalendaroauth",
       "community": 63,
@@ -9587,7 +9567,7 @@
       "label": "disconnectProfessionalCalendar()",
       "file_type": "code",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L557",
+      "source_location": "L551",
       "_origin": "ast",
       "id": "lib_secretaria_hub_disconnectprofessionalcalendar",
       "community": 5,
@@ -9597,7 +9577,7 @@
       "label": "CreateProfessionalCalendarResult",
       "file_type": "code",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L573",
+      "source_location": "L567",
       "_origin": "ast",
       "id": "lib_secretaria_hub_createprofessionalcalendarresult",
       "community": 5,
@@ -9607,7 +9587,7 @@
       "label": "createProfessionalCalendar()",
       "file_type": "code",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L586",
+      "source_location": "L580",
       "_origin": "ast",
       "id": "lib_secretaria_hub_createprofessionalcalendar",
       "community": 63,
@@ -9650,7 +9630,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "lib_sign_out",
-      "community": 9,
+      "community": 71,
       "norm_label": "sign-out.ts"
     },
     {
@@ -9660,7 +9640,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "lib_sign_out_signout",
-      "community": 9,
+      "community": 71,
       "norm_label": "signout()"
     },
     {
@@ -9760,7 +9740,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "lib_types_alert",
-      "community": 7,
+      "community": 42,
       "norm_label": "alert"
     },
     {
@@ -9770,7 +9750,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "lib_types_structureddata",
-      "community": 6,
+      "community": 24,
       "norm_label": "structureddata"
     },
     {
@@ -9780,7 +9760,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "lib_types_summary",
-      "community": 24,
+      "community": 42,
       "norm_label": "summary"
     },
     {
@@ -9800,7 +9780,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "lib_types_summarymediaitem",
-      "community": 37,
+      "community": 22,
       "norm_label": "summarymediaitem"
     },
     {
@@ -9840,7 +9820,7 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "lib_types_demorequest",
-      "community": 24,
+      "community": 16,
       "norm_label": "demorequest"
     },
     {
@@ -10424,96 +10404,6 @@
       "norm_label": "pendencias / follow-ups"
     },
     {
-      "label": "CHECKPOINT_fixed_greeting_buttons_ui.md",
-      "file_type": "document",
-      "source_file": "docs/CHECKPOINT_fixed_greeting_buttons_ui.md",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "docs_checkpoint_fixed_greeting_buttons_ui",
-      "community": 38,
-      "norm_label": "checkpoint_fixed_greeting_buttons_ui.md"
-    },
-    {
-      "label": "CHECKPOINT \u2014 Fixed greeting buttons (WhatsApp sauda\u00e7\u00e3o) UI",
-      "file_type": "document",
-      "source_file": "docs/CHECKPOINT_fixed_greeting_buttons_ui.md",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "docs_checkpoint_fixed_greeting_buttons_ui_checkpoint_fixed_greeting_buttons_whatsapp_sauda\u00e7\u00e3o_ui",
-      "community": 38,
-      "norm_label": "checkpoint \u2014 fixed greeting buttons (whatsapp saudacao) ui"
-    },
-    {
-      "label": "What changed",
-      "file_type": "document",
-      "source_file": "docs/CHECKPOINT_fixed_greeting_buttons_ui.md",
-      "source_location": "L16",
-      "_origin": "ast",
-      "id": "docs_checkpoint_fixed_greeting_buttons_ui_what_changed",
-      "community": 38,
-      "norm_label": "what changed"
-    },
-    {
-      "label": "`configuracao/components/MessagesSection.tsx` (Section 02 \"Mensagens\")",
-      "file_type": "document",
-      "source_file": "docs/CHECKPOINT_fixed_greeting_buttons_ui.md",
-      "source_location": "L18",
-      "_origin": "ast",
-      "id": "docs_checkpoint_fixed_greeting_buttons_ui_configuracao_components_messagessection_tsx_section_02_mensagens",
-      "community": 38,
-      "norm_label": "`configuracao/components/messagessection.tsx` (section 02 \"mensagens\")"
-    },
-    {
-      "label": "Wire/state cleanup \u2014 `greeting_buttons`/`greetingButtons` removed everywhere",
-      "file_type": "document",
-      "source_file": "docs/CHECKPOINT_fixed_greeting_buttons_ui.md",
-      "source_location": "L38",
-      "_origin": "ast",
-      "id": "docs_checkpoint_fixed_greeting_buttons_ui_wire_state_cleanup_greeting_buttons_greetingbuttons_removed_everywhere",
-      "community": 38,
-      "norm_label": "wire/state cleanup \u2014 `greeting_buttons`/`greetingbuttons` removed everywhere"
-    },
-    {
-      "label": "Tested",
-      "file_type": "document",
-      "source_file": "docs/CHECKPOINT_fixed_greeting_buttons_ui.md",
-      "source_location": "L65",
-      "_origin": "ast",
-      "id": "docs_checkpoint_fixed_greeting_buttons_ui_tested",
-      "community": 38,
-      "norm_label": "tested"
-    },
-    {
-      "label": "Pend\u00eancias / follow-ups",
-      "file_type": "document",
-      "source_file": "docs/CHECKPOINT_fixed_greeting_buttons_ui.md",
-      "source_location": "L74",
-      "_origin": "ast",
-      "id": "docs_checkpoint_fixed_greeting_buttons_ui_pend\u00eancias_follow_ups",
-      "community": 38,
-      "norm_label": "pendencias / follow-ups"
-    },
-    {
-      "label": "Also in this working tree this session (different round \u2014 not touched here)",
-      "file_type": "document",
-      "source_file": "docs/CHECKPOINT_fixed_greeting_buttons_ui.md",
-      "source_location": "L82",
-      "_origin": "ast",
-      "id": "docs_checkpoint_fixed_greeting_buttons_ui_also_in_this_working_tree_this_session_different_round_not_touched_here",
-      "community": 38,
-      "norm_label": "also in this working tree this session (different round \u2014 not touched here)"
-    },
-    {
-      "label": "Closing an open question from the prior round",
-      "file_type": "document",
-      "source_file": "docs/CHECKPOINT_fixed_greeting_buttons_ui.md",
-      "source_location": "L93",
-      "_origin": "ast",
-      "id": "docs_checkpoint_fixed_greeting_buttons_ui_closing_an_open_question_from_the_prior_round",
-      "community": 38,
-      "norm_label": "closing an open question from the prior round"
-    },
-    {
       "label": "CHECKPOINT_perfil_gcal_modes.md",
       "file_type": "document",
       "source_file": "docs/CHECKPOINT_perfil_gcal_modes.md",
@@ -10857,7 +10747,7 @@
       "label": "6. `/calendar/connected` (Google OAuth landing)",
       "file_type": "document",
       "source_file": "docs/VERIFICATION_onboarding.md",
-      "source_location": "L305",
+      "source_location": "L298",
       "_origin": "ast",
       "id": "docs_verification_onboarding_6_calendar_connected_google_oauth_landing",
       "community": 31,
@@ -10867,7 +10757,7 @@
       "label": "What's actually live vs. pending",
       "file_type": "document",
       "source_file": "docs/VERIFICATION_onboarding.md",
-      "source_location": "L321",
+      "source_location": "L314",
       "_origin": "ast",
       "id": "docs_verification_onboarding_what_s_actually_live_vs_pending",
       "community": 31,
@@ -10877,7 +10767,7 @@
       "label": "Not verified in this pass",
       "file_type": "document",
       "source_file": "docs/VERIFICATION_onboarding.md",
-      "source_location": "L334",
+      "source_location": "L327",
       "_origin": "ast",
       "id": "docs_verification_onboarding_not_verified_in_this_pass",
       "community": 31,
@@ -19048,7 +18938,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/app/onboarding/lib/meta-embedded-signup.ts",
-      "source_location": "L73",
+      "source_location": "L68",
       "weight": 1.0,
       "source": "app_site_app_onboarding_lib_meta_embedded_signup",
       "target": "app_site_app_onboarding_lib_meta_embedded_signup_embeddedsignupoutcome",
@@ -19058,7 +18948,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/app/onboarding/lib/meta-embedded-signup.ts",
-      "source_location": "L31",
+      "source_location": "L26",
       "weight": 1.0,
       "source": "app_site_app_onboarding_lib_meta_embedded_signup",
       "target": "app_site_app_onboarding_lib_meta_embedded_signup_facebookloginresponse",
@@ -19068,7 +18958,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/app/onboarding/lib/meta-embedded-signup.ts",
-      "source_location": "L53",
+      "source_location": "L48",
       "weight": 1.0,
       "source": "app_site_app_onboarding_lib_meta_embedded_signup",
       "target": "app_site_app_onboarding_lib_meta_embedded_signup_loadfacebooksdk",
@@ -19078,7 +18968,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/app/onboarding/lib/meta-embedded-signup.ts",
-      "source_location": "L80",
+      "source_location": "L75",
       "weight": 1.0,
       "source": "app_site_app_onboarding_lib_meta_embedded_signup",
       "target": "app_site_app_onboarding_lib_meta_embedded_signup_runembeddedsignup",
@@ -19088,7 +18978,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/app/onboarding/lib/meta-embedded-signup.ts",
-      "source_location": "L26",
+      "source_location": "L21",
       "weight": 1.0,
       "source": "app_site_app_onboarding_lib_meta_embedded_signup",
       "target": "app_site_app_onboarding_lib_meta_embedded_signup_trusted_message_origins",
@@ -19098,7 +18988,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/app/onboarding/lib/meta-embedded-signup.ts",
-      "source_location": "L36",
+      "source_location": "L31",
       "weight": 1.0,
       "source": "app_site_app_onboarding_lib_meta_embedded_signup",
       "target": "app_site_app_onboarding_lib_meta_embedded_signup_window",
@@ -19109,7 +18999,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/app/onboarding/lib/meta-embedded-signup.ts",
-      "source_location": "L84",
+      "source_location": "L79",
       "weight": 1.0,
       "source": "app_site_app_onboarding_lib_meta_embedded_signup_runembeddedsignup",
       "target": "app_site_app_onboarding_lib_meta_embedded_signup_loadfacebooksdk",
@@ -23928,7 +23818,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/components/MessagesSection.tsx",
-      "source_location": "L19",
+      "source_location": "L10",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_components_messagessection",
       "target": "app_site_secretaria_shared_ui",
@@ -24309,7 +24199,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/components/MessagesSection.tsx",
-      "source_location": "L19",
+      "source_location": "L10",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_components_messagessection",
       "target": "app_site_secretaria_shared_ui_icon",
@@ -24639,7 +24529,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/components/MessagesSection.tsx",
-      "source_location": "L19",
+      "source_location": "L10",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_components_messagessection",
       "target": "app_site_secretaria_shared_ui_field",
@@ -24748,6 +24638,17 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "app/(site)/secretaria/configuracao/components/MessagesSection.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "app_site_secretaria_configuracao_components_messagessection",
+      "target": "app_site_secretaria_shared_ui_textinput",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/components/PixSection.tsx",
       "source_location": "L13",
       "weight": 1.0,
@@ -24782,7 +24683,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/components/MessagesSection.tsx",
-      "source_location": "L19",
+      "source_location": "L10",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_components_messagessection",
       "target": "app_site_secretaria_shared_ui_textarea",
@@ -24978,7 +24879,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/(site)/secretaria/configuracao/page.tsx",
-      "source_location": "L308",
+      "source_location": "L309",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_page_configuracaopage",
       "target": "app_site_secretaria_shared_usesecretariahub_usesecretariahub"
@@ -26111,7 +26012,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/components/MessagesSection.tsx",
-      "source_location": "L21",
+      "source_location": "L12",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_components_messagessection",
       "target": "app_site_secretaria_configuracao_components_cselect",
@@ -26144,7 +26045,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/components/MessagesSection.tsx",
-      "source_location": "L21",
+      "source_location": "L12",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_components_messagessection",
       "target": "app_site_secretaria_configuracao_components_cselect_cselect",
@@ -26605,27 +26506,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/components/MessagesSection.tsx",
-      "source_location": "L31",
-      "weight": 1.0,
-      "source": "app_site_secretaria_configuracao_components_messagessection",
-      "target": "app_site_secretaria_configuracao_components_messagessection_fixed_greeting_buttons",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "app/(site)/secretaria/configuracao/components/MessagesSection.tsx",
-      "source_location": "L54",
-      "weight": 1.0,
-      "source": "app_site_secretaria_configuracao_components_messagessection",
-      "target": "app_site_secretaria_configuracao_components_messagessection_greetingbuttonspreview",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "app/(site)/secretaria/configuracao/components/MessagesSection.tsx",
-      "source_location": "L33",
+      "source_location": "L17",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_components_messagessection",
       "target": "app_site_secretaria_configuracao_components_messagessection_language_options",
@@ -26635,7 +26516,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/components/MessagesSection.tsx",
-      "source_location": "L87",
+      "source_location": "L31",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_components_messagessection",
       "target": "app_site_secretaria_configuracao_components_messagessection_messagessection",
@@ -26645,7 +26526,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/components/MessagesSection.tsx",
-      "source_location": "L38",
+      "source_location": "L22",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_components_messagessection",
       "target": "app_site_secretaria_configuracao_components_messagessection_messagessectionprops",
@@ -26656,7 +26537,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/components/MessagesSection.tsx",
-      "source_location": "L20",
+      "source_location": "L11",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_components_messagessection",
       "target": "app_site_secretaria_configuracao_components_section",
@@ -26667,7 +26548,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/components/MessagesSection.tsx",
-      "source_location": "L20",
+      "source_location": "L11",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_components_messagessection",
       "target": "app_site_secretaria_configuracao_components_section_section",
@@ -26678,7 +26559,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/components/MessagesSection.tsx",
-      "source_location": "L22",
+      "source_location": "L13",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_components_messagessection",
       "target": "app_site_secretaria_configuracao_lib_types",
@@ -26689,7 +26570,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/components/MessagesSection.tsx",
-      "source_location": "L22",
+      "source_location": "L13",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_components_messagessection",
       "target": "app_site_secretaria_configuracao_lib_types_messages",
@@ -27493,7 +27374,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/lib/hub-mapping.ts",
-      "source_location": "L232",
+      "source_location": "L233",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_lib_hub_mapping",
       "target": "app_site_secretaria_configuracao_lib_hub_mapping_applywiregcal",
@@ -27523,7 +27404,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/lib/hub-mapping.ts",
-      "source_location": "L214",
+      "source_location": "L215",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_lib_hub_mapping",
       "target": "app_site_secretaria_configuracao_lib_hub_mapping_applywirepixdeposit",
@@ -27533,7 +27414,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/lib/hub-mapping.ts",
-      "source_location": "L200",
+      "source_location": "L201",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_lib_hub_mapping",
       "target": "app_site_secretaria_configuracao_lib_hub_mapping_applywirepostconsult",
@@ -27543,7 +27424,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/lib/hub-mapping.ts",
-      "source_location": "L244",
+      "source_location": "L245",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_lib_hub_mapping",
       "target": "app_site_secretaria_configuracao_lib_hub_mapping_applywireprofessionalprofile",
@@ -27553,7 +27434,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/lib/hub-mapping.ts",
-      "source_location": "L265",
+      "source_location": "L266",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_lib_hub_mapping",
       "target": "app_site_secretaria_configuracao_lib_hub_mapping_buildconfigupdatepayload",
@@ -27563,7 +27444,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/lib/hub-mapping.ts",
-      "source_location": "L296",
+      "source_location": "L298",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_lib_hub_mapping",
       "target": "app_site_secretaria_configuracao_lib_hub_mapping_buildprofessionalconfigpayload",
@@ -27885,7 +27766,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/lib/hub-mapping.ts",
-      "source_location": "L302",
+      "source_location": "L304",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_lib_hub_mapping_buildprofessionalconfigpayload",
       "target": "app_site_secretaria_configuracao_lib_hub_mapping_towirebusinesshours",
@@ -27907,7 +27788,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/lib/hub-mapping.ts",
-      "source_location": "L303",
+      "source_location": "L305",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_lib_hub_mapping_buildprofessionalconfigpayload",
       "target": "app_site_secretaria_configuracao_lib_hub_mapping_towireappointmenttypes",
@@ -27918,7 +27799,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/lib/hub-mapping.ts",
-      "source_location": "L275",
+      "source_location": "L276",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_lib_hub_mapping_buildconfigupdatepayload",
       "target": "app_site_secretaria_configuracao_lib_hub_mapping_towireaddress",
@@ -27940,7 +27821,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/lib/hub-mapping.ts",
-      "source_location": "L276",
+      "source_location": "L277",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_lib_hub_mapping_buildconfigupdatepayload",
       "target": "app_site_secretaria_configuracao_lib_hub_mapping_towireinsurances",
@@ -28048,7 +27929,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/lib/types.ts",
-      "source_location": "L151",
+      "source_location": "L148",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_lib_types",
       "target": "app_site_secretaria_configuracao_lib_types_dayconfig",
@@ -28058,7 +27939,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/lib/types.ts",
-      "source_location": "L91",
+      "source_location": "L88",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_lib_types",
       "target": "app_site_secretaria_configuracao_lib_types_default_pix_deposit",
@@ -28068,7 +27949,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/lib/types.ts",
-      "source_location": "L114",
+      "source_location": "L111",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_lib_types",
       "target": "app_site_secretaria_configuracao_lib_types_empty_professional_profile",
@@ -28078,7 +27959,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/lib/types.ts",
-      "source_location": "L182",
+      "source_location": "L179",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_lib_types",
       "target": "app_site_secretaria_configuracao_lib_types_gcalstate",
@@ -28088,7 +27969,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/lib/types.ts",
-      "source_location": "L180",
+      "source_location": "L177",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_lib_types",
       "target": "app_site_secretaria_configuracao_lib_types_googlecalendarmode",
@@ -28098,7 +27979,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/lib/types.ts",
-      "source_location": "L42",
+      "source_location": "L37",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_lib_types",
       "target": "app_site_secretaria_configuracao_lib_types_messages",
@@ -28108,7 +27989,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/lib/types.ts",
-      "source_location": "L74",
+      "source_location": "L71",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_lib_types",
       "target": "app_site_secretaria_configuracao_lib_types_pixdeposit",
@@ -28118,7 +27999,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/lib/types.ts",
-      "source_location": "L55",
+      "source_location": "L52",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_lib_types",
       "target": "app_site_secretaria_configuracao_lib_types_postconsult",
@@ -28128,7 +28009,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/lib/types.ts",
-      "source_location": "L158",
+      "source_location": "L155",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_lib_types",
       "target": "app_site_secretaria_configuracao_lib_types_prefs",
@@ -28138,7 +28019,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/lib/types.ts",
-      "source_location": "L108",
+      "source_location": "L105",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_lib_types",
       "target": "app_site_secretaria_configuracao_lib_types_professionalprofile",
@@ -28148,7 +28029,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/lib/types.ts",
-      "source_location": "L127",
+      "source_location": "L124",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_lib_types",
       "target": "app_site_secretaria_configuracao_lib_types_requirement",
@@ -28158,7 +28039,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/lib/types.ts",
-      "source_location": "L132",
+      "source_location": "L129",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_lib_types",
       "target": "app_site_secretaria_configuracao_lib_types_service",
@@ -28168,7 +28049,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/lib/types.ts",
-      "source_location": "L146",
+      "source_location": "L143",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_lib_types",
       "target": "app_site_secretaria_configuracao_lib_types_timerange",
@@ -28513,7 +28394,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "app/(site)/secretaria/configuracao/page.tsx",
-      "source_location": "L291",
+      "source_location": "L292",
       "weight": 1.0,
       "source": "app_site_secretaria_configuracao_page_configuracaopage",
       "target": "app_site_secretaria_configuracao_page_demoweek",
@@ -32180,7 +32061,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L367",
+      "source_location": "L361",
       "weight": 1.0,
       "source": "lib_secretaria_hub",
       "target": "lib_secretaria_hub_appointmentcancelpayload",
@@ -32190,7 +32071,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L351",
+      "source_location": "L345",
       "weight": 1.0,
       "source": "lib_secretaria_hub",
       "target": "lib_secretaria_hub_appointmentcreatepayload",
@@ -32200,7 +32081,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L372",
+      "source_location": "L366",
       "weight": 1.0,
       "source": "lib_secretaria_hub",
       "target": "lib_secretaria_hub_appointmentreschedulepayload",
@@ -32210,7 +32091,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L326",
+      "source_location": "L320",
       "weight": 1.0,
       "source": "lib_secretaria_hub",
       "target": "lib_secretaria_hub_appointmentstatuswire",
@@ -32230,7 +32111,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L335",
+      "source_location": "L329",
       "weight": 1.0,
       "source": "lib_secretaria_hub",
       "target": "lib_secretaria_hub_appointmentwire",
@@ -32240,7 +32121,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L360",
+      "source_location": "L354",
       "weight": 1.0,
       "source": "lib_secretaria_hub",
       "target": "lib_secretaria_hub_blockcreatepayload",
@@ -32260,7 +32141,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L318",
+      "source_location": "L312",
       "weight": 1.0,
       "source": "lib_secretaria_hub",
       "target": "lib_secretaria_hub_calendareventwire",
@@ -32270,7 +32151,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L431",
+      "source_location": "L425",
       "weight": 1.0,
       "source": "lib_secretaria_hub",
       "target": "lib_secretaria_hub_cancelappointment",
@@ -32280,7 +32161,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L409",
+      "source_location": "L403",
       "weight": 1.0,
       "source": "lib_secretaria_hub",
       "target": "lib_secretaria_hub_createappointment",
@@ -32290,7 +32171,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L420",
+      "source_location": "L414",
       "weight": 1.0,
       "source": "lib_secretaria_hub",
       "target": "lib_secretaria_hub_createblock",
@@ -32300,7 +32181,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L586",
+      "source_location": "L580",
       "weight": 1.0,
       "source": "lib_secretaria_hub",
       "target": "lib_secretaria_hub_createprofessionalcalendar",
@@ -32310,7 +32191,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L573",
+      "source_location": "L567",
       "weight": 1.0,
       "source": "lib_secretaria_hub",
       "target": "lib_secretaria_hub_createprofessionalcalendarresult",
@@ -32320,7 +32201,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L468",
+      "source_location": "L462",
       "weight": 1.0,
       "source": "lib_secretaria_hub",
       "target": "lib_secretaria_hub_disconnectcalendar",
@@ -32330,7 +32211,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L557",
+      "source_location": "L551",
       "weight": 1.0,
       "source": "lib_secretaria_hub",
       "target": "lib_secretaria_hub_disconnectprofessionalcalendar",
@@ -32350,7 +32231,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L509",
+      "source_location": "L503",
       "weight": 1.0,
       "source": "lib_secretaria_hub",
       "target": "lib_secretaria_hub_getprofessionals",
@@ -32360,7 +32241,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L383",
+      "source_location": "L377",
       "weight": 1.0,
       "source": "lib_secretaria_hub",
       "target": "lib_secretaria_hub_gettenantconfig",
@@ -32420,7 +32301,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L399",
+      "source_location": "L393",
       "weight": 1.0,
       "source": "lib_secretaria_hub",
       "target": "lib_secretaria_hub_listcalendarevents",
@@ -32460,7 +32341,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L515",
+      "source_location": "L509",
       "weight": 1.0,
       "source": "lib_secretaria_hub",
       "target": "lib_secretaria_hub_professionalconfigupdatepayload",
@@ -32470,7 +32351,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L489",
+      "source_location": "L483",
       "weight": 1.0,
       "source": "lib_secretaria_hub",
       "target": "lib_secretaria_hub_professionalwire",
@@ -32490,7 +32371,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L444",
+      "source_location": "L438",
       "weight": 1.0,
       "source": "lib_secretaria_hub",
       "target": "lib_secretaria_hub_rescheduleappointment",
@@ -32520,7 +32401,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L458",
+      "source_location": "L452",
       "weight": 1.0,
       "source": "lib_secretaria_hub",
       "target": "lib_secretaria_hub_startcalendaroauth",
@@ -32530,7 +32411,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L543",
+      "source_location": "L537",
       "weight": 1.0,
       "source": "lib_secretaria_hub",
       "target": "lib_secretaria_hub_startprofessionalcalendaroauth",
@@ -32540,7 +32421,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L290",
+      "source_location": "L283",
       "weight": 1.0,
       "source": "lib_secretaria_hub",
       "target": "lib_secretaria_hub_tenantconfigupdatepayload",
@@ -32550,7 +32431,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L242",
+      "source_location": "L234",
       "weight": 1.0,
       "source": "lib_secretaria_hub",
       "target": "lib_secretaria_hub_tenantconfigwire",
@@ -32580,7 +32461,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L527",
+      "source_location": "L521",
       "weight": 1.0,
       "source": "lib_secretaria_hub",
       "target": "lib_secretaria_hub_updateprofessionalconfig",
@@ -32590,7 +32471,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L388",
+      "source_location": "L382",
       "weight": 1.0,
       "source": "lib_secretaria_hub",
       "target": "lib_secretaria_hub_updatetenantconfig",
@@ -32688,7 +32569,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L436",
+      "source_location": "L430",
       "weight": 1.0,
       "source": "lib_secretaria_hub_cancelappointment",
       "target": "lib_secretaria_hub_hubfetch",
@@ -32699,7 +32580,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L413",
+      "source_location": "L407",
       "weight": 1.0,
       "source": "lib_secretaria_hub_createappointment",
       "target": "lib_secretaria_hub_hubfetch",
@@ -32710,7 +32591,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L424",
+      "source_location": "L418",
       "weight": 1.0,
       "source": "lib_secretaria_hub_createblock",
       "target": "lib_secretaria_hub_hubfetch",
@@ -32721,7 +32602,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L590",
+      "source_location": "L584",
       "weight": 1.0,
       "source": "lib_secretaria_hub_createprofessionalcalendar",
       "target": "lib_secretaria_hub_hubfetch",
@@ -32732,7 +32613,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L471",
+      "source_location": "L465",
       "weight": 1.0,
       "source": "lib_secretaria_hub_disconnectcalendar",
       "target": "lib_secretaria_hub_hubfetch",
@@ -32743,7 +32624,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L561",
+      "source_location": "L555",
       "weight": 1.0,
       "source": "lib_secretaria_hub_disconnectprofessionalcalendar",
       "target": "lib_secretaria_hub_hubfetch",
@@ -32754,7 +32635,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L510",
+      "source_location": "L504",
       "weight": 1.0,
       "source": "lib_secretaria_hub_getprofessionals",
       "target": "lib_secretaria_hub_hubfetch",
@@ -32765,7 +32646,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L384",
+      "source_location": "L378",
       "weight": 1.0,
       "source": "lib_secretaria_hub_gettenantconfig",
       "target": "lib_secretaria_hub_hubfetch",
@@ -32776,7 +32657,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L405",
+      "source_location": "L399",
       "weight": 1.0,
       "source": "lib_secretaria_hub_listcalendarevents",
       "target": "lib_secretaria_hub_hubfetch",
@@ -32787,7 +32668,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L449",
+      "source_location": "L443",
       "weight": 1.0,
       "source": "lib_secretaria_hub_rescheduleappointment",
       "target": "lib_secretaria_hub_hubfetch",
@@ -32798,7 +32679,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L532",
+      "source_location": "L526",
       "weight": 1.0,
       "source": "lib_secretaria_hub_updateprofessionalconfig",
       "target": "lib_secretaria_hub_hubfetch",
@@ -32809,7 +32690,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "lib/secretaria-hub.ts",
-      "source_location": "L392",
+      "source_location": "L386",
       "weight": 1.0,
       "source": "lib_secretaria_hub_updatetenantconfig",
       "target": "lib_secretaria_hub_hubfetch",
@@ -33562,86 +33443,6 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "docs/CHECKPOINT_fixed_greeting_buttons_ui.md",
-      "source_location": "L1",
-      "weight": 1.0,
-      "source": "docs_checkpoint_fixed_greeting_buttons_ui",
-      "target": "docs_checkpoint_fixed_greeting_buttons_ui_checkpoint_fixed_greeting_buttons_whatsapp_sauda\u00e7\u00e3o_ui",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "docs/CHECKPOINT_fixed_greeting_buttons_ui.md",
-      "source_location": "L82",
-      "weight": 1.0,
-      "source": "docs_checkpoint_fixed_greeting_buttons_ui_checkpoint_fixed_greeting_buttons_whatsapp_sauda\u00e7\u00e3o_ui",
-      "target": "docs_checkpoint_fixed_greeting_buttons_ui_also_in_this_working_tree_this_session_different_round_not_touched_here",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "docs/CHECKPOINT_fixed_greeting_buttons_ui.md",
-      "source_location": "L93",
-      "weight": 1.0,
-      "source": "docs_checkpoint_fixed_greeting_buttons_ui_checkpoint_fixed_greeting_buttons_whatsapp_sauda\u00e7\u00e3o_ui",
-      "target": "docs_checkpoint_fixed_greeting_buttons_ui_closing_an_open_question_from_the_prior_round",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "docs/CHECKPOINT_fixed_greeting_buttons_ui.md",
-      "source_location": "L74",
-      "weight": 1.0,
-      "source": "docs_checkpoint_fixed_greeting_buttons_ui_checkpoint_fixed_greeting_buttons_whatsapp_sauda\u00e7\u00e3o_ui",
-      "target": "docs_checkpoint_fixed_greeting_buttons_ui_pend\u00eancias_follow_ups",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "docs/CHECKPOINT_fixed_greeting_buttons_ui.md",
-      "source_location": "L65",
-      "weight": 1.0,
-      "source": "docs_checkpoint_fixed_greeting_buttons_ui_checkpoint_fixed_greeting_buttons_whatsapp_sauda\u00e7\u00e3o_ui",
-      "target": "docs_checkpoint_fixed_greeting_buttons_ui_tested",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "docs/CHECKPOINT_fixed_greeting_buttons_ui.md",
-      "source_location": "L16",
-      "weight": 1.0,
-      "source": "docs_checkpoint_fixed_greeting_buttons_ui_checkpoint_fixed_greeting_buttons_whatsapp_sauda\u00e7\u00e3o_ui",
-      "target": "docs_checkpoint_fixed_greeting_buttons_ui_what_changed",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "docs/CHECKPOINT_fixed_greeting_buttons_ui.md",
-      "source_location": "L18",
-      "weight": 1.0,
-      "source": "docs_checkpoint_fixed_greeting_buttons_ui_what_changed",
-      "target": "docs_checkpoint_fixed_greeting_buttons_ui_configuracao_components_messagessection_tsx_section_02_mensagens",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "docs/CHECKPOINT_fixed_greeting_buttons_ui.md",
-      "source_location": "L38",
-      "weight": 1.0,
-      "source": "docs_checkpoint_fixed_greeting_buttons_ui_what_changed",
-      "target": "docs_checkpoint_fixed_greeting_buttons_ui_wire_state_cleanup_greeting_buttons_greetingbuttons_removed_everywhere",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
       "source_file": "docs/CHECKPOINT_perfil_gcal_modes.md",
       "source_location": "L1",
       "weight": 1.0,
@@ -33863,7 +33664,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/VERIFICATION_onboarding.md",
-      "source_location": "L305",
+      "source_location": "L298",
       "weight": 1.0,
       "source": "docs_verification_onboarding_manual_verification_onboarding_wizard_multi_professional_configuration",
       "target": "docs_verification_onboarding_6_calendar_connected_google_oauth_landing",
@@ -33883,7 +33684,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/VERIFICATION_onboarding.md",
-      "source_location": "L334",
+      "source_location": "L327",
       "weight": 1.0,
       "source": "docs_verification_onboarding_manual_verification_onboarding_wizard_multi_professional_configuration",
       "target": "docs_verification_onboarding_not_verified_in_this_pass",
@@ -33893,7 +33694,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/VERIFICATION_onboarding.md",
-      "source_location": "L321",
+      "source_location": "L314",
       "weight": 1.0,
       "source": "docs_verification_onboarding_manual_verification_onboarding_wizard_multi_professional_configuration",
       "target": "docs_verification_onboarding_what_s_actually_live_vs_pending",

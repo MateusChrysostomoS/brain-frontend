@@ -32,13 +32,16 @@ export type ClinicCtx = {
 // Section 02 — Messages (greeting/persona copy the bot uses)
 // ---------------------------------------------------------------------------
 
-// Every field here already existed on secretarIA's wire (TenantConfigWire) —
-// this section is the first UI for them, not a new backend surface.
+// greetingMessage/returningGreetingMessage/language are real fields on
+// secretarIA's wire (TenantConfigWire) — this section is the first UI for
+// them, not a new backend surface. There is no `greetingButtons` here
+// (2026-08 round): the WhatsApp first-contact buttons are now a FIXED
+// product-level set, no longer clinic-editable or part of the wire — see
+// FIXED_GREETING_BUTTONS in MessagesSection.tsx, which renders them as
+// local, read-only display copy.
 export type Messages = {
   greetingMessage: string;
   returningGreetingMessage: string;
-  // Short quick-reply labels shown as WhatsApp buttons — capped at 3.
-  greetingButtons: string[];
   language: string;
 };
 
@@ -162,11 +165,21 @@ export type Prefs = {
 // Section 08 — Google Calendar (tenant-level; unchanged single-professional path)
 // ---------------------------------------------------------------------------
 
-// `connected` is the ONLY field secretarIA's wire actually backs
-// (TenantConfigWire.calendar_connected, read-only). There is no account
-// email, no named-calendar list, and no two-way-sync preference on the wire
-// today — GoogleSection intentionally shows nothing for those instead of
-// inventing values (see GoogleSection's connected-state rendering).
+// `connected` mirrors TenantConfigWire.calendar_connected (read-only). There
+// is no account email, no named-calendar list, and no two-way-sync
+// preference on the wire today — GoogleSection intentionally shows nothing
+// for those instead of inventing values (see GoogleSection's connected-state
+// rendering).
+//
+// `mode` mirrors TenantConfigWire.google_calendar_mode — WRITABLE via the
+// mode selector in GoogleSection, batched into the same tenant-level PUT as
+// every other field on this page (see page.tsx's handleSave). Declared as its
+// own local union (mirroring the wire's GoogleCalendarMode) rather than
+// imported, matching how e.g. PixDeposit.retentionPolicy mirrors
+// TenantConfigWire.pix_retention_policy elsewhere in this file.
+export type GoogleCalendarMode = "per_professional" | "shared_account";
+
 export type GcalState = {
   connected: boolean;
+  mode: GoogleCalendarMode;
 };

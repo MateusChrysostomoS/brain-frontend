@@ -17,6 +17,7 @@ import {
   DEFAULT_PIX_DEPOSIT,
   type ClinicCtx,
   type DayConfig,
+  type GcalState,
   type Messages,
   type PixDeposit,
   type PostConsult,
@@ -40,14 +41,16 @@ const LOCAL_TO_WIRE_DAY: Record<string, string> = Object.fromEntries(
   Object.entries(WIRE_TO_LOCAL_DAY).map(([wire, local]) => [local, wire]),
 );
 
-// "HH:MM" -> minutes from midnight.
-function hhmmToMinutes(hhmm: string): number {
+// "HH:MM" -> minutes from midnight. Exported: reused as-is by the /doctor/perfil
+// "Configuração da secretaria" card's own (lighter, native <input type="time">)
+// hours editor — see app/(site)/doctor/perfil/SecretariaConfigSection.tsx.
+export function hhmmToMinutes(hhmm: string): number {
   const [h, m] = hhmm.split(":").map(Number);
   return (h || 0) * 60 + (m || 0);
 }
 
-// minutes from midnight -> "HH:MM".
-function minutesToHhmm(min: number): string {
+// minutes from midnight -> "HH:MM". Exported for the same reason as above.
+export function minutesToHhmm(min: number): string {
   const h = Math.floor(min / 60);
   const m = min % 60;
   return String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
@@ -184,7 +187,6 @@ export function applyWireMessages(cfg: TenantConfigWire): Messages {
   return {
     greetingMessage: cfg.greeting_message ?? "",
     returningGreetingMessage: cfg.returning_greeting_message ?? "",
-    greetingButtons: cfg.greeting_buttons ?? [],
     language: cfg.language || "pt-BR",
   };
 }
@@ -222,6 +224,19 @@ export function applyWirePixDeposit(cfg: TenantConfigWire): PixDeposit {
 }
 
 // ---------------------------------------------------------------------------
+// Google Calendar (Section 08) — `connected` is read-only; `mode` is
+// writable via the mode selector and round-trips through the same
+// tenant-level PUT as everything else (see buildConfigUpdatePayload below).
+// ---------------------------------------------------------------------------
+
+export function applyWireGcal(cfg: TenantConfigWire): GcalState {
+  return {
+    connected: cfg.calendar_connected,
+    mode: cfg.google_calendar_mode,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Professional profile (specialty/about/context_doctor_message) — moved out
 // of ClinicCtx and onto the per-professional config PUT.
 // ---------------------------------------------------------------------------
@@ -253,6 +268,7 @@ export function buildConfigUpdatePayload(
   postConsult: PostConsult,
   pixDeposit: PixDeposit,
   defaultDurationMin: number,
+  gcalMode: GcalState["mode"],
 ): TenantConfigUpdatePayload {
   return {
     appointment_duration_min: defaultDurationMin,
@@ -261,7 +277,6 @@ export function buildConfigUpdatePayload(
     collect_insurance: ctx.collectInsurance,
     greeting_message: messages.greetingMessage || null,
     returning_greeting_message: messages.returningGreetingMessage || null,
-    greeting_buttons: messages.greetingButtons,
     language: messages.language,
     post_consult_message: postConsult.postConsultMessage || null,
     post_consult_knowledge: postConsult.postConsultKnowledge || null,
@@ -271,6 +286,7 @@ export function buildConfigUpdatePayload(
     pix_retention_policy: pixDeposit.retentionPolicy,
     pix_partial_refund_percent: pixDeposit.partialRefundPercent,
     pix_reschedule_limit: pixDeposit.rescheduleLimit,
+    google_calendar_mode: gcalMode,
   };
 }
 

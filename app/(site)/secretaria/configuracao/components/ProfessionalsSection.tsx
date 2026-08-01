@@ -12,6 +12,13 @@
 // professional is preselected the first time the roster loads (see
 // page.tsx's loadProfessionals), but nothing stops them from switching to a
 // colleague afterwards.
+//
+// Google Calendar modes round (2026-08): the per-row Calendar action and the
+// "Agenda" completeness chip now depend on the tenant's googleCalendarMode
+// (see GoogleSection). In "shared_account" mode the row action creates a
+// secondary calendar inside the CLINIC's Google account (idempotent POST)
+// instead of starting a per-professional OAuth handoff — see
+// handleCreateCalendar/ProfessionalRow below.
 
 import { useState } from "react";
 import { Avatar, Btn, Field, Icon, TextArea, TextInput } from "../../_shared/ui";
@@ -19,8 +26,20 @@ import type { IconName } from "../../_shared/ui";
 import { Section } from "./Section";
 import { InviteProfessionalModal } from "./InviteProfessionalModal";
 import { createSelfProfessional, type DoctorProfessional, type Session } from "@/lib/manage-api";
-import { startProfessionalCalendarOauth } from "@/lib/secretaria-hub";
-import type { ProfessionalProfile } from "../lib/types";
+import {
+  createProfessionalCalendar,
+  HubApiError,
+  startProfessionalCalendarOauth,
+  HUB_ERROR_CLINIC_CALENDAR_NOT_CONNECTED,
+  HUB_ERROR_GOOGLE_RECONNECT_REQUIRED,
+} from "@/lib/secretaria-hub";
+import type { GoogleCalendarMode, ProfessionalProfile } from "../lib/types";
+
+// A roster action failed (OAuth start, or shared-account calendar creation).
+// `showGoogleCta` is set for the two structured calendar-creation errors
+// (clinic not connected / needs reconnect) — both point the user at the same
+// place, the GoogleSection card further down this same page.
+type RosterActionError = { message: string; showGoogleCta: boolean };
 
 type ProfessionalsSectionProps = {
   // null in demo/logged-out mode — every action below degrades to disabled
@@ -38,6 +57,17 @@ type ProfessionalsSectionProps = {
   profile: ProfessionalProfile;
   onProfileChange: <K extends keyof ProfessionalProfile>(key: K, value: ProfessionalProfile[K]) => void;
   onRosterChanged: () => void;
+  // Tenant-wide Google Calendar mode (see GoogleSection) — governs what the
+  // row's Calendar action does and what the "Agenda" chip means.
+  googleCalendarMode: GoogleCalendarMode;
+  // gcal.connected from the parent page — whether the CLINIC has a Google
+  // account connected. Only meaningful in "shared_account" mode, where the
+  // row action is disabled until this is true.
+  clinicCalendarConnected: boolean;
+  // Keyed by professional id -> ProfessionalWire.google_calendar_id (hub
+  // roster). null/absent = no dedicated calendar yet. Only meaningful in
+  // "shared_account" mode.
+  googleCalendarIdByProfessional: Record<string, string | null>;
 };
 
 export function ProfessionalsSection({
@@ -50,12 +80,22 @@ export function ProfessionalsSection({
   profile,
   onProfileChange,
   onRosterChanged,
+  googleCalendarMode,
+  clinicCalendarConnected,
+  googleCalendarIdByProfessional,
 }: ProfessionalsSectionProps) {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [connectingId, setConnectingId] = useState<string | null>(null);
-  const [connectError, setConnectError] = useState<string | null>(null);
+  const [creatingCalendarId, setCreatingCalendarId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<RosterActionError | null>(null);
   const [binding, setBinding] = useState(false);
   const [selfBindDismissed, setSelfBindDismissed] = useState(false);
+
+  // Scrolls to GoogleSection (Section 08, id="gcal") further down this same
+  // page — the shared CTA target for both calendar-creation error codes.
+  const scrollToGoogleSection = () => {
+    document.getElementById("gcal")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   // Owner-with-no-professional detection: derived from the roster's linked
   // email (fresh immediately after self-bind) rather than session.professionalId
@@ -78,9 +118,10 @@ export function ProfessionalsSection({
     }
   }
 
+  // per_professional mode: unchanged per-professional OAuth handoff.
   async function handleConnectCalendar(professionalId: string) {
     if (!session) return;
-    setConnectError(null);
+    setActionError(null);
     setConnectingId(professionalId);
     try {
       const url = await startProfessionalCalendarOauth(session, professionalId);
@@ -88,8 +129,35 @@ export function ProfessionalsSection({
       // Leave connectingId set — the browser is navigating away to Google.
     } catch (e) {
       console.error("secretaria configuracao: failed to start professional Calendar OAuth", e);
-      setConnectError("Não foi possível iniciar a conexão agora. Tente novamente.");
+      setActionError({ message: "Não foi possível iniciar a conexão agora. Tente novamente.", showGoogleCta: false });
       setConnectingId(null);
+    }
+  }
+
+  // shared_account mode: idempotent POST creates a dedicated calendar for
+  // this professional inside the CLINIC's Google account. On the two
+  // structured errors (clinic never connected / clinic token needs
+  // reconnecting), surface the backend's own pt-BR message plus a CTA that
+  // scrolls to GoogleSection — never a generic error for these two cases.
+  async function handleCreateCalendar(professionalId: string) {
+    if (!session) return;
+    setActionError(null);
+    setCreatingCalendarId(professionalId);
+    try {
+      await createProfessionalCalendar(session, professionalId);
+      onRosterChanged(); // refetch roster + hub professionals -> google_calendar_id now set
+    } catch (e) {
+      console.error("secretaria configuracao: failed to create professional calendar", e);
+      if (
+        e instanceof HubApiError &&
+        (e.code === HUB_ERROR_CLINIC_CALENDAR_NOT_CONNECTED || e.code === HUB_ERROR_GOOGLE_RECONNECT_REQUIRED)
+      ) {
+        setActionError({ message: e.message, showGoogleCta: true });
+      } else {
+        setActionError({ message: "Não foi possível criar a agenda agora. Tente novamente.", showGoogleCta: false });
+      }
+    } finally {
+      setCreatingCalendarId(null);
     }
   }
 
@@ -204,10 +272,17 @@ export function ProfessionalsSection({
         {/* --- Roster --- */}
         {roster && roster.length > 0 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {connectError && (
-              <p role="alert" style={{ fontSize: 12.5, color: "var(--danger, #c0392b)" }}>
-                {connectError}
-              </p>
+            {actionError && (
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                <p role="alert" style={{ fontSize: 12.5, color: "var(--danger, #c0392b)", margin: 0 }}>
+                  {actionError.message}
+                </p>
+                {actionError.showGoogleCta && (
+                  <Btn variant="outline" size="sm" onClick={scrollToGoogleSection}>
+                    Ir para a conexão com o Google
+                  </Btn>
+                )}
+              </div>
             )}
             {roster.map((p) => (
               <ProfessionalRow
@@ -215,8 +290,13 @@ export function ProfessionalsSection({
                 professional={p}
                 selected={p.id === selectedId}
                 onSelect={() => onSelect(p.id)}
+                mode={googleCalendarMode}
+                googleCalendarId={googleCalendarIdByProfessional[p.id] ?? null}
+                clinicCalendarConnected={clinicCalendarConnected}
                 onConnectCalendar={() => handleConnectCalendar(p.id)}
+                onCreateCalendar={() => handleCreateCalendar(p.id)}
                 connecting={connectingId === p.id}
+                creatingCalendar={creatingCalendarId === p.id}
                 canConnect={!!session}
               />
             ))}
@@ -245,22 +325,39 @@ export function ProfessionalsSection({
 }
 
 // ProfessionalRow — one roster entry: name, completeness chips, invite/email
-// status, and its own "Conectar Google Calendar" action.
+// status, and its own Calendar action — meaning depends on googleCalendarMode.
 function ProfessionalRow({
   professional,
   selected,
   onSelect,
+  mode,
+  googleCalendarId,
+  clinicCalendarConnected,
   onConnectCalendar,
+  onCreateCalendar,
   connecting,
+  creatingCalendar,
   canConnect,
 }: {
   professional: DoctorProfessional;
   selected: boolean;
   onSelect: () => void;
+  mode: GoogleCalendarMode;
+  googleCalendarId: string | null;
+  clinicCalendarConnected: boolean;
   onConnectCalendar: () => void;
+  onCreateCalendar: () => void;
   connecting: boolean;
+  creatingCalendar: boolean;
   canConnect: boolean;
 }) {
+  const sharedAccount = mode === "shared_account";
+  // "Agenda" chip: per_professional keeps the existing has_calendar semantics
+  // (own token OR clinic fallback); shared_account means a DEDICATED
+  // secondary calendar exists — has_calendar would silently fall back to the
+  // clinic's single calendar, which is not what this chip should promise here.
+  const agendaOk = sharedAccount ? googleCalendarId != null : professional.has_calendar;
+
   return (
     <div
       onClick={onSelect}
@@ -276,7 +373,7 @@ function ProfessionalRow({
       <div style={{ flex: 1, minWidth: 160 }}>
         <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)" }}>{professional.name}</div>
         <div style={{ display: "flex", gap: 12, marginTop: 4, flexWrap: "wrap" }}>
-          <CompletenessChip label="Agenda" ok={professional.has_calendar} />
+          <CompletenessChip label="Agenda" ok={agendaOk} />
           <CompletenessChip label="Serviços" ok={professional.has_services} />
           <CompletenessChip label="Horários" ok={professional.has_hours} />
         </div>
@@ -290,19 +387,55 @@ function ProfessionalRow({
           </div>
         ) : null}
       </div>
-      <Btn
-        variant="outline"
-        size="sm"
-        icon="calendar"
-        // Also selects this row (via the card's own onClick, since this button
-        // has no propagation guard) — harmless: connecting a professional's
-        // calendar while also making them the selected one is sensible UX.
-        onClick={onConnectCalendar}
-        disabled={connecting || !canConnect}
-        title={canConnect ? undefined : "Entre para conectar a agenda"}
-      >
-        {connecting ? "Conectando…" : professional.has_calendar ? "Reconectar agenda" : "Conectar Google Calendar"}
-      </Btn>
+
+      {sharedAccount ? (
+        agendaOk ? (
+          // Creation is idempotent — once google_calendar_id exists, show the
+          // connected state instead of a "create again" button (there is
+          // nothing left to do here).
+          <span style={{
+            display: "inline-flex", alignItems: "center", gap: 6,
+            padding: "7px 13px", borderRadius: 999,
+            fontSize: 12.5, fontWeight: 600,
+            color: "var(--st-attend-ink, #1a7f4b)",
+            background: "var(--st-attend-bg)", border: "1px solid var(--st-attend-bd)",
+          }}>
+            <Icon name="checkCircle" size={14} />
+            Agenda criada
+          </span>
+        ) : (
+          <Btn
+            variant="outline"
+            size="sm"
+            icon="calendar"
+            onClick={onCreateCalendar}
+            disabled={creatingCalendar || !canConnect || !clinicCalendarConnected}
+            title={
+              !canConnect
+                ? "Entre para criar a agenda"
+                : !clinicCalendarConnected
+                  ? "Conecte primeiro a conta do Google da clínica (mais abaixo, em Integração com o Google Calendar)"
+                  : undefined
+            }
+          >
+            {creatingCalendar ? "Criando…" : "Criar agenda do profissional"}
+          </Btn>
+        )
+      ) : (
+        <Btn
+          variant="outline"
+          size="sm"
+          icon="calendar"
+          // Also selects this row (via the card's own onClick, since this button
+          // has no propagation guard) — harmless: connecting a professional's
+          // calendar while also making them the selected one is sensible UX.
+          onClick={onConnectCalendar}
+          disabled={connecting || !canConnect}
+          title={canConnect ? undefined : "Entre para conectar a agenda"}
+        >
+          {connecting ? "Conectando…" : professional.has_calendar ? "Reconectar agenda" : "Conectar Google Calendar"}
+        </Btn>
+      )}
     </div>
   );
 }
