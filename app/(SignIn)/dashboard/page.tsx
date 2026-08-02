@@ -41,6 +41,7 @@ export default function DashboardPage() {
   const [items, setItems] = useState<Summary[]>([]);
   const [clinic, setClinic] = useState("");
   const [role, setRole] = useState<string>("");
+  const [isManager, setIsManager] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -98,6 +99,7 @@ export default function DashboardPage() {
           if (!cancelled) {
             setClinic(me.name || "");
             setRole(me.role || "");
+            setIsManager(!!me.is_manager);
           }
         } catch {
           /* clinic label + role are best-effort */
@@ -295,7 +297,7 @@ export default function DashboardPage() {
 
   return (
     <div className="dash-route">
-      <DashNav clinic={clinic} role={role} onLogout={logout} />
+      <DashNav clinic={clinic} role={role} isManager={isManager} onLogout={logout} />
 
       <main className="dash">
         <DashHeader total={stats.total} waiting={stats.waiting} />

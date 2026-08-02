@@ -92,10 +92,155 @@
   transform: scaleX(-1);
 }
 
+/* --- PreCheck billing sub-block (PrecheckBillingSection) --- */
+.pc-usage-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 13.5px;
+  padding: 4px 0;
+}
+.pc-usage-label {
+  color: var(--ink-faint);
+  font-weight: 600;
+  font-size: 12.5px;
+}
+.pc-usage-value {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* Thin quota progress bar — same mechanics as ../../cadastro/cadastro.css's
+   .cad-progress-track/.cad-progress-fill, sized down for an inline stat. */
+.pc-progress-wrap {
+  margin: 12px 0 4px;
+}
+.pc-progress-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.pc-progress-fill {
+  height: 100%;
+  background: var(--brand);
+  border-radius: 999px;
+  transition: width 0.3s var(--ease);
+}
+/* Quota fully used — amber instead of the brand teal, matches badge--amber's tone. */
+.pc-progress-fill.pc-progress-full {
+  background: var(--al-amber-ink);
+}
+.pc-progress-caption {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--ink-faint);
+  margin-top: 6px;
+}
+
+/* Avulso top-up credits callout — brand-tinted, same recipe as cadastro.css's
+   .cad-testwindow-highlight. */
+.pc-credits {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--brand-tint);
+  color: var(--brand-ink);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.pc-spend {
+  margin-top: 14px;
+  font-size: 12.5px;
+  color: var(--ink-faint);
+  line-height: 1.6;
+}
+
+.pc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+/* Avulso quantity field — sits inline with the "Comprar mais pré-consultas"
+   CTA, since the top-up price is per pré-consulta and the quantity is decided
+   here (never on Stripe's hosted page). Sized to a small integer, not a free
+   text field. */
+.pc-qty {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.pc-qty-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-faint);
+}
+.pc-qty-input {
+  width: 92px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13.5px;
+  font-variant-numeric: tabular-nums;
+}
+.pc-qty-input:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 1px;
+}
+.pc-qty-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.pc-qty-hint {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-faint);
+}
+
+/* Inline "Fazer upgrade" confirmation panel — neutral surface, no danger tone
+   (an upgrade isn't destructive, just worth a deliberate second step). */
+.pc-confirm {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.pc-confirm-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* Success notice after a completed upgrade — mirrors .portal-alert but green. */
+.pc-notice {
+  margin-top: 12px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--al-green-ink, #27704a);
+}
+
 @media (max-width: 720px) {
   .sub-summary-row {
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
+  }
+  .pc-usage-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
   }
 }

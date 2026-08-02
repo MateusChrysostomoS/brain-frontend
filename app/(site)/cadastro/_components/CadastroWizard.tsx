@@ -24,7 +24,7 @@ import { TestWindowExplainerStep } from "./TestWindowExplainerStep";
 import { SummaryStep } from "./SummaryStep";
 import { registerSignup, saveSession, ManageApiError } from "@/lib/manage-api";
 import { EMPTY_ANSWERS, SIGNUP_ADDON_IDS, type StepId, type WizardAnswers } from "../lib/types";
-import type { ResolvedPlan } from "../lib/plans";
+import { isPrecheckPlan, type ResolvedPlan } from "../lib/plans";
 
 // Ordinal position per step, used only for the progress bar (0..8). Branches
 // that skip a conditional screen simply jump positions instead of by one —
@@ -60,10 +60,13 @@ const PROGRESS_LABEL: Record<StepId, string> = {
 // for a secretarIA purchase; see nextAfterEligibility. `addons` always continues to
 // `test_window` next (the connection-test-window explainer) — reachable only via a
 // secretarIA purchase in the first place, so it never needs its own eligibility check.
+// A PreCheck purchase (isPrecheckPlan) skips the WhatsApp/Meta questionnaire
+// entirely — that flow exists only to gate secretarIA's WhatsApp Coexistence
+// requirement — so `contact` goes straight to `summary` for it.
 function nextStepId(current: StepId, answers: WizardAnswers, plan: ResolvedPlan): StepId {
   switch (current) {
     case "contact":
-      return "usage";
+      return isPrecheckPlan(plan) ? "summary" : "usage";
     case "usage":
       return answers.whatsappUsage === "none" ? "dedicated_number" : "prior_api";
     case "dedicated_number":

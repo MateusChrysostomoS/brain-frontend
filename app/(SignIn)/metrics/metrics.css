@@ -1,0 +1,586 @@
+/* ─────────────────────────────────────────────────────────────
+   PreCheck — Métricas (/metrics)
+   Ported from the sibling PreCheck frontend (dashboard do Gestor). Same
+   visual identity as the panel (cream + teal + Instrument Serif). This repo
+   has no shared app/tokens.css or app/dash-nav.css — every (SignIn) route CSS
+   file is self-contained, so this file declares its own token set and its
+   own `.dash-nav` chrome, exactly like ../dashboard/dashboard.css and
+   ../inbound/inbound.css already do.
+   ───────────────────────────────────────────────────────────── */
+
+body:has(.metrics-route)::before,
+body:has(.metrics-route)::after { display: none; }
+
+.metrics-route {
+  --bg:         #f7f6f2;
+  --surface:    #ffffff;
+  --surface-2:  #f1efe8;
+  --ink:        #0b1f2a;
+  --ink-2:      #1c3344;
+  --muted:      #5a6b76;
+  --dim:        #8a98a1;
+  --border:     #e6e1d6;
+  --border-2:   #d8d2c4;
+  --navy:       #0b3a4a;
+  --teal:       #1a8c93;
+  --teal-2:     #2aa6a8;
+  --green:      #5b8c5a;
+  --warning:    #c89638;
+  --danger:     #c4544c;
+  --radius-lg:  20px;
+  --font-ui:    'Inter', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  --shadow:     0 2px 8px rgba(11, 31, 42, .05), 0 8px 24px rgba(11, 31, 42, .06);
+
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color .3s ease, color .3s ease;
+}
+
+/* ── Top nav (mirrors ../dashboard/dashboard.css / ../inbound/inbound.css) ── */
+
+.metrics-route .dash-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(247, 246, 242, .82);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+          backdrop-filter: saturate(180%) blur(14px);
+  border-bottom: 1px solid var(--border);
+  transition: background .3s ease, border-color .3s ease;
+}
+.metrics-route .dash-nav-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 28px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.metrics-route .dash-brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--font-serif);
+  font-size: 24px;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--ink);
+  text-decoration: none;
+}
+.metrics-route .dash-brand em {
+  font-style: italic;
+  color: var(--teal);
+}
+
+.metrics-route .dash-nav-left {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  min-width: 0;
+}
+.metrics-route .dash-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+}
+.metrics-route .dash-tab {
+  padding: 7px 16px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-radius: 100px;
+  transition: background .15s ease, color .15s ease;
+  white-space: nowrap;
+}
+.metrics-route .dash-tab:hover {
+  color: var(--ink);
+  background: var(--surface-2);
+}
+.metrics-route .dash-tab.active,
+.metrics-route .dash-tab.active:hover {
+  color: #fff;
+  background: var(--teal);
+}
+
+.metrics-route .dash-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.metrics-route .dash-role {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.metrics-route .dash-role .avatar {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--teal);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+}
+
+.metrics-route .theme-toggle {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  color: var(--ink-2);
+  background: transparent;
+  border: 1px solid var(--border-2);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.metrics-route .theme-toggle:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+.metrics-route .theme-toggle svg {
+  transition: transform .4s cubic-bezier(.2, .7, .2, 1);
+}
+.metrics-route .theme-toggle:hover svg { transform: rotate(-20deg); }
+.metrics-route .theme-toggle .sun { display: none; }
+html[data-theme="dark"] .metrics-route .theme-toggle .sun  { display: block; }
+html[data-theme="dark"] .metrics-route .theme-toggle .moon { display: none; }
+
+.metrics-route .dash-signout {
+  font-family: var(--font-ui);
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 8px 14px;
+  color: var(--ink-2);
+  background: transparent;
+  border: 1px solid var(--border-2);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.metrics-route .dash-signout:hover {
+  background: var(--surface-2);
+  border-color: var(--ink-2);
+  color: var(--ink);
+}
+
+/* ── Page shell (mesmo halo do dashboard/inbound) ─────────── */
+
+.metrics-route .metrics {
+  position: relative;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 40px 28px 100px;
+}
+.metrics-route .metrics::before {
+  content: '';
+  position: fixed;
+  width: 720px;
+  height: 720px;
+  top: -240px;
+  right: -240px;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(circle, rgba(26, 140, 147, .08) 0%, transparent 60%);
+}
+.metrics-route .metrics > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Header ──────────────────────────────────────────────── */
+
+.metrics-route .metrics-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 32px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.metrics-route .eyebrow {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.metrics-route .metrics-head h1 {
+  margin-top: 8px;
+  font-family: var(--font-serif);
+  font-size: clamp(36px, 4.2vw, 52px);
+  font-weight: 400;
+  letter-spacing: -0.024em;
+  line-height: 1.02;
+  color: var(--ink);
+  text-wrap: balance;
+}
+.metrics-route .metrics-head h1 em {
+  font-style: italic;
+  color: var(--teal);
+}
+.metrics-route .metrics-sub {
+  margin-top: 12px;
+  max-width: 560px;
+  font-size: 15px;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+/* ── Toolbar: período + clínica ──────────────────────────── */
+
+.metrics-route .metrics-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.metrics-route .metrics-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.metrics-route .metrics-pill {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font: 600 13px/1 var(--font-ui);
+  padding: 9px 16px;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: background .18s ease, color .18s ease, border-color .18s ease;
+}
+.metrics-route .metrics-pill:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+.metrics-route .metrics-pill.active {
+  background: var(--teal);
+  border-color: var(--teal);
+  color: #fff;
+}
+.metrics-route .metrics-clinic-select {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  font: 500 13px/1 var(--font-ui);
+  padding: 10px 36px 10px 14px;
+  border-radius: 100px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235a6b76' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+
+/* ── Estados ─────────────────────────────────────────────── */
+
+.metrics-route .state {
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 15px;
+  background: var(--surface);
+  border: 1px dashed var(--border-2);
+  border-radius: var(--radius-lg);
+}
+
+/* ── KPIs ────────────────────────────────────────────────── */
+
+.metrics-route .kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.metrics-route .kpi {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 18px 14px;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+.metrics-route .kpi::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--border-2);
+}
+.metrics-route .kpi-good::before { background: var(--green); }
+.metrics-route .kpi-warn::before { background: var(--warning); }
+.metrics-route .kpi-bad::before  { background: var(--danger); }
+.metrics-route .kpi .num {
+  font-family: var(--font-serif);
+  font-size: 30px;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.metrics-route .kpi .num em {
+  font-style: italic;
+  color: var(--teal);
+}
+.metrics-route .kpi .kpi-of {
+  font-size: 16px;
+  color: var(--dim);
+}
+.metrics-route .kpi .label {
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+/* ── Painéis ─────────────────────────────────────────────── */
+
+.metrics-route .metrics-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+@media (max-width: 860px) {
+  .metrics-route .metrics-columns { grid-template-columns: 1fr; }
+}
+.metrics-route .panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px 22px 20px;
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+}
+.metrics-route .metrics-columns .panel { margin-bottom: 0; }
+.metrics-route .panel h2 {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.metrics-route .panel-sub {
+  margin-top: 4px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.metrics-route .panel-empty {
+  padding: 26px 12px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--dim);
+  border: 1px dashed var(--border-2);
+  border-radius: 12px;
+}
+.metrics-route .panel-note {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--dim);
+}
+
+/* ── Barras de satisfação ────────────────────────────────── */
+
+.metrics-route .sat-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.metrics-route .sat-row {
+  display: grid;
+  grid-template-columns: 96px 1fr 32px;
+  align-items: center;
+  gap: 12px;
+}
+.metrics-route .sat-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  text-align: right;
+}
+.metrics-route .sat-track {
+  height: 10px;
+  background: var(--surface-2);
+  border-radius: 100px;
+  overflow: hidden;
+}
+.metrics-route .sat-fill {
+  height: 100%;
+  border-radius: 100px;
+  background: var(--teal);
+  transition: width .4s ease;
+}
+.metrics-route .sat-fill.sat-5 { background: var(--teal); }
+.metrics-route .sat-fill.sat-4 { background: var(--teal-2); }
+.metrics-route .sat-fill.sat-3 { background: var(--warning); }
+.metrics-route .sat-fill.sat-2 { background: #d18a5a; }
+.metrics-route .sat-fill.sat-1 { background: var(--danger); }
+.metrics-route .sat-count {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Tabelas ─────────────────────────────────────────────── */
+
+.metrics-route .metrics-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.metrics-route .metrics-table th {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dim);
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+}
+.metrics-route .metrics-table td {
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--ink-2);
+}
+.metrics-route .metrics-table tbody tr:last-child td { border-bottom: 0; }
+.metrics-route .metrics-table .num-col {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.metrics-route .metrics-table .good { color: var(--green); font-weight: 600; }
+.metrics-route .metrics-table .bad  { color: var(--danger); font-weight: 600; }
+
+/* ── Linha do tempo ──────────────────────────────────────── */
+
+.metrics-route .tl-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 140px;
+  padding-top: 8px;
+}
+.metrics-route .tl-col {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.metrics-route .tl-bar {
+  width: 100%;
+  max-width: 26px;
+  border-radius: 6px 6px 2px 2px;
+  background: color-mix(in srgb, var(--teal) 75%, transparent);
+  transition: height .4s ease;
+}
+.metrics-route .tl-col:hover .tl-bar { background: var(--teal); }
+.metrics-route .tl-day {
+  font-size: 9px;
+  color: var(--dim);
+  white-space: nowrap;
+  transform: rotate(-45deg);
+  transform-origin: center;
+}
+@media (max-width: 700px) {
+  .metrics-route .tl-day { display: none; }
+}
+
+/* ── Dark theme ──────────────────────────────────────────── */
+
+html[data-theme="dark"] .metrics-route {
+  --bg:        #0b1f2a;
+  --surface:   #122a35;
+  --surface-2: #173342;
+  --ink:       #f3eee0;
+  --ink-2:     #e0d8c4;
+  --muted:     #a0adb8;
+  --dim:       #6e7c87;
+  --border:    rgba(255, 255, 255, 0.07);
+  --border-2:  rgba(255, 255, 255, 0.14);
+  --teal:      #2aa6a8;
+  --teal-2:    #45c2c4;
+  --warning:   #d4a851;
+  --danger:    #e57168;
+}
+html[data-theme="dark"] .metrics-route .dash-nav {
+  background: rgba(11, 31, 42, .78);
+}
+html[data-theme="dark"] .metrics-route .metrics::before {
+  background: radial-gradient(circle, rgba(42, 166, 168, .12) 0%, transparent 60%);
+}
+
+/* ── Responsivo ──────────────────────────────────────────── */
+
+@media (max-width: 760px) {
+  /* Same nav reflow as dashboard/inbound: dissolve .dash-nav-left so brand,
+     tabs and account cluster become row items, then put brand + account
+     controls on row 1 and the full-width segmented tabs on row 2. */
+  .metrics-route .dash-nav-inner {
+    height: auto;
+    min-height: 64px;
+    flex-wrap: wrap;
+    gap: 12px 16px;
+    padding: 12px 18px;
+  }
+  .metrics-route .dash-nav-left { display: contents; }
+  .metrics-route .dash-brand { order: 1; }
+  .metrics-route .dash-nav-right {
+    order: 2;
+    margin-left: auto;
+    gap: 12px;
+  }
+  .metrics-route .dash-tabs {
+    order: 3;
+    flex-basis: 100%;
+    width: 100%;
+  }
+  .metrics-route .dash-tab {
+    flex: 1;
+    text-align: center;
+    padding: 9px 16px;
+  }
+
+  .metrics-route .metrics { padding: 28px 16px 80px; }
+  .metrics-route .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 480px) {
+  .metrics-route .dash-clinic-name { display: none; }
+}

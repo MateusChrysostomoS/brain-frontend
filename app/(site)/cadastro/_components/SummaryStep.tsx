@@ -21,7 +21,7 @@ import {
   ManageApiError,
 } from "@/lib/manage-api";
 import { CheckoutTrialNotice } from "../../_components/CheckoutTrialNotice";
-import type { ResolvedPlan } from "../lib/plans";
+import { isPrecheckPlan, type ResolvedPlan } from "../lib/plans";
 import type { WizardAnswers } from "../lib/types";
 
 const USAGE_LABEL: Record<string, string> = {
@@ -59,6 +59,10 @@ type SummaryStepProps = {
 export function SummaryStep({ answers, plan, intentId, onBack }: SummaryStepProps) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // PreCheck never visited the WhatsApp/Meta eligibility steps (CadastroWizard
+  // skips straight from contact to summary for it) — hide those review rows and
+  // don't attach an intake that was never collected.
+  const isPrecheck = isPrecheckPlan(plan);
 
   async function handleSubmit() {
     if (!intentId) {
@@ -71,9 +75,10 @@ export function SummaryStep({ answers, plan, intentId, onBack }: SummaryStepProp
     setSubmitting(true);
     try {
       // Best-effort: attach the eligibility answers so the webhook can seed onboarding
-      // state. A failure here must never block payment, so it's swallowed.
+      // state. A failure here must never block payment, so it's swallowed. Skipped
+      // entirely for PreCheck — it has no eligibility questionnaire to attach.
       const session = getSession();
-      if (session && answers.whatsappUsage && answers.priorApi && answers.fbPage) {
+      if (!isPrecheck && session && answers.whatsappUsage && answers.priorApi && answers.fbPage) {
         try {
           await attachSignupIntake(session, {
             whatsapp_usage: answers.whatsappUsage,
@@ -113,9 +118,19 @@ export function SummaryStep({ answers, plan, intentId, onBack }: SummaryStepProp
         <Row label="Clínica" value={answers.contact.clinicName} />
         <Row label="E-mail" value={answers.contact.email} />
         <Row label="WhatsApp" value={answers.contact.whatsappPhone} />
-        <Row label="Uso do WhatsApp Business App" value={USAGE_LABEL[answers.whatsappUsage ?? ""] ?? "—"} />
-        <Row label="Número usado com API antes" value={PRIOR_API_LABEL[answers.priorApi ?? ""] ?? "—"} />
-        <Row label="Página no Facebook" value={FB_PAGE_LABEL[answers.fbPage ?? ""] ?? "—"} />
+        {!isPrecheck && (
+          <>
+            <Row
+              label="Uso do WhatsApp Business App"
+              value={USAGE_LABEL[answers.whatsappUsage ?? ""] ?? "—"}
+            />
+            <Row
+              label="Número usado com API antes"
+              value={PRIOR_API_LABEL[answers.priorApi ?? ""] ?? "—"}
+            />
+            <Row label="Página no Facebook" value={FB_PAGE_LABEL[answers.fbPage ?? ""] ?? "—"} />
+          </>
+        )}
         <Row
           label="Complementos"
           value={

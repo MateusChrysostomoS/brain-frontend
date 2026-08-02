@@ -2,16 +2,21 @@
 
 import { getToken } from "./auth";
 import type {
+  AdminUser,
+  AdminUserListResponse,
   BulkDeleteResponse,
+  ClinicInfo,
   DemoRequest,
   DemoRequestCreatePayload,
   DemoRequestListResponse,
   LoginResponse,
   MediaUrlResponse,
   MessageResponse,
+  MetricsOverview,
   Summary,
   SummaryListResponse,
   SummaryMediaListResponse,
+  UserCreatePayload,
   UserInfo,
 } from "./types";
 
@@ -138,6 +143,47 @@ export function listDemoRequests(
   });
   if (statusFilter) params.set("status", statusFilter);
   return apiFetch<DemoRequestListResponse>(`/leads/demo-requests?${params.toString()}`);
+}
+
+// ── Métricas (dashboard do Gestor) ─────────────────────────────────────────
+
+// Agregados do painel do gestor. days = janela; all = desde sempre; clinicId
+// só tem efeito para superadmin (demais perfis são escopados no backend).
+export function getMetricsOverview(opts: {
+  days?: number;
+  all?: boolean;
+  clinicId?: number | null;
+} = {}): Promise<MetricsOverview> {
+  const params = new URLSearchParams();
+  if (opts.all) params.set("all", "true");
+  else if (opts.days) params.set("days", String(opts.days));
+  if (opts.clinicId != null) params.set("clinic_id", String(opts.clinicId));
+  const qs = params.toString();
+  return apiFetch<MetricsOverview>(`/metrics/overview${qs ? `?${qs}` : ""}`);
+}
+
+// ── Gestão de usuários / clínicas (admin) ──────────────────────────────────
+
+// Superadmin: todas as clínicas (para o select do form e o filtro de métricas).
+export function listClinics(): Promise<{ items: ClinicInfo[] }> {
+  return apiFetch<{ items: ClinicInfo[] }>("/admin/clinics?limit=100");
+}
+
+// Admin: superadmin vê todos (filtro opcional); clinic-admin só a própria clínica.
+export function listUsers(clinicId?: number | null): Promise<AdminUserListResponse> {
+  const params = new URLSearchParams({ limit: "100" });
+  if (clinicId != null) params.set("clinic_id", String(clinicId));
+  return apiFetch<AdminUserListResponse>(`/admin/users?${params.toString()}`);
+}
+
+export function createUser(
+  clinicId: number,
+  payload: UserCreatePayload,
+): Promise<AdminUser> {
+  return apiFetch<AdminUser>(`/admin/clinics/${clinicId}/users`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
 // Admin — muda status do lead (new → contacted → converted/dismissed).

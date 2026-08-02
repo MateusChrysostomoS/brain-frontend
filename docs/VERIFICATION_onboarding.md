@@ -284,7 +284,8 @@ invite one).
    `PUT /tenants/me/config` — reload the page and confirm they persist (this is
    genuinely wired, not demo state). Below the two greeting fields, a **read-only**
    "Botões da primeira mensagem" preview shows the three FIXED product buttons
-   (Agendar/Remarcar/Cancelar, 2026-08 round) — no input, no add/remove control;
+   (Agendar/Gerenciar consulta/Outro — trio-gerenciar round; previously
+   Agendar/Remarcar/Cancelar) — no input, no add/remove control;
    `greeting_buttons` no longer exists on the wire at all (removed from
    `TenantConfigWire`/`TenantConfigUpdatePayload` — GET omits it, PUT ignores it
    silently if sent).
@@ -326,7 +327,7 @@ consent screen.
 | `/app/onboarding` | Full state timeline, all 5 blocker copies + resolve-blocker, last-attempt line, pause toggles, Embedded Signup attempt posting | The real Embedded Signup button itself is environment-dependent, not code-dependent — it silently degrades to "ainda não configurada" until brain-api's `META_APP_ID`/`META_APP_SECRET`/`META_ES_CONFIG_ID` are set (external wiring, not a frontend gap) |
 | Professional invite/self-bind | `/doctor/professionals/invites` + `/self`, copyable link, roster completeness chips, `/convite` → set password → scoped view | — |
 | Per-professional config | Hours/services/specialty/about/context per professional, per-professional Calendar OAuth, two-PUT save split | Agenda has **no professional filter** — `secretaria/agenda/*` has zero references to a professional field; `CalendarEventRead`/appointment wire data carries no `professional_id` yet, so a multi-professional tenant's `/secretaria/agenda` still shows one unfiltered week for the whole clinic |
-| Mensagens section | greeting/returning-greeting/persona_notes/language, all round-trip on `PUT /tenants/me/config`; greeting buttons are a fixed read-only product preview (Agendar/Remarcar/Cancelar), not a wire field | — |
+| Mensagens section | greeting/returning-greeting/persona_notes/language, all round-trip on `PUT /tenants/me/config`; greeting buttons are a fixed read-only product preview (Agendar/Gerenciar consulta/Outro), not a wire field | — |
 | Address / convênios | Structured address + insurances + collect_insurance, all round-trip on the same PUT, null-safe on blank | Clinic **phone** stays demo-only — no wire field for it yet (pre-existing gap, unrelated to this round) |
 | Header | De-demoed: real name/role/clinic from `GET /auth/me` once a session exists, falls back to demo constants only while logged out | — |
 | `/calendar/connected` | Both tenant-level and per-professional OAuth flows land here | — |

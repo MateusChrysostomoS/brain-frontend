@@ -22,6 +22,7 @@ import {
   type Entitlements,
   type Session,
 } from "@/lib/manage-api";
+import { PrecheckBillingSection } from "./_components/PrecheckBillingSection";
 import "../dashboard-shell.css";
 import "./billing.css";
 
@@ -32,7 +33,9 @@ import "./billing.css";
 // ---------------------------------------------------------------------------
 
 const PLAN_LABELS: Record<string, string> = {
-  precheck: "PreCheck",
+  precheck: "PreCheck", // legacy id — brain-api still resolves it server-side
+  precheck_basic: "PreCheck Basic",
+  precheck_advanced: "PreCheck Advanced",
   secretaria_basico: "secretarIA Básico",
   complete_clinic_combo: "Brain Completo",
   "brain-completo": "Brain Completo", // legacy alias (see Entitlements comment in manage-api.ts)
@@ -269,6 +272,11 @@ export default function BillingPage() {
                 </div>
               </div>
             )}
+
+            {/* --- PreCheck plan usage/top-ups/upgrade — renders nothing when the
+                tenant's plan isn't a PreCheck plan, or if its own optional fetch
+                fails (see PrecheckBillingSection for the "resolves null" idiom). --- */}
+            {session && <PrecheckBillingSection session={session} />}
 
             {/* --- Manage subscription (Stripe Billing Portal handoff) --- */}
             <div className="sub-block">

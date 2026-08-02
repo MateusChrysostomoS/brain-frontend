@@ -12,6 +12,7 @@
 //   POST /billing/portal   -> Stripe Billing Portal URL       (createPortalSession)
 //   POST /doctor/secretaria/hub-token -> secretarIA hub token (getSecretariaHubToken)
 //   POST /demo-requests  -> lead-capture confirmation         (submitDemoRequest)
+//   POST /public/launch-waitlist -> pre-launch waitlist capture (submitLaunchWaitlist)
 //   GET  /public/checkout-config         -> trial length + add-on availability (getCheckoutConfig, getCheckoutTrialDays)
 //   POST /public/signup-intents          -> register lead + session  (registerSignup)
 //   PATCH /public/signup-intents/{id}    -> update add-on selection  (updateSignupIntentCatalog)
@@ -21,6 +22,9 @@
 //   POST /auth/exchange-onboarding-token -> real session, one-time   (exchangeOnboardingToken)
 //   GET  /doctor/onboarding/test-window          -> activation test-window state (getTestWindow)
 //   POST /doctor/onboarding/test-window/restart  -> restart the test window      (restartTestWindow)
+//   GET  /billing/precheck/usage    -> PreCheck plan quota/usage/top-ups (getPrecheckBillingUsage)
+//   POST /billing/precheck/topup    -> Stripe Checkout URL for N avulso units   (createPrecheckTopupSession)
+//   POST /billing/precheck/upgrade  -> upgrade precheck_basic -> precheck_advanced (upgradePrecheckPlan)
 
 // ---------------------------------------------------------------------------
 // Types
@@ -100,6 +104,20 @@ export type DemoRequestPayload = {
 export type DemoRequestConfirmation = {
   id: string;
   status: string;
+  message: string;
+};
+
+// Launch-waitlist capture (pre-launch buy gate). `plan_hint` records WHICH
+// purchase the blocked click was for — free-form on the backend, sent as the
+// catalog ids joined by ",".
+export type WaitlistLeadPayload = {
+  name: string;
+  email: string;
+  plan_hint?: string | null;
+};
+
+export type WaitlistLeadConfirmation = {
+  id: string;
   message: string;
 };
 
@@ -433,6 +451,20 @@ export async function submitDemoRequest(
   });
 }
 
+// POST /public/launch-waitlist — "avise-me quando lançar" capture behind the
+// pre-launch buy gate (see app/(site)/_lib/launch.ts). Unauthenticated, and
+// IDEMPOTENT per email server-side: a visitor who clicks three different plans
+// leaves one row, so the caller never has to dedupe or handle a "already on the
+// list" conflict — a repeat submission is just another success.
+export async function submitLaunchWaitlist(
+  payload: WaitlistLeadPayload,
+): Promise<WaitlistLeadConfirmation> {
+  return manageFetch<WaitlistLeadConfirmation>("/public/launch-waitlist", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Self-service cold signup (public, unauthenticated) — Stripe-test-mode
 // validation pass. A visitor with no Brain account buys a plan straight from
@@ -722,8 +754,13 @@ export async function setPassword(
 // tier ladder was collapsed (2026-07-22) into one fully-metered plan, secretaria_basico
 // (no flat/anchor price — billed on active professionals, billable patients, and
 // reminders sent outside the WhatsApp 24h window).
+// PreCheck itself was split into two purchasable tiers (precheck_basic/precheck_advanced);
+// the legacy bare "precheck" id is kept here too since brain-api still resolves it
+// server-side (existing subscriptions, stale links) even though nothing new should send it.
 export type CatalogPlanId =
   | "precheck"
+  | "precheck_basic"
+  | "precheck_advanced"
   | "secretaria_basico"
   | "complete_clinic_combo";
 
@@ -1507,6 +1544,89 @@ export function restartTestWindow(session: Session): Promise<RestartTestWindowRe
   return manageFetch<RestartTestWindowResult>(
     "/doctor/onboarding/test-window/restart",
     { method: "POST" },
+    session.token,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// PreCheck billing (role=tenant_owner|tenant_staff) — quota usage, one-off
+// "avulso" top-ups (priced per pré-consulta, quantity chosen here), and the
+// precheck_basic -> precheck_advanced upgrade.
+// Surfaced as a "Pré-consultas (PreCheck)" sub-block on /app/billing, shown
+// only for a tenant whose plan is a PreCheck plan (usage.precheck_enabled).
+// ---------------------------------------------------------------------------
+
+export type PrecheckBillingUsage = {
+  plan: string;
+  plan_name: string;
+  precheck_enabled: boolean;
+  enforced: boolean;
+  quota: number;
+  used: number;
+  remaining: number;
+  topup_credits: number;
+  topup_expires_at: string | null;
+  window_start: string | null;
+  window_end: string | null;
+  spend: {
+    topup_cents: number;
+    topup_count: number;
+    currency: string;
+  };
+};
+
+// GET /billing/precheck/usage (Bearer) — always 200 per contract, but resolves
+// null on ANY failure (network error, non-200, malformed body) instead of
+// throwing — mirrors getCheckoutConfig's "optional fetch resolves null" idiom,
+// so a hiccup here can never break the rest of /app/billing (the plan/status,
+// módulos ativos and limites blocks render independently of this call).
+export async function getPrecheckBillingUsage(
+  session: Session,
+): Promise<PrecheckBillingUsage | null> {
+  try {
+    return await manageFetch<PrecheckBillingUsage>(
+      "/billing/precheck/usage",
+      {},
+      session.token,
+    );
+  } catch {
+    return null;
+  }
+}
+
+// POST /billing/precheck/topup (Bearer) { quantity } — mints a Stripe Checkout
+// URL for `quantity` avulso pré-consultas, for a full-page redirect (same shape
+// as createCheckoutSession/createPortalSession above). The top-up price is per
+// unit, so this quantity is what Stripe charges for and what the webhook grants;
+// Checkout carries no adjustable_quantity, so it is decided HERE and never
+// re-asked on Stripe's page. Throws ManageApiError: 503 billing unconfigured,
+// 409 when the tenant's plan isn't a PreCheck plan, 422
+// `quantity_below_minimum` / `quantity_above_maximum` (the server bounds are the
+// enforcement point — the input's own minimum is convenience only).
+export async function createPrecheckTopupSession(
+  session: Session,
+  quantity: number,
+): Promise<string> {
+  const data = await manageFetch<{ url: string }>(
+    "/billing/precheck/topup",
+    { method: "POST", body: JSON.stringify({ quantity }) },
+    session.token,
+  );
+  return data.url;
+}
+
+// POST /billing/precheck/upgrade (Bearer) { plan } — upgrades a precheck_basic
+// subscription to precheck_advanced in place and returns the fresh usage
+// payload (same shape as GET .../usage), so the caller can swap it straight
+// into state instead of refetching separately. Throws ManageApiError: 409
+// `already_on_plan` / `no_active_subscription`, 422 invalid plan.
+export async function upgradePrecheckPlan(
+  session: Session,
+  plan: "precheck_advanced",
+): Promise<PrecheckBillingUsage> {
+  return manageFetch<PrecheckBillingUsage>(
+    "/billing/precheck/upgrade",
+    { method: "POST", body: JSON.stringify({ plan }) },
     session.token,
   );
 }

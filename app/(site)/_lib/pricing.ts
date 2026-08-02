@@ -19,11 +19,14 @@ export type PricingPlan = {
 
 export const PRICING: Record<PricingPlanKey, PricingPlan> = {
   precheck: {
-    name: "Plano PreCheck",
+    name: "PreCheck Basic",
     tagline: "Pré-consulta no WhatsApp",
     amount: "R$ 120,00",
     unit: "/mês",
-    catalogIds: ["precheck"],
+    // Renamed from the legacy bare "precheck" id — see cadastro/lib/plans.ts.
+    // A secondary link on the card points interested visitors at the
+    // precheck_advanced tier (higher monthly quota) instead of a second card.
+    catalogIds: ["precheck_basic"],
   },
   secretaria: {
     name: "Plano secretarIA",

@@ -1,0 +1,468 @@
+/* ─────────────────────────────────────────────────────────────
+   PreCheck — Usuários (/users)
+   Ported from the sibling PreCheck frontend (gestão de usuários, admin-only).
+   Same visual identity as the panel. This repo has no shared app/tokens.css
+   or app/dash-nav.css — every (SignIn) route CSS file is self-contained, so
+   this file declares its own token set and its own `.dash-nav` chrome,
+   exactly like ../dashboard/dashboard.css and ../inbound/inbound.css already do.
+   ───────────────────────────────────────────────────────────── */
+
+body:has(.users-route)::before,
+body:has(.users-route)::after { display: none; }
+
+.users-route {
+  --bg:         #f7f6f2;
+  --surface:    #ffffff;
+  --surface-2:  #f1efe8;
+  --ink:        #0b1f2a;
+  --ink-2:      #1c3344;
+  --muted:      #5a6b76;
+  --dim:        #8a98a1;
+  --border:     #e6e1d6;
+  --border-2:   #d8d2c4;
+  --teal:       #1a8c93;
+  --green:      #5b8c5a;
+  --warning:    #c89638;
+  --danger:     #c4544c;
+  --radius-lg:  20px;
+  --font-ui:    'Inter', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  --shadow:     0 2px 8px rgba(11, 31, 42, .05), 0 8px 24px rgba(11, 31, 42, .06);
+
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color .3s ease, color .3s ease;
+}
+
+/* ── Top nav (mirrors ../dashboard/dashboard.css / ../inbound/inbound.css) ── */
+
+.users-route .dash-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(247, 246, 242, .82);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+          backdrop-filter: saturate(180%) blur(14px);
+  border-bottom: 1px solid var(--border);
+  transition: background .3s ease, border-color .3s ease;
+}
+.users-route .dash-nav-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 28px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.users-route .dash-brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--font-serif);
+  font-size: 24px;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--ink);
+  text-decoration: none;
+}
+.users-route .dash-brand em {
+  font-style: italic;
+  color: var(--teal);
+}
+
+.users-route .dash-nav-left {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  min-width: 0;
+}
+.users-route .dash-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+}
+.users-route .dash-tab {
+  padding: 7px 16px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-radius: 100px;
+  transition: background .15s ease, color .15s ease;
+  white-space: nowrap;
+}
+.users-route .dash-tab:hover {
+  color: var(--ink);
+  background: var(--surface-2);
+}
+.users-route .dash-tab.active,
+.users-route .dash-tab.active:hover {
+  color: #fff;
+  background: var(--teal);
+}
+
+.users-route .dash-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.users-route .dash-role {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.users-route .dash-role .avatar {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--teal);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+}
+
+.users-route .theme-toggle {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  color: var(--ink-2);
+  background: transparent;
+  border: 1px solid var(--border-2);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.users-route .theme-toggle:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+.users-route .theme-toggle svg {
+  transition: transform .4s cubic-bezier(.2, .7, .2, 1);
+}
+.users-route .theme-toggle:hover svg { transform: rotate(-20deg); }
+.users-route .theme-toggle .sun { display: none; }
+html[data-theme="dark"] .users-route .theme-toggle .sun  { display: block; }
+html[data-theme="dark"] .users-route .theme-toggle .moon { display: none; }
+
+.users-route .dash-signout {
+  font-family: var(--font-ui);
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 8px 14px;
+  color: var(--ink-2);
+  background: transparent;
+  border: 1px solid var(--border-2);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.users-route .dash-signout:hover {
+  background: var(--surface-2);
+  border-color: var(--ink-2);
+  color: var(--ink);
+}
+
+/* ── Page shell ──────────────────────────────────────────── */
+
+.users-route .users {
+  position: relative;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 28px 100px;
+}
+.users-route .users::before {
+  content: '';
+  position: fixed;
+  width: 720px;
+  height: 720px;
+  top: -240px;
+  right: -240px;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(circle, rgba(26, 140, 147, .08) 0%, transparent 60%);
+}
+.users-route .users > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Header ──────────────────────────────────────────────── */
+
+.users-route .users-head { margin-bottom: 24px; }
+.users-route .eyebrow {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.users-route .users-head h1 {
+  margin-top: 8px;
+  font-family: var(--font-serif);
+  font-size: clamp(36px, 4.2vw, 52px);
+  font-weight: 400;
+  letter-spacing: -0.024em;
+  line-height: 1.02;
+  color: var(--ink);
+  text-wrap: balance;
+}
+.users-route .users-head h1 em {
+  font-style: italic;
+  color: var(--teal);
+}
+.users-route .users-sub {
+  margin-top: 12px;
+  max-width: 560px;
+  font-size: 15px;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+/* ── Painéis ─────────────────────────────────────────────── */
+
+.users-route .panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+}
+.users-route .panel h2 {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--ink);
+  margin-bottom: 14px;
+}
+.users-route .state {
+  padding: 40px 16px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* ── Formulário ──────────────────────────────────────────── */
+
+.users-route .form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+.users-route .user-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.users-route .user-form input[type="text"],
+.users-route .user-form input[type="email"],
+.users-route .user-form input[type="password"],
+.users-route .user-form select {
+  appearance: none;
+  border: 1px solid var(--border-2);
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 14px/1.4 var(--font-ui);
+  padding: 11px 13px;
+  border-radius: 10px;
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+.users-route .user-form input:focus,
+.users-route .user-form select:focus {
+  outline: none;
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--teal) 18%, transparent);
+}
+.users-route .check-row {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start;
+  gap: 10px !important;
+  margin-top: 16px;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  color: var(--muted) !important;
+  cursor: pointer;
+  max-width: 560px;
+}
+.users-route .check-row input[type="checkbox"] {
+  margin-top: 2px;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--teal);
+  cursor: pointer;
+}
+.users-route .check-row strong {
+  color: var(--ink-2);
+  font-weight: 600;
+}
+.users-route .form-msg {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+.users-route .form-msg-error {
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  color: var(--danger);
+  border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
+}
+.users-route .form-msg-ok {
+  background: color-mix(in srgb, var(--green) 12%, transparent);
+  color: var(--green);
+  border: 1px solid color-mix(in srgb, var(--green) 30%, transparent);
+}
+.users-route .submit-btn {
+  margin-top: 16px;
+  appearance: none;
+  border: 0;
+  background: var(--teal);
+  color: #fff;
+  font: 600 14px/1 var(--font-ui);
+  padding: 12px 22px;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: filter .18s ease, transform .12s ease;
+}
+.users-route .submit-btn:hover { filter: brightness(1.08); }
+.users-route .submit-btn:active { transform: scale(.98); }
+.users-route .submit-btn:disabled { opacity: .6; cursor: default; }
+
+/* ── Tabela ──────────────────────────────────────────────── */
+
+.users-route .users-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.users-route .users-table th {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dim);
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+}
+.users-route .users-table td {
+  padding: 11px 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--ink-2);
+  vertical-align: middle;
+}
+.users-route .users-table tbody tr:last-child td { border-bottom: 0; }
+.users-route .email-col { color: var(--muted); }
+
+.users-route .role-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  border-radius: 100px;
+  background: var(--surface-2);
+  color: var(--ink-2);
+  border: 1px solid var(--border);
+}
+.users-route .role-badge.role-admin {
+  background: color-mix(in srgb, var(--teal) 14%, transparent);
+  color: var(--teal);
+  border-color: color-mix(in srgb, var(--teal) 30%, transparent);
+}
+.users-route .role-badge.role-manager {
+  background: color-mix(in srgb, var(--warning) 14%, transparent);
+  color: var(--warning);
+  border-color: color-mix(in srgb, var(--warning) 32%, transparent);
+}
+.users-route .role-badge.role-extra { margin-left: 6px; }
+
+/* ── Dark theme ──────────────────────────────────────────── */
+
+html[data-theme="dark"] .users-route {
+  --bg:        #0b1f2a;
+  --surface:   #122a35;
+  --surface-2: #173342;
+  --ink:       #f3eee0;
+  --ink-2:     #e0d8c4;
+  --muted:     #a0adb8;
+  --dim:       #6e7c87;
+  --border:    rgba(255, 255, 255, 0.07);
+  --border-2:  rgba(255, 255, 255, 0.14);
+  --teal:      #2aa6a8;
+  --warning:   #d4a851;
+  --danger:    #e57168;
+}
+html[data-theme="dark"] .users-route .dash-nav {
+  background: rgba(11, 31, 42, .78);
+}
+html[data-theme="dark"] .users-route .users::before {
+  background: radial-gradient(circle, rgba(42, 166, 168, .12) 0%, transparent 60%);
+}
+
+/* ── Responsivo ──────────────────────────────────────────── */
+
+@media (max-width: 760px) {
+  /* Same nav reflow as dashboard/inbound/metrics. */
+  .users-route .dash-nav-inner {
+    height: auto;
+    min-height: 64px;
+    flex-wrap: wrap;
+    gap: 12px 16px;
+    padding: 12px 18px;
+  }
+  .users-route .dash-nav-left { display: contents; }
+  .users-route .dash-brand { order: 1; }
+  .users-route .dash-nav-right {
+    order: 2;
+    margin-left: auto;
+    gap: 12px;
+  }
+  .users-route .dash-tabs {
+    order: 3;
+    flex-basis: 100%;
+    width: 100%;
+  }
+  .users-route .dash-tab {
+    flex: 1;
+    text-align: center;
+    padding: 9px 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .users-route .users { padding: 28px 16px 80px; }
+  .users-route .users-table .email-col { display: none; }
+  .users-route .users-table th:nth-child(2) { display: none; }
+}
+
+@media (max-width: 480px) {
+  .users-route .dash-clinic-name { display: none; }
+}

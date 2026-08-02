@@ -1,10 +1,11 @@
 "use client";
 
-// DashNav — shared sticky top bar for /dashboard, /summary and /inbound.
-// Holds the brand, an admin-only segmented tab (Dashboard / Inbound),
-// the role chip, inline theme toggle and Sair button. Each route supplies
-// the matching scoped CSS (.dash-route / .patient-route / .inbound-route)
-// for the `.dash-nav` class family.
+// DashNav — shared sticky top bar for /dashboard, /summary, /inbound,
+// /metrics and /users. Holds the brand, a segmented tab computed from the
+// user's access areas (clínico / métricas / admin), the role chip, inline
+// theme toggle and Sair button. Each route supplies the matching scoped CSS
+// (.dash-route / .patient-route / .inbound-route / .metrics-route /
+// .users-route) for the `.dash-nav` class family.
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -14,15 +15,13 @@ import { getCurrentTheme, toggleTheme, type Theme } from "@/lib/theme";
 type DashNavProps = {
   clinic?: string;
   role?: string;
+  // Doctor/admin who is ALSO a manager (users.is_manager) — unlocks the
+  // Métricas tab alongside their normal area.
+  isManager?: boolean;
   onLogout: () => void;
 };
 
-const ADMIN_TABS = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/inbound", label: "Inbound" },
-] as const;
-
-export default function DashNav({ clinic, role, onLogout }: DashNavProps) {
+export default function DashNav({ clinic, role, isManager, onLogout }: DashNavProps) {
   const pathname = usePathname();
   const [theme, setTheme] = useState<Theme>("dark");
   const [mounted, setMounted] = useState(false);
@@ -46,9 +45,25 @@ export default function DashNav({ clinic, role, onLogout }: DashNavProps) {
       : "Ativar tema claro"
     : "Alternar tema";
 
-  // Admin sees a segmented tab to jump between Dashboard and Inbound.
-  // For other roles we render nothing — the area collapses.
-  const showAdminTabs = role === "admin";
+  // Tabs by access area (mirrors the backend gates):
+  //   clinical (/dashboard)      — admin and doctor;
+  //   metrics  (/metrics)        — admin, manager and is_manager;
+  //   admin    (/inbound, /users) — admin only.
+  // An area that resolves to nothing just doesn't become a tab — a plain
+  // doctor or a plain manager never sees the tab bar at all (tabs.length <= 1).
+  const canClinical = role === "admin" || role === "doctor";
+  const canMetrics = role === "admin" || role === "manager" || !!isManager;
+  const tabs = [
+    ...(canClinical ? [{ href: "/dashboard", label: "Dashboard" }] : []),
+    ...(canMetrics ? [{ href: "/metrics", label: "Métricas" }] : []),
+    ...(role === "admin"
+      ? [
+          { href: "/inbound", label: "Inbound" },
+          { href: "/users", label: "Usuários" },
+        ]
+      : []),
+  ];
+  const showAdminTabs = tabs.length > 1;
 
   return (
     <nav className="dash-nav">
@@ -59,8 +74,8 @@ export default function DashNav({ clinic, role, onLogout }: DashNavProps) {
           </Link>
 
           {showAdminTabs && (
-            <div className="dash-tabs" role="tablist" aria-label="Áreas administrativas">
-              {ADMIN_TABS.map((tab) => {
+            <div className="dash-tabs" role="tablist" aria-label="Áreas do painel">
+              {tabs.map((tab) => {
                 const active = pathname?.startsWith(tab.href) ?? false;
                 return (
                   <Link

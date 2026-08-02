@@ -234,11 +234,13 @@ export type AddressWire = {
 //
 // `greeting_buttons` REMOVED (2026-08 round): the WhatsApp first-contact
 // buttons are no longer clinic-editable text. secretarIA now ships a FIXED
-// product-level set — [Agendar] [Remarcar] [Cancelar] — routed
-// deterministically server-side. GET no longer returns the field at all, and
-// PUT silently ignores it if a caller still sends it (never persisted). See
-// FIXED_GREETING_BUTTONS in configuracao/components/MessagesSection.tsx for
-// the local, read-only display of this fixed set.
+// product-level set — [Agendar] [Gerenciar consulta] [Outro] since the
+// trio-gerenciar round — routed server-side (Agendar/Gerenciar
+// deterministically; Outro is the explicit LLM hand-off). GET no longer
+// returns the field at all, and PUT silently ignores it if a caller still
+// sends it (never persisted). See FIXED_GREETING_BUTTONS in
+// configuracao/components/MessagesSection.tsx for the local, read-only
+// display of this fixed set.
 export type TenantConfigWire = {
   clinic_name: string;
   greeting_message: string | null; // capped at 1024 chars server-side

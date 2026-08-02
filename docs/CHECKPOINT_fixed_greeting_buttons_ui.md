@@ -4,6 +4,30 @@ Date: 2026-08-01. State: **frontend DONE**, no pending frontend work for this ro
 depends on the already-shipped secretarIA backend contract (1072 tests green per this
 round's brief) — no further backend work needed from this repo's side.
 
+## Update 2026-08-02 — trio consolidated to [Agendar] [Gerenciar consulta] [Outro]
+
+secretarIA's trio-gerenciar round (see that repo's
+`docs/CHECKPOINT_trio_gerenciar_scoped_help.md`) consolidated the initial-greeting
+trio: the separate Remarcar/Cancelar slots became one "Gerenciar consulta" entry
+(same manage sub-flow — identify the appointment, then ask reschedule-or-cancel),
+freeing the third slot for "Outro", the explicit talk-to-the-assistant escape.
+Frontend follow-up in this repo, same session:
+
+- `MessagesSection.tsx` — `FIXED_GREETING_BUTTONS` is now
+  `["Agendar", "Gerenciar consulta", "Outro"]`; the read-only chip UI itself is
+  unchanged (still the `GreetingButtonsPreview` pattern below). Caption updated to
+  say Agendar/Gerenciar start the automatic flows while Outro opens the free
+  conversation. Header comment rewritten to match.
+- Comment/doc-only collateral: `lib/secretaria-hub.ts` (the `TenantConfigWire`
+  removal note now names the new trio) and `docs/VERIFICATION_onboarding.md`
+  (manual-test step + live-vs-pending table row).
+- Still no wire field involved — display copy stays purely local, exactly as below.
+- Verified: `.\node_modules\.bin\tsc.cmd --noEmit` clean, `npm run build` green,
+  `npm test` 69/69.
+
+Everything below this line describes the 2026-08-01 round and remains accurate
+except where the trio labels are concerned.
+
 Round scope: secretarIA turned the WhatsApp first-contact greeting buttons from
 clinic-editable free text into a FIXED product-level set — **[Agendar] [Remarcar]
 [Cancelar]** — routed deterministically server-side (the LLM is never the default

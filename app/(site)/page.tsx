@@ -337,13 +337,24 @@ export default function BrainHomePage() {
                 ctaLabel="Falar com a Brain"
                 ctaHref="#contato"
                 cta={
-                  <PlanCheckoutCta
-                    plan="precheck"
-                    catalogIds={PRICING.precheck.catalogIds ?? []}
-                    label="Contratar PreCheck"
-                    secondaryHref="#contato"
-                    secondaryLabel="Falar com a Brain"
-                  />
+                  <>
+                    <PlanCheckoutCta
+                      plan="precheck_basic"
+                      catalogIds={PRICING.precheck.catalogIds ?? []}
+                      label="Contratar PreCheck Basic"
+                      secondaryHref="#contato"
+                      secondaryLabel="Falar com a Brain"
+                    />
+                    {/* Higher-quota tier — kept as a secondary link rather than a
+                        fourth card so the 3-column price-grid layout stays intact. */}
+                    <Link
+                      href="/cadastro?plan=precheck_advanced"
+                      className="muted"
+                      style={{ display: "inline-block", fontSize: 12.5, marginTop: 10 }}
+                    >
+                      Precisa de mais volume? Conheça o PreCheck Advanced →
+                    </Link>
+                  </>
                 }
               />
             </Reveal>

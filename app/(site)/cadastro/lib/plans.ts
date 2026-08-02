@@ -9,8 +9,18 @@ import type { CatalogPlanId } from "@/lib/manage-api";
 // (`complete_clinic_combo`, catalogIds: null in _lib/pricing.ts) — Phase 2
 // (PreCheck/combo Stripe Prices) is out of scope, so combo stays unpurchasable
 // even if a stray `?plan=complete_clinic_combo` link is ever created.
+//
+// PreCheck is now two purchasable tiers (precheck_basic/precheck_advanced) —
+// see resolvePlan below for the `?plan=precheck` backward-compat mapping.
 const PURCHASABLE_PLANS: Record<string, { label: string; tagline: string }> = {
-  precheck: { label: "PreCheck", tagline: "Pré-consulta no WhatsApp" },
+  precheck_basic: {
+    label: "PreCheck Basic",
+    tagline: "Cota mensal de pré-consultas no WhatsApp",
+  },
+  precheck_advanced: {
+    label: "PreCheck Advanced",
+    tagline: "Cota mensal maior de pré-consultas no WhatsApp",
+  },
   secretaria_basico: {
     label: "secretarIA Básico",
     tagline: "Converse e agende no WhatsApp — pague só pelo que usar",
@@ -28,8 +38,11 @@ export type ResolvedPlan = {
 // Returns null when `plan` is missing or not a known purchasable id — the page
 // shows an inline error instead of guessing.
 export function resolvePlan(searchParams: URLSearchParams): ResolvedPlan | null {
-  const planId = searchParams.get("plan");
-  if (!planId) return null;
+  const rawPlanId = searchParams.get("plan");
+  if (!rawPlanId) return null;
+  // Backward-compat: a stale marketing link/bookmark may still carry the
+  // legacy bare "precheck" id — treat it as the current entry-level tier.
+  const planId = rawPlanId === "precheck" ? "precheck_basic" : rawPlanId;
   const meta = PURCHASABLE_PLANS[planId];
   if (!meta) return null;
 
@@ -39,4 +52,13 @@ export function resolvePlan(searchParams: URLSearchParams): ResolvedPlan | null 
     : [planId];
 
   return { planId, label: meta.label, tagline: meta.tagline, catalogIds };
+}
+
+// True for any PreCheck plan variant (precheck_basic, precheck_advanced, and —
+// defensively — the legacy bare "precheck" id). PreCheck has no WhatsApp/Meta
+// eligibility questionnaire to answer: that flow exists only to gate
+// secretarIA's WhatsApp Coexistence requirement, so CadastroWizard and
+// SummaryStep both use this to skip/hide it for a PreCheck purchase.
+export function isPrecheckPlan(plan: ResolvedPlan): boolean {
+  return plan.planId.startsWith("precheck");
 }

@@ -52,6 +52,7 @@ export default function InboundPage() {
 
   const [clinic, setClinic] = useState("");
   const [role, setRole] = useState<string>("");
+  const [isManager, setIsManager] = useState(false);
   const [items, setItems] = useState<DemoRequest[]>([]);
   const [filter, setFilter] = useState<StatusKey>("all");
   const [loading, setLoading] = useState(true);
@@ -82,6 +83,7 @@ export default function InboundPage() {
         }
         setClinic(me.name || "");
         setRole(me.role || "");
+        setIsManager(!!me.is_manager);
 
         const data = await listDemoRequests(0, 100);
         if (cancelled) return;
@@ -145,7 +147,7 @@ export default function InboundPage() {
 
   return (
     <div className="inbound-route">
-      <DashNav clinic={clinic} role={role} onLogout={logout} />
+      <DashNav clinic={clinic} role={role} isManager={isManager} onLogout={logout} />
 
       <main className="inbound">
         <header className="inbound-head">

@@ -49,9 +49,98 @@ export interface MediaUrlResponse {
 export interface UserInfo {
   name?: string;
   email?: string;
-  role?: string; // "admin" | "doctor" | "service"
+  role?: string; // "admin" | "doctor" | "manager" | "service"
+  // Orthogonal axis to role: a doctor/admin who is ALSO a manager (unlocks /metrics).
+  is_manager?: boolean;
   clinic_id?: number | null;
   [key: string]: any;
+}
+
+// ── Métricas (dashboard do Gestor) ──────────────────────────────────────────
+
+export interface MetricsTotals {
+  summaries: number;
+  patients: number;
+  draft: number;
+  approved: number;
+  rejected: number;
+}
+
+export interface DoctorStats {
+  doctor_id: number;
+  name: string;
+  approved: number;
+  rejected: number;
+  total: number;
+}
+
+export interface SatisfactionStats {
+  responses: number;
+  unscored: number;
+  average: number | null;
+  distribution: Record<string, number>; // "1".."5"
+}
+
+export interface TimelinePoint {
+  day: string; // yyyy-mm-dd
+  total: number;
+}
+
+export interface ClinicStats {
+  clinic_id: number;
+  name: string;
+  summaries: number;
+  satisfaction_average: number | null;
+  satisfaction_responses: number;
+}
+
+export interface MetricsOverview {
+  period_days: number | null;
+  clinic_id: number | null;
+  clinic_name: string | null;
+  totals: MetricsTotals;
+  per_doctor: DoctorStats[];
+  unattributed_reviews: number;
+  satisfaction: SatisfactionStats;
+  timeline: TimelinePoint[];
+  avg_hours_to_review: number | null;
+  per_clinic: ClinicStats[] | null;
+}
+
+// ── Gestão de usuários (admin) ──────────────────────────────────────────────
+
+export interface AdminUser {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  is_manager: boolean;
+  clinic_id: number | null;
+  clinic?: { id: number; name: string } | null;
+  created_at: string;
+}
+
+export interface AdminUserListResponse {
+  items: AdminUser[];
+  total: number;
+  skip: number;
+  limit: number;
+  has_next: boolean;
+}
+
+export interface ClinicInfo {
+  id: number;
+  name: string;
+  slug?: string;
+  [key: string]: any;
+}
+
+export interface UserCreatePayload {
+  email: string;
+  name: string;
+  password: string;
+  role: "admin" | "doctor" | "manager";
+  is_manager: boolean;
 }
 
 export interface DemoRequest {

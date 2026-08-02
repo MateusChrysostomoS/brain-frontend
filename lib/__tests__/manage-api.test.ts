@@ -395,6 +395,169 @@ describe("billing", () => {
 });
 
 // ---------------------------------------------------------------------------
+// PreCheck billing — usage/top-up/upgrade (Feature: PreCheck billing portal)
+// ---------------------------------------------------------------------------
+
+describe("getPrecheckBillingUsage", () => {
+  function usageBody(overrides: Partial<Record<string, unknown>> = {}) {
+    return {
+      plan: "precheck_basic",
+      plan_name: "PreCheck Basic",
+      precheck_enabled: true,
+      enforced: true,
+      quota: 100,
+      used: 40,
+      remaining: 60,
+      topup_credits: 0,
+      topup_expires_at: null,
+      window_start: "2026-08-01T00:00:00Z",
+      window_end: "2026-08-31T23:59:59Z",
+      spend: { topup_cents: 0, topup_count: 0, currency: "brl" },
+      ...overrides,
+    };
+  }
+
+  it("GETs /billing/precheck/usage authenticated and resolves the payload as-is", async () => {
+    const session = makeSession({ token: "tok1" });
+    fetchMock.mockResolvedValueOnce(mockResponse(200, usageBody()));
+
+    const result = await api.getPrecheckBillingUsage(session);
+
+    expect(result).toEqual(usageBody());
+    const call = fetchMock.mock.calls[0];
+    expect(call[0]).toBe("/billing/precheck/usage");
+    expect(call[1].headers.Authorization).toBe("Bearer tok1");
+  });
+
+  it("resolves null on a non-200 response instead of throwing (optional-fetch idiom)", async () => {
+    const session = makeSession({ token: "tok1" });
+    fetchMock.mockResolvedValueOnce(mockResponse(500, { detail: "server_error" }));
+
+    await expect(api.getPrecheckBillingUsage(session)).resolves.toBeNull();
+  });
+
+  it("resolves null on a network failure instead of rejecting", async () => {
+    const session = makeSession({ token: "tok1" });
+    fetchMock.mockRejectedValueOnce(new Error("network down"));
+
+    await expect(api.getPrecheckBillingUsage(session)).resolves.toBeNull();
+  });
+});
+
+describe("createPrecheckTopupSession", () => {
+  it("POSTs { quantity } to /billing/precheck/topup authenticated and resolves the Stripe url", async () => {
+    const session = makeSession({ token: "tok1" });
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(200, { url: "https://checkout.stripe.com/topup-abc" }),
+    );
+
+    const url = await api.createPrecheckTopupSession(session, 12);
+
+    expect(url).toBe("https://checkout.stripe.com/topup-abc");
+    const call = fetchMock.mock.calls[0];
+    expect(call[0]).toBe("/billing/precheck/topup");
+    expect(call[1].method).toBe("POST");
+    // The per-unit price means the QUANTITY is the purchase — it has to reach the API.
+    expect(JSON.parse(call[1].body)).toEqual({ quantity: 12 });
+    expect(call[1].headers.Authorization).toBe("Bearer tok1");
+  });
+
+  it("503 billing unconfigured -> ManageApiError 503", async () => {
+    const session = makeSession({ token: "tok1" });
+    fetchMock.mockResolvedValueOnce(mockResponse(503, { detail: "billing_not_configured" }));
+
+    await expectManageError(
+      api.createPrecheckTopupSession(session, 10),
+      503,
+      "billing_not_configured",
+    );
+  });
+
+  it("409 plan not precheck -> ManageApiError 409", async () => {
+    const session = makeSession({ token: "tok1" });
+    fetchMock.mockResolvedValueOnce(mockResponse(409, { detail: "plan_not_precheck" }));
+
+    await expectManageError(api.createPrecheckTopupSession(session, 10), 409, "plan_not_precheck");
+  });
+
+  it("422 quantity_below_minimum -> ManageApiError 422 (server bounds are the enforcement point)", async () => {
+    const session = makeSession({ token: "tok1" });
+    fetchMock.mockResolvedValueOnce(mockResponse(422, { detail: "quantity_below_minimum" }));
+
+    await expectManageError(
+      api.createPrecheckTopupSession(session, 4),
+      422,
+      "quantity_below_minimum",
+    );
+  });
+});
+
+describe("upgradePrecheckPlan", () => {
+  it("POSTs { plan } to /billing/precheck/upgrade authenticated and resolves the fresh usage payload", async () => {
+    const session = makeSession({ token: "tok1" });
+    const fresh = {
+      plan: "precheck_advanced",
+      plan_name: "PreCheck Advanced",
+      precheck_enabled: true,
+      enforced: true,
+      quota: 300,
+      used: 40,
+      remaining: 260,
+      topup_credits: 0,
+      topup_expires_at: null,
+      window_start: "2026-08-01T00:00:00Z",
+      window_end: "2026-08-31T23:59:59Z",
+      spend: { topup_cents: 0, topup_count: 0, currency: "brl" },
+    };
+    fetchMock.mockResolvedValueOnce(mockResponse(200, fresh));
+
+    const result = await api.upgradePrecheckPlan(session, "precheck_advanced");
+
+    expect(result).toEqual(fresh);
+    const call = fetchMock.mock.calls[0];
+    expect(call[0]).toBe("/billing/precheck/upgrade");
+    expect(call[1].method).toBe("POST");
+    expect(JSON.parse(call[1].body)).toEqual({ plan: "precheck_advanced" });
+    expect(call[1].headers.Authorization).toBe("Bearer tok1");
+  });
+
+  it("409 already_on_plan -> ManageApiError 409", async () => {
+    const session = makeSession({ token: "tok1" });
+    fetchMock.mockResolvedValueOnce(mockResponse(409, { detail: "already_on_plan" }));
+
+    await expectManageError(
+      api.upgradePrecheckPlan(session, "precheck_advanced"),
+      409,
+      "already_on_plan",
+    );
+  });
+
+  it("409 no_active_subscription -> ManageApiError 409", async () => {
+    const session = makeSession({ token: "tok1" });
+    fetchMock.mockResolvedValueOnce(mockResponse(409, { detail: "no_active_subscription" }));
+
+    await expectManageError(
+      api.upgradePrecheckPlan(session, "precheck_advanced"),
+      409,
+      "no_active_subscription",
+    );
+  });
+
+  it("422 invalid plan -> ManageApiError 422", async () => {
+    const session = makeSession({ token: "tok1" });
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(
+        422,
+        { detail: [{ loc: ["body", "plan"], msg: "invalid" }] },
+        "Unprocessable Entity",
+      ),
+    );
+
+    await expectManageError(api.upgradePrecheckPlan(session, "precheck_advanced"), 422);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // catalogRequiresWhatsappCoexistence — truth table backing the pre-checkout
 // disclosure's PreCheck-only exclusion (CheckoutTrialNotice)
 // ---------------------------------------------------------------------------
@@ -1097,5 +1260,70 @@ describe("restartTestWindow", () => {
       409,
       "test_window_not_applicable",
     );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// submitLaunchWaitlist — the pre-launch buy gate's lead capture. Unauthenticated
+// (no Authorization header must ever be attached) and the ONLY network call the
+// gated pricing page makes, so its failure mode matters: the modal keeps the
+// visitor's data on screen and lets them retry, which depends on this rejecting
+// rather than resolving.
+// ---------------------------------------------------------------------------
+
+describe("submitLaunchWaitlist", () => {
+  it("POSTs /public/launch-waitlist unauthenticated and returns the confirmation", async () => {
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(201, { id: "lead-1", message: "Prontinho!" }),
+    );
+
+    const result = await api.submitLaunchWaitlist({
+      name: "Dr. Aurélio Lima",
+      email: "voce@clinica.com.br",
+      plan_hint: "secretaria_basico",
+    });
+
+    expect(result).toEqual({ id: "lead-1", message: "Prontinho!" });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const call = fetchMock.mock.calls[0];
+    expect(call[0]).toBe("/public/launch-waitlist");
+    expect(call[1].method).toBe("POST");
+    expect(call[1].headers.Authorization).toBeUndefined();
+    expect(JSON.parse(call[1].body)).toEqual({
+      name: "Dr. Aurélio Lima",
+      email: "voce@clinica.com.br",
+      plan_hint: "secretaria_basico",
+    });
+  });
+
+  it("sends plan_hint: null when the click carried no catalog hint", async () => {
+    fetchMock.mockResolvedValueOnce(mockResponse(201, { id: "lead-2", message: "ok" }));
+
+    await api.submitLaunchWaitlist({
+      name: "Dra. Ana",
+      email: "ana@clinica.com.br",
+      plan_hint: null,
+    });
+
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body).plan_hint).toBeNull();
+  });
+
+  it("rate limit -> ManageApiError 429 (modal shows the retry message)", async () => {
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(429, { detail: "Muitas solicitações. Tente novamente em instantes." }),
+    );
+
+    await expectManageError(
+      api.submitLaunchWaitlist({ name: "Dr. A", email: "a@clinica.com.br" }),
+      429,
+    );
+  });
+
+  it("network failure rejects (never a silent success that drops the lead)", async () => {
+    fetchMock.mockRejectedValueOnce(new Error("network down"));
+
+    await expect(
+      api.submitLaunchWaitlist({ name: "Dr. A", email: "a@clinica.com.br" }),
+    ).rejects.toThrow("network down");
   });
 });

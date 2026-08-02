@@ -6,10 +6,13 @@
 // field was removed from this UI — a hardcoded safety layer now lives in the
 // backend prompt instead of a clinic-editable field.
 //
-// Greeting buttons (2026-08 round): the WhatsApp first-contact buttons are no
-// longer clinic-editable text. secretarIA now ships a FIXED product-level
-// set — [Agendar] [Remarcar] [Cancelar] — routed deterministically
-// server-side (the LLM is never the default path). `greeting_buttons` was
+// Greeting buttons (2026-08 rounds): the WhatsApp first-contact buttons are
+// no longer clinic-editable text. secretarIA ships a FIXED product-level
+// set — now [Agendar] [Gerenciar consulta] [Outro] (the trio-gerenciar
+// round consolidated the old separate Remarcar/Cancelar slots into one
+// manage entry, freeing the third slot for "Outro", the explicit
+// talk-to-the-assistant escape). Agendar/Gerenciar route deterministically
+// server-side; Outro opens the LLM conversation. `greeting_buttons` was
 // REMOVED from TenantConfigWire (GET no longer returns it) and
 // TenantConfigUpdatePayload (PUT ignores it silently if sent) — see
 // lib/secretaria-hub.ts. FIXED_GREETING_BUTTONS below is purely local
@@ -28,7 +31,7 @@ const GREETING_MESSAGE_MAX_LENGTH = 1024;
 
 // Fixed product-level WhatsApp greeting buttons — see header comment. Order
 // matches the deterministic routing the backend documents.
-const FIXED_GREETING_BUTTONS = ["Agendar", "Remarcar", "Cancelar"];
+const FIXED_GREETING_BUTTONS = ["Agendar", "Gerenciar consulta", "Outro"];
 
 const LANGUAGE_OPTIONS: { value: string; label: string }[] = [
   { value: "pt-BR", label: "Português (Brasil)" },
@@ -77,8 +80,8 @@ function GreetingButtonsPreview() {
         ))}
       </div>
       <span style={{ fontSize: 11.5, color: "var(--ink-faint)", lineHeight: 1.5 }}>
-        Estes são os botões que seus pacientes veem na primeira mensagem — cada um inicia o
-        fluxo correspondente automaticamente.
+        Estes são os botões que seus pacientes veem na primeira mensagem — Agendar e Gerenciar
+        consulta iniciam os fluxos automáticos, e Outro abre a conversa livre com a assistente.
       </span>
     </div>
   );

@@ -19,6 +19,13 @@
 // billing/trial disclosure, since this card is where both flows above start.
 // Scoped to secretarIA-bearing purchases only (see
 // catalogRequiresWhatsappCoexistence); a PreCheck-only card shows nothing.
+//
+// PRE-LAUNCH GATE: because every purchasable card on the site routes its CTA
+// through this one component, it is also the single place the launch gate needs
+// to exist. While PRODUCT_LAUNCHED is false, handleClick short-circuits into
+// LaunchWaitlistModal before it looks at the session at all, and the trial
+// notice is suppressed (see below). Nothing about the card's own markup —
+// prices, copy, layout — changes either way.
 import { useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -29,7 +36,9 @@ import {
   type CatalogAddonId,
   type CatalogPlanId,
 } from "@/lib/manage-api";
+import { PRODUCT_LAUNCHED } from "../_lib/launch";
 import { CheckoutTrialNotice } from "./CheckoutTrialNotice";
+import { LaunchWaitlistModal } from "./LaunchWaitlistModal";
 
 export type PlanCheckoutCtaProps = {
   plan: CatalogPlanId;
@@ -72,6 +81,7 @@ export function PlanCheckoutCta({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [adminNotice, setAdminNotice] = useState(false);
+  const [waitlistOpen, setWaitlistOpen] = useState(false);
 
   // The authenticated path bills `plan` itself, which may not appear in the
   // anonymous-flow `catalogIds` list — include it so CheckoutTrialNotice sees
@@ -81,6 +91,14 @@ export function PlanCheckoutCta({
   async function handleClick() {
     setError(null);
     setAdminNotice(false);
+
+    // PRE-LAUNCH GATE — first thing, before the session is even read: while the
+    // product is not on sale, no click may reach /cadastro or Stripe Checkout,
+    // logged in or not. Collect the lead instead (app/(site)/_lib/launch.ts).
+    if (!PRODUCT_LAUNCHED) {
+      setWaitlistOpen(true);
+      return;
+    }
 
     const session = getSession();
     if (!session) {
@@ -133,8 +151,13 @@ export function PlanCheckoutCta({
       {/* Pre-checkout billing disclosure — must be visible before Stripe's
           hosted Checkout page, which this button can navigate straight to
           for a logged-in tenant. Renders nothing for a PreCheck-only
-          purchase (see catalogRequiresWhatsappCoexistence). */}
-      <CheckoutTrialNotice catalogIds={purchaseCatalogIds} />
+          purchase (see catalogRequiresWhatsappCoexistence).
+
+          Suppressed entirely behind the launch gate: it is a disclosure ABOUT
+          a checkout the button currently cannot reach, so showing it would
+          promise a trial nobody can start (and it would fire a
+          /public/checkout-config request per card for nothing). */}
+      {PRODUCT_LAUNCHED && <CheckoutTrialNotice catalogIds={purchaseCatalogIds} />}
 
       {secondaryHref && secondaryLabel && (
         <Link
@@ -156,6 +179,16 @@ export function PlanCheckoutCta({
           {error}
         </p>
       )}
+
+      {/* Pre-launch gate. Mounted unconditionally (it renders null while closed
+          and portals to <body> when open) so the launch flip is a one-line
+          change in _lib/launch.ts and nothing here. `planHint` records which
+          card was clicked — same id list the purchase would have carried. */}
+      <LaunchWaitlistModal
+        open={waitlistOpen}
+        onClose={() => setWaitlistOpen(false)}
+        planHint={purchaseCatalogIds.join(",")}
+      />
     </div>
   );
 }
