@@ -46,18 +46,34 @@ Round scope: two related pieces of brain-frontend work landed together this sess
   below); `buildConfigUpdatePayload` takes a 6th `gcalMode` param and includes
   `google_calendar_mode` in the PUT body.
 - **`configuracao/components/GoogleSection.tsx`** — new mode selector at the top of
-  Section 08: a `Segmented<GoogleCalendarMode>` control ("Por profissional" / "Conta única
-  da clínica") + a 1–2 sentence explanation that switches with the selection (the
-  `shared_account` copy explicitly recommends an institutional clinic account, never a
-  personal Gmail — "ela passa a ser dona das agendas de todos os profissionais") + a fixed
-  footnote ("trocar de modo agora não desconecta nada — só muda o fluxo de conexão
-  oferecido daqui pra frente"). The disconnected-state card gets one extra reinforcing line
-  when `mode === "shared_account"`. New props: `onModeChange` (a plain local setter,
-  batched into the SAME "Salvar configuração" PUT as every other field on this page — not
-  its own save action) and `readOnly` (disables the selector while the hub is unreachable,
-  same convention as every other section).
+  Section 08 ("Por profissional" / "Conta única da clínica") + a 1–2 sentence explanation
+  per option (the `shared_account` copy explicitly recommends an institutional clinic
+  account, never a personal Gmail — "ela passa a ser dona das agendas de todos os
+  profissionais") + a fixed footnote ("trocar de modo agora não desconecta nada — só muda
+  o fluxo de conexão oferecido daqui pra frente"). The disconnected-state card gets one
+  extra reinforcing line when `mode === "shared_account"`. New props: `onModeChange` (a
+  plain local setter, batched into the SAME "Salvar configuração" PUT as every other field
+  on this page — not its own save action) and `readOnly` (disables the selector while the
+  hub is unreachable, same convention as every other section).
+
+  **Rework 2026-08-02 — visual only, `onModeChange`/`gcal.mode`/`readOnly` untouched.**
+  The selector was a `Segmented` pill sitting inside a full-width rounded `<div>` that had
+  no `onClick`, no `cursor`, no role: the big box read as the control while only the small
+  pill inside it was clickable. It is now a `RadioPillGroup` — two full-width
+  `<label>` + `<input type="radio">` cards where the whole card is the click/tap target and
+  each option carries its own explanation, so the visitor knows what each mode does BEFORE
+  choosing. The decorative wrapper is gone (the option cards themselves are the rounded
+  surfaces now); the `shared_account` institutional-account warning stays as a separate
+  line that appears on selection, since it is a consequence, not a description.
+- **`_components/RadioPillGroup.tsx`** — promoted out of `cadastro/_components/` (same
+  file, moved) when GoogleSection became its second caller; gained an optional `disabled`
+  prop backing `readOnly`, plus `.radio-pill.is-disabled` in `brand-ds.css`. The three
+  `/cadastro` intake steps import it from the new path; markup and styling are unchanged
+  for them. Works on the product routes because `.radio-pill--block` lives in
+  `brand-ds.css`, which the `(site)` layout loads for `/secretaria/configuracao` too.
 - **`_shared/ui.tsx`** — `Segmented` gained an optional `disabled` prop (small additive
-  change used by the above; every existing call site is unaffected).
+  change; it was used by the mode selector until the 2026-08-02 rework above and is kept —
+  every other call site is unaffected).
 - **`configuracao/components/ProfessionalsSection.tsx`** — the roster is now mode-aware:
   - New props: `googleCalendarMode`, `clinicCalendarConnected` (= `gcal.connected`),
     `googleCalendarIdByProfessional` (professional id -> `ProfessionalWire.google_calendar_id`,

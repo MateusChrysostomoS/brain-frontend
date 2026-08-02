@@ -22,10 +22,13 @@
 //
 // PRE-LAUNCH GATE: because every purchasable card on the site routes its CTA
 // through this one component, it is also the single place the launch gate needs
-// to exist. While PRODUCT_LAUNCHED is false, handleClick short-circuits into
-// LaunchWaitlistModal before it looks at the session at all, and the trial
-// notice is suppressed (see below). Nothing about the card's own markup —
-// prices, copy, layout — changes either way.
+// to exist — and, for the same reason, the gate must be asked PER PRODUCT and
+// not as a global boolean (a global one blocked PreCheck too, which is on
+// sale). isPurchaseGated answers that for the ids this particular card carries:
+// while it is true, handleClick short-circuits into LaunchWaitlistModal before
+// it looks at the session at all, and the trial notice is suppressed (see
+// below). Nothing about the card's own markup — prices, copy, layout — changes
+// either way.
 import { useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -36,7 +39,7 @@ import {
   type CatalogAddonId,
   type CatalogPlanId,
 } from "@/lib/manage-api";
-import { PRODUCT_LAUNCHED } from "../_lib/launch";
+import { isPurchaseGated } from "../_lib/launch";
 import { CheckoutTrialNotice } from "./CheckoutTrialNotice";
 import { LaunchWaitlistModal } from "./LaunchWaitlistModal";
 
@@ -88,14 +91,19 @@ export function PlanCheckoutCta({
   // the full purchase when deciding whether it's secretarIA-bearing.
   const purchaseCatalogIds = Array.from(new Set([plan, ...catalogIds]));
 
+  // Whether THIS card's purchase is still behind the launch gate. Scoped to the
+  // product being bought, so a PreCheck card checks out normally while a
+  // secretarIA one still collects a lead (app/(site)/_lib/launch.ts).
+  const gated = isPurchaseGated(purchaseCatalogIds);
+
   async function handleClick() {
     setError(null);
     setAdminNotice(false);
 
-    // PRE-LAUNCH GATE — first thing, before the session is even read: while the
-    // product is not on sale, no click may reach /cadastro or Stripe Checkout,
-    // logged in or not. Collect the lead instead (app/(site)/_lib/launch.ts).
-    if (!PRODUCT_LAUNCHED) {
+    // PRE-LAUNCH GATE — first thing, before the session is even read: while
+    // this product is not on sale, no click may reach /cadastro or Stripe
+    // Checkout, logged in or not. Collect the lead instead.
+    if (gated) {
       setWaitlistOpen(true);
       return;
     }
@@ -157,7 +165,7 @@ export function PlanCheckoutCta({
           a checkout the button currently cannot reach, so showing it would
           promise a trial nobody can start (and it would fire a
           /public/checkout-config request per card for nothing). */}
-      {PRODUCT_LAUNCHED && <CheckoutTrialNotice catalogIds={purchaseCatalogIds} />}
+      {!gated && <CheckoutTrialNotice catalogIds={purchaseCatalogIds} />}
 
       {secondaryHref && secondaryLabel && (
         <Link

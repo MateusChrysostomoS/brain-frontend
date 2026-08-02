@@ -7,7 +7,7 @@
 // instead, same non-blocking pattern as PriorApiStep's "yes" branch.
 
 import { StepHeading, StepActions } from "./WizardShell";
-import { RadioPillGroup } from "./RadioPillGroup";
+import { RadioPillGroup } from "../../_components/RadioPillGroup";
 import type { SignupIntakeFbPage } from "@/lib/manage-api";
 
 const OPTIONS: { value: SignupIntakeFbPage; label: string; hint?: string }[] = [

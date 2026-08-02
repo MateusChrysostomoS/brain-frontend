@@ -1,7 +1,7 @@
 # Graph Report - brain-frontend  (2026-08-02)
 
 ## Corpus Check
-- 180 files · ~125,905 words
+- 180 files · ~125,758 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -182,16 +182,16 @@ Cohesion: 0.06
 Nodes (43): formatDatePtBR(), PrecheckBillingSection(), PrecheckBillingSectionProps, durationMinutes(), formatDateTimePtBR(), formatTimePtBR(), isSameLocalDay(), isTodayLocal() (+35 more)
 
 ### Community 18 - "calendar.tsx"
-Cohesion: 0.15
-Nodes (10): AvailabilitySection(), AvailabilitySectionProps, DayRowProps, TIME_LIST, CToggle(), CToggleProps, ToggleRow(), ToggleRowProps (+2 more)
+Cohesion: 0.18
+Nodes (8): AvailabilitySection(), AvailabilitySectionProps, DayRowProps, TIME_LIST, CToggle(), CToggleProps, DayConfig, Prefs
 
 ### Community 19 - "page.tsx"
 Cohesion: 0.22
 Nodes (6): ContactForm(), ContactFormProps, FormState, DemoProductInterest, DemoProfile, submitDemoRequest()
 
 ### Community 20 - "modals.tsx"
-Cohesion: 0.22
-Nodes (8): DURATION_OPTIONS, RequirementRowProps, ServiceCard(), ServiceCardProps, ServicesSection(), ServicesSectionProps, Requirement, Service
+Cohesion: 0.33
+Nodes (5): GoogleGlyph(), GoogleSection(), GoogleSectionProps, GcalState, GoogleCalendarMode
 
 ### Community 21 - "PlanCheckoutCta.tsx"
 Cohesion: 0.12
@@ -214,8 +214,8 @@ Cohesion: 0.40
 Nodes (4): CHECKPOINT — secretarIA Agenda mock purge (de-demo round), Pendências / follow-ups, Tested, What changed
 
 ### Community 26 - "page.tsx"
-Cohesion: 0.16
-Nodes (13): AddressFields(), AddressFieldsProps, ContextSection(), ContextSectionProps, GoogleGlyph(), GoogleSection(), GoogleSectionProps, ClinicCtx (+5 more)
+Cohesion: 0.13
+Nodes (14): AddressFields(), AddressFieldsProps, ContextSection(), ContextSectionProps, NumberFieldProps, PixSection(), PixSectionProps, ToggleRow() (+6 more)
 
 ### Community 27 - "page.tsx"
 Cohesion: 0.14
@@ -287,7 +287,7 @@ Nodes (3): brain-frontend, Documentação — manter em dia (obrigatório), grap
 
 ### Community 57 - "ProfessionalsSection.tsx"
 Cohesion: 0.07
-Nodes (31): CSelect(), CSelectProps, CToast(), CToastProps, FIXED_GREETING_BUTTONS, LANGUAGE_OPTIONS, MessagesSection(), MessagesSectionProps (+23 more)
+Nodes (35): CSelect(), CSelectProps, CToast(), CToastProps, FIXED_GREETING_BUTTONS, LANGUAGE_OPTIONS, MessagesSection(), MessagesSectionProps (+27 more)
 
 ### Community 60 - "page.tsx"
 Cohesion: 0.14

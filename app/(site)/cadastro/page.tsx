@@ -8,19 +8,19 @@
 // useSearchParams requires it (same pattern as /checkout/sucesso).
 //
 // PRE-LAUNCH GATE (see app/(site)/_lib/launch.ts): PlanCheckoutCta stops the buy
-// buttons before they ever navigate here, but it is NOT the only door — the
-// homepage's "PreCheck Advanced" upsell links straight to
-// /cadastro?plan=precheck_advanced, and any bookmark or stale link does the
-// same. So the wizard itself is gated too: while PRODUCT_LAUNCHED is false this
-// route never renders CadastroWizard (no registration, no signup intent, no
-// Stripe) and offers the same waitlist capture the modal does instead.
+// buttons before they ever navigate here, but it is NOT the only door — a
+// bookmark or a stale marketing link reaches this route directly. So the wizard
+// itself is gated too, with the SAME per-product rule the CTA uses: a
+// secretarIA-bearing `?plan=` never renders CadastroWizard (no registration, no
+// signup intent, no Stripe) and offers the waitlist capture instead, while a
+// PreCheck link goes straight through to the wizard.
 
 import Link from "next/link";
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { BrandGlyph } from "../_components/BrandGlyph";
 import { LaunchWaitlistForm } from "../_components/LaunchWaitlistForm";
-import { PRODUCT_LAUNCHED } from "../_lib/launch";
+import { isPurchaseGated } from "../_lib/launch";
 import { CadastroWizard } from "./_components/CadastroWizard";
 import { resolvePlan } from "./lib/plans";
 import "../checkout/checkout.css";
@@ -37,11 +37,13 @@ function CadastroInner() {
   const searchParams = useSearchParams();
   const plan = resolvePlan(searchParams);
 
-  // Checked BEFORE the plan is validated: while the gate is shut it makes no
-  // difference whether the link carried a good plan id — nothing here can be
-  // bought either way, and "Estamos quase lá" is the more honest answer than
-  // "Plano não encontrado".
-  if (!PRODUCT_LAUNCHED) {
+  // Checked AFTER the plan is resolved — the gate is per product now, so which
+  // plan the link carried is exactly what decides the answer. An unknown plan
+  // id falls through to "Plano não encontrado" below (the honest answer once
+  // part of the catalog is genuinely purchasable). `planId` is included
+  // alongside `catalogIds` for the same reason PlanCheckoutCta does it: a
+  // `?catalog=` list may name add-ons only, never contradicting the plan.
+  if (plan && isPurchaseGated([plan.planId, ...plan.catalogIds])) {
     return (
       <>
         <BrandHeader />
@@ -56,9 +58,9 @@ function CadastroInner() {
             </p>
             <div className="mt-m" style={{ textAlign: "left" }}>
               <LaunchWaitlistForm
-                // The plan the link asked for, when it named a valid one — same
-                // sales hint the modal sends from a card click.
-                planHint={plan?.catalogIds.join(",") ?? null}
+                // The gated plan the link asked for — same sales hint the modal
+                // sends from a card click.
+                planHint={plan.catalogIds.join(",")}
                 doneAction={
                   <Link href="/#planos" className="btn btn--outline btn--block mt-m">
                     Ver planos

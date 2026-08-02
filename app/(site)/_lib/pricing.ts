@@ -4,7 +4,11 @@
 // module just keeps "R$ ..." literals and catalog id lists out of JSX so
 // page.tsx never hardcodes a price string.
 
-export type PricingPlanKey = "precheck" | "secretaria" | "combo";
+export type PricingPlanKey =
+  | "precheck"
+  | "precheckAdvanced"
+  | "secretaria"
+  | "combo";
 
 export type PricingPlan = {
   name: string;
@@ -21,12 +25,31 @@ export const PRICING: Record<PricingPlanKey, PricingPlan> = {
   precheck: {
     name: "PreCheck Basic",
     tagline: "Pré-consulta no WhatsApp",
-    amount: "R$ 120,00",
+    amount: "R$ 59,99",
     unit: "/mês",
     // Renamed from the legacy bare "precheck" id — see cadastro/lib/plans.ts.
-    // A secondary link on the card points interested visitors at the
-    // precheck_advanced tier (higher monthly quota) instead of a second card.
     catalogIds: ["precheck_basic"],
+  },
+  // Second purchasable PreCheck tier (2026-08-01 PreCheck-billing split). Both
+  // tiers are fully active in brain-api's catalog and differ ONLY in the monthly
+  // consultation quota (PLAN_PRECHECK_BASIC/ADVANCED, base_limits
+  // LIMIT_PRECHECK_CONSULTATIONS), so this renders as a real fourth PriceCard
+  // rather than the secondary text link it used to be — a plan the site never
+  // priced could not be compared, only stumbled into.
+  //
+  // The quotas quoted on both PreCheck cards (50 / 150 per month) are the
+  // COMMERCIAL numbers; what brain-api actually enforces is
+  // PRECHECK_BASIC_CONSULTATIONS_PER_MONTH / PRECHECK_ADVANCED_CONSULTATIONS_PER_MONTH
+  // (deployed env, code default still 100/300). They must be set to match — a
+  // card promising 50 while the backend grants 100 is a silent giveaway.
+  precheckAdvanced: {
+    name: "PreCheck Advanced",
+    tagline: "Mais volume de pré-consultas",
+    // Display-only, like every amount in this file: the charged value is the
+    // Stripe Price behind STRIPE_PRICE_MAP["precheck_advanced"], not this string.
+    amount: "R$ 169,99",
+    unit: "/mês",
+    catalogIds: ["precheck_advanced"],
   },
   secretaria: {
     name: "Plano secretarIA",

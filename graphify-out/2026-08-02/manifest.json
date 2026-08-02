@@ -235,8 +235,8 @@
     "semantic_hash": ""
   },
   "app/(site)/_lib/pricing.ts": {
-    "mtime": 1785703451.1581001,
-    "ast_hash": "e8fbb9d7e1e27f2ae2a907ad5f15fe15",
+    "mtime": 1785702175.2308576,
+    "ast_hash": "bc8658aabb18bb914527f793210301dd",
     "semantic_hash": ""
   },
   "app/(site)/admin/dashboard/page.tsx": {
@@ -315,8 +315,8 @@
     "semantic_hash": ""
   },
   "app/(site)/page.tsx": {
-    "mtime": 1785703456.1988266,
-    "ast_hash": "0d1d312d34202182feb99b5570294000",
+    "mtime": 1785702418.8863232,
+    "ast_hash": "1217073e5997631dbb337f498f1dd782",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/_shared/Header.tsx": {
@@ -875,8 +875,8 @@
     "semantic_hash": ""
   },
   "docs/CHECKPOINT_precheck_billing_portal.md": {
-    "mtime": 1785703498.194074,
-    "ast_hash": "1662a42f195e891435111a244039b634",
+    "mtime": 1785702667.8168235,
+    "ast_hash": "fda8bb4aec40868d9aa8e1bd84eba8cf",
     "semantic_hash": ""
   },
   "app/(site)/_components/LaunchWaitlistForm.tsx": {

@@ -1,6 +1,9 @@
 # CHECKPOINT — Launch waitlist (pre-launch buy gate, frontend half)
 
 Status: **BUILT + tested + verified in the browser (2026-08-01)**, UNCOMMITTED, not deployed.
+**Amended 2026-08-02: the gate is now SCOPED TO secretarIA, not global — see "Scoping"
+below.** PreCheck (Basic and Advanced) checks out normally; only secretarIA-bearing
+purchases still hit the waitlist.
 
 ```
 .\node_modules\.bin\tsc.cmd --noEmit      # clean
@@ -28,9 +31,31 @@ exported, so an env read would either be baked in at build time anyway (same eff
 invisible in the diff) or force a runtime fetch onto a page that must not wait on the
 network to decide whether a button works.
 
+## Scoping — which purchases the gate applies to (2026-08-02)
+
+The flag above stayed, but it is no longer consulted directly by the two doors. Both now
+call one helper, also in `_lib/launch.ts`:
+
+```ts
+export function isPurchaseGated(catalogIds: string[]): boolean {
+  if (PRODUCT_LAUNCHED) return false;
+  return catalogRequiresWhatsappCoexistence(catalogIds);   // lib/manage-api.ts
+}
+```
+
+**Why:** the original global boolean was correct about the mechanism (one component owns
+every buy button) and wrong about the commercial reality — it also blocked PreCheck, which
+is on sale. The two products launch independently: what is not ready is secretarIA's
+WhatsApp Coexistence approval, which is exactly what
+`catalogRequiresWhatsappCoexistence` already identifies (every `secretaria*` plan + the
+combo, mirroring brain-api's catalog). Reusing it means the gate and the pre-checkout
+trial disclosure can never disagree about what "a secretarIA purchase" is.
+
+Flipping `PRODUCT_LAUNCHED` to `true` still opens everything at once, as before.
+
 ## What the gate does
 
-Two doors, both reading `PRODUCT_LAUNCHED`:
+Two doors, both calling `isPurchaseGated` with the ids of the purchase at hand:
 
 ### Door 1 — `_components/PlanCheckoutCta.tsx` (the buy buttons)
 
@@ -39,28 +64,33 @@ and `/secretaria`) renders this one component as its `cta`. The gate is the FIRS
 `handleClick()`, before the session is even read:
 
 ```
-if (!PRODUCT_LAUNCHED) { setWaitlistOpen(true); return; }
+const gated = isPurchaseGated(purchaseCatalogIds);   // plan + catalogIds
+...
+if (gated) { setWaitlistOpen(true); return; }
 ```
 
-So neither the anonymous path (`/cadastro`) nor the logged-in path
-(`createCheckoutSession` → Stripe) is reachable. `<CheckoutTrialNotice />` is also
-suppressed while gated — it is a disclosure about a checkout the button cannot reach, and
-leaving it would promise a trial nobody can start (and fire a `/public/checkout-config`
-request per card for nothing).
+For a gated card neither the anonymous path (`/cadastro`) nor the logged-in path
+(`createCheckoutSession` → Stripe) is reachable; for a PreCheck card both work normally.
+`<CheckoutTrialNotice />` is suppressed on the same condition — it is a disclosure about a
+checkout the button cannot reach, and leaving it would promise a trial nobody can start.
+(On an ungated PreCheck card it now mounts but renders nothing and fires no
+`/public/checkout-config` request, since `catalogRequiresWhatsappCoexistence` is false
+there too.)
 
 ### Door 2 — `cadastro/page.tsx` (the signup wizard route)
 
 **Not in the original spec — added because the premise "PlanCheckoutCta is the single
-purchase entry point" turned out not to hold.** `app/(site)/page.tsx:350` renders a
-"Precisa de mais volume? Conheça o PreCheck Advanced →" link pointing straight at
-`/cadastro?plan=precheck_advanced`, bypassing the CTA entirely. Bookmarks and stale
-marketing links do the same.
+purchase entry point" turned out not to hold.** Bookmarks and stale marketing links reach
+`/cadastro?plan=...` directly. (Until 2026-08-02 the pricing page itself did too, via a
+"Conheça o PreCheck Advanced →" text link — that link is gone now that Advanced has a real
+card.)
 
-Rather than edit the pricing page (explicitly out of scope — it stays byte-identical),
-the wizard route itself is gated: while `PRODUCT_LAUNCHED` is false, `/cadastro` never
-renders `CadastroWizard` (no registration, no signup intent, no Stripe) and shows the same
-waitlist capture inline instead. Checked BEFORE the plan id is validated, so a bad link
-gets "Estamos quase lá" rather than the more confusing "Plano não encontrado".
+So the wizard route is gated on the same per-product rule: a secretarIA-bearing `?plan=`
+never renders `CadastroWizard` (no registration, no signup intent, no Stripe) and shows the
+waitlist capture inline instead, while `?plan=precheck_basic|precheck_advanced` goes
+straight through. Checked AFTER `resolvePlan`, because which plan the link carried is now
+what decides the answer; an unknown plan id therefore gets "Plano não encontrado" (it used
+to get "Estamos quase lá", which was the honest answer only while nothing was for sale).
 
 ## Components
 
@@ -126,23 +156,37 @@ Both pricing pages, both themes:
 - `CheckoutTrialNotice` absent and **zero `/public/checkout-config` requests** while gated.
 - Console clean (no errors/warnings).
 
+### Re-verified after the 2026-08-02 scoping (dev server)
+
+- "Contratar secretarIA" → modal "Estamos quase lá", URL unchanged. **Not regressed.**
+- "Contratar Basic" / "Contratar Advanced" → no modal; navigates to
+  `/cadastro?plan=precheck_advanced&catalog=precheck_advanced` and the wizard renders
+  ("Vamos criar sua conta").
+- `/cadastro?plan=secretaria_basico` opened directly → still "Estamos quase lá", no wizard.
+
 Nothing was sent to the deployed brain-api: `fetch` was stubbed for the submit tests
 (`.env.local` points at `secretaria-brain-api.cpux9k.easypanel.host`, and the endpoint is
 not deployed there yet).
 
-## Pricing screen — unchanged
+## Pricing screen
 
-`PriceCard.tsx`, `_lib/pricing.ts`, prices, copy and layout were **not** touched. The only
-visual difference while gated is the deliberately suppressed `CheckoutTrialNotice` line
-under the buy button.
+Untouched by the original round (the only visual difference while gated was the suppressed
+`CheckoutTrialNotice` line). **Changed on 2026-08-02 for a different reason** — PreCheck
+Advanced became a real fourth `PriceCard` and the pricing grid went to 4 columns; see
+`CHECKPOINT_precheck_billing_portal.md`.
 
 ## Pendências
 
 - [ ] Deploy brain-api first (this frontend calls `POST /public/launch-waitlist`; until it
       exists the modal shows its error state and captures nothing).
 - [ ] Apply brain-api migration `0011_launch_waitlist`.
-- [ ] On launch day: set `PRODUCT_LAUNCHED = true` in `app/(site)/_lib/launch.ts`, rebuild,
-      deploy. Nothing else.
-- [ ] Optional follow-up: if you'd rather the "PreCheck Advanced" upsell open the modal
-      in place (instead of navigating to the gated `/cadastro`), that needs a small change
-      to `app/(site)/page.tsx` — left alone here because the plans screen was out of scope.
+- [ ] On secretarIA launch day: set `PRODUCT_LAUNCHED = true` in
+      `app/(site)/_lib/launch.ts`, rebuild, deploy. Nothing else.
+- [x] ~~Optional follow-up: make the "PreCheck Advanced" upsell open the modal in place~~ —
+      moot since 2026-08-02: the upsell link is gone (Advanced is a real card) and PreCheck
+      is no longer gated at all.
+- [ ] PreCheck now checks out for real from the landing page, so its Stripe Prices
+      (`precheck_basic` / `precheck_advanced` in `STRIPE_PRICE_MAP`) must actually exist in
+      the deployed environment before this ships — otherwise the button reaches Checkout
+      and gets 503 `price_not_configured`. See
+      `brain-api/docs/CHECKPOINT_precheck_billing.md`.

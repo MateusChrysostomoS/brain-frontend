@@ -6120,7 +6120,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_googleglyph",
-      "community": 26,
+      "community": 20,
       "norm_label": "googleglyph.tsx"
     },
     {
@@ -6130,7 +6130,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_googleglyph_googleglyph",
-      "community": 26,
+      "community": 20,
       "norm_label": "googleglyph()"
     },
     {
@@ -6140,7 +6140,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_googlesection",
-      "community": 26,
+      "community": 20,
       "norm_label": "googlesection.tsx"
     },
     {
@@ -6150,7 +6150,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_googlesection_googlesectionprops",
-      "community": 26,
+      "community": 20,
       "norm_label": "googlesectionprops"
     },
     {
@@ -6160,7 +6160,7 @@
       "source_location": "L62",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_googlesection_googlesection",
-      "community": 26,
+      "community": 20,
       "norm_label": "googlesection()"
     },
     {
@@ -6260,7 +6260,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_pixsection",
-      "community": 57,
+      "community": 26,
       "norm_label": "pixsection.tsx"
     },
     {
@@ -6270,7 +6270,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_pixsection_pixsectionprops",
-      "community": 57,
+      "community": 26,
       "norm_label": "pixsectionprops"
     },
     {
@@ -6280,7 +6280,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_pixsection_numberfieldprops",
-      "community": 57,
+      "community": 26,
       "norm_label": "numberfieldprops"
     },
     {
@@ -6290,7 +6290,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_pixsection_numberfield",
-      "community": 57,
+      "community": 26,
       "norm_label": "numberfield()"
     },
     {
@@ -6300,7 +6300,7 @@
       "source_location": "L97",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_pixsection_asaasstatuspill",
-      "community": 57,
+      "community": 26,
       "norm_label": "asaasstatuspill()"
     },
     {
@@ -6310,7 +6310,7 @@
       "source_location": "L124",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_pixsection_pixsection",
-      "community": 57,
+      "community": 26,
       "norm_label": "pixsection()"
     },
     {
@@ -6440,7 +6440,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_servicecard",
-      "community": 20,
+      "community": 57,
       "norm_label": "servicecard.tsx"
     },
     {
@@ -6450,7 +6450,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_servicecard_duration_options",
-      "community": 20,
+      "community": 57,
       "norm_label": "duration_options"
     },
     {
@@ -6460,7 +6460,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_servicecard_requirementrowprops",
-      "community": 20,
+      "community": 57,
       "norm_label": "requirementrowprops"
     },
     {
@@ -6470,7 +6470,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_servicecard_requirementrow",
-      "community": 20,
+      "community": 57,
       "norm_label": "requirementrow()"
     },
     {
@@ -6480,7 +6480,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_servicecard_servicecardprops",
-      "community": 20,
+      "community": 57,
       "norm_label": "servicecardprops"
     },
     {
@@ -6490,7 +6490,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_servicecard_servicecard",
-      "community": 20,
+      "community": 57,
       "norm_label": "servicecard()"
     },
     {
@@ -6500,7 +6500,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_servicessection",
-      "community": 20,
+      "community": 57,
       "norm_label": "servicessection.tsx"
     },
     {
@@ -6510,7 +6510,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_servicessection_servicessectionprops",
-      "community": 20,
+      "community": 57,
       "norm_label": "servicessectionprops"
     },
     {
@@ -6520,7 +6520,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_servicessection_servicessection",
-      "community": 20,
+      "community": 57,
       "norm_label": "servicessection()"
     },
     {
@@ -6580,7 +6580,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_togglerow",
-      "community": 18,
+      "community": 26,
       "norm_label": "togglerow.tsx"
     },
     {
@@ -6590,7 +6590,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_togglerow_togglerowprops",
-      "community": 18,
+      "community": 26,
       "norm_label": "togglerowprops"
     },
     {
@@ -6600,7 +6600,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_components_togglerow_togglerow",
-      "community": 18,
+      "community": 26,
       "norm_label": "togglerow()"
     },
     {
@@ -6860,7 +6860,7 @@
       "source_location": "L74",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_lib_types_pixdeposit",
-      "community": 57,
+      "community": 26,
       "norm_label": "pixdeposit"
     },
     {
@@ -6900,7 +6900,7 @@
       "source_location": "L127",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_lib_types_requirement",
-      "community": 20,
+      "community": 57,
       "norm_label": "requirement"
     },
     {
@@ -6910,7 +6910,7 @@
       "source_location": "L132",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_lib_types_service",
-      "community": 20,
+      "community": 57,
       "norm_label": "service"
     },
     {
@@ -6950,7 +6950,7 @@
       "source_location": "L180",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_lib_types_googlecalendarmode",
-      "community": 26,
+      "community": 20,
       "norm_label": "googlecalendarmode"
     },
     {
@@ -6960,7 +6960,7 @@
       "source_location": "L182",
       "_origin": "ast",
       "id": "app_site_secretaria_configuracao_lib_types_gcalstate",
-      "community": 26,
+      "community": 20,
       "norm_label": "gcalstate"
     },
     {
@@ -11357,7 +11357,7 @@
       "label": "Frente B \u2014 port de `/metrics` e `/users`, `DashNav` sens\u00edvel a papel",
       "file_type": "document",
       "source_file": "docs/CHECKPOINT_precheck_billing_portal.md",
-      "source_location": "L156",
+      "source_location": "L144",
       "_origin": "ast",
       "id": "docs_checkpoint_precheck_billing_portal_frente_b_port_de_metrics_e_users_dashnav_sens\u00edvel_a_papel",
       "community": 69,
@@ -11367,7 +11367,7 @@
       "label": "Reuso vs. duplica\u00e7\u00e3o",
       "file_type": "document",
       "source_file": "docs/CHECKPOINT_precheck_billing_portal.md",
-      "source_location": "L217",
+      "source_location": "L205",
       "_origin": "ast",
       "id": "docs_checkpoint_precheck_billing_portal_reuso_vs_duplica\u00e7\u00e3o",
       "community": 69,
@@ -11377,7 +11377,7 @@
       "label": "Testado",
       "file_type": "document",
       "source_file": "docs/CHECKPOINT_precheck_billing_portal.md",
-      "source_location": "L233",
+      "source_location": "L221",
       "_origin": "ast",
       "id": "docs_checkpoint_precheck_billing_portal_testado",
       "community": 69,
@@ -11387,7 +11387,7 @@
       "label": "Notas para o operador",
       "file_type": "document",
       "source_file": "docs/CHECKPOINT_precheck_billing_portal.md",
-      "source_location": "L254",
+      "source_location": "L242",
       "_origin": "ast",
       "id": "docs_checkpoint_precheck_billing_portal_notas_para_o_operador",
       "community": 69,
@@ -11397,7 +11397,7 @@
       "label": "Pend\u00eancias / follow-ups",
       "file_type": "document",
       "source_file": "docs/CHECKPOINT_precheck_billing_portal.md",
-      "source_location": "L272",
+      "source_location": "L260",
       "_origin": "ast",
       "id": "docs_checkpoint_precheck_billing_portal_pend\u00eancias_follow_ups",
       "community": 69,
@@ -36068,7 +36068,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/CHECKPOINT_precheck_billing_portal.md",
-      "source_location": "L254",
+      "source_location": "L242",
       "weight": 1.0,
       "source": "docs_checkpoint_precheck_billing_portal_checkpoint_portal_de_cobran\u00e7a_do_precheck_port_de_metrics_e_users",
       "target": "docs_checkpoint_precheck_billing_portal_notas_para_o_operador",
@@ -36088,7 +36088,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/CHECKPOINT_precheck_billing_portal.md",
-      "source_location": "L272",
+      "source_location": "L260",
       "weight": 1.0,
       "source": "docs_checkpoint_precheck_billing_portal_checkpoint_portal_de_cobran\u00e7a_do_precheck_port_de_metrics_e_users",
       "target": "docs_checkpoint_precheck_billing_portal_pend\u00eancias_follow_ups",
@@ -36098,7 +36098,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/CHECKPOINT_precheck_billing_portal.md",
-      "source_location": "L233",
+      "source_location": "L221",
       "weight": 1.0,
       "source": "docs_checkpoint_precheck_billing_portal_checkpoint_portal_de_cobran\u00e7a_do_precheck_port_de_metrics_e_users",
       "target": "docs_checkpoint_precheck_billing_portal_testado",
@@ -36118,7 +36118,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/CHECKPOINT_precheck_billing_portal.md",
-      "source_location": "L156",
+      "source_location": "L144",
       "weight": 1.0,
       "source": "docs_checkpoint_precheck_billing_portal_o_que_mudou",
       "target": "docs_checkpoint_precheck_billing_portal_frente_b_port_de_metrics_e_users_dashnav_sens\u00edvel_a_papel",
@@ -36128,7 +36128,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/CHECKPOINT_precheck_billing_portal.md",
-      "source_location": "L217",
+      "source_location": "L205",
       "weight": 1.0,
       "source": "docs_checkpoint_precheck_billing_portal_o_que_mudou",
       "target": "docs_checkpoint_precheck_billing_portal_reuso_vs_duplica\u00e7\u00e3o",

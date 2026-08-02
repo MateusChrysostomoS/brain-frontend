@@ -321,7 +321,7 @@ export default function BrainHomePage() {
           </div>
 
           <div className="price-grid">
-            {/* PreCheck plan — self-service checkout wired for anonymous visitors */}
+            {/* PreCheck Basic — self-service checkout wired for anonymous visitors */}
             <Reveal>
               <PriceCard
                 name={PRICING.precheck.name}
@@ -329,39 +329,58 @@ export default function BrainHomePage() {
                 amount={PRICING.precheck.amount}
                 unit={PRICING.precheck.unit}
                 features={[
+                  "50 pré-consultas por mês",
                   "Anamnese guiada por IA",
                   "Resumo estruturado + alertas",
-                  "Análise de exames por foto",
                   "Painel clínico PreCheck",
                 ]}
                 ctaLabel="Falar com a Brain"
                 ctaHref="#contato"
                 cta={
-                  <>
-                    <PlanCheckoutCta
-                      plan="precheck_basic"
-                      catalogIds={PRICING.precheck.catalogIds ?? []}
-                      label="Contratar PreCheck Basic"
-                      secondaryHref="#contato"
-                      secondaryLabel="Falar com a Brain"
-                    />
-                    {/* Higher-quota tier — kept as a secondary link rather than a
-                        fourth card so the 3-column price-grid layout stays intact. */}
-                    <Link
-                      href="/cadastro?plan=precheck_advanced"
-                      className="muted"
-                      style={{ display: "inline-block", fontSize: 12.5, marginTop: 10 }}
-                    >
-                      Precisa de mais volume? Conheça o PreCheck Advanced →
-                    </Link>
-                  </>
+                  <PlanCheckoutCta
+                    plan="precheck_basic"
+                    catalogIds={PRICING.precheck.catalogIds ?? []}
+                    label="Contratar Basic"
+                    secondaryHref="#contato"
+                    secondaryLabel="Falar com a Brain"
+                  />
+                }
+              />
+            </Reveal>
+
+            {/* PreCheck Advanced — same checkout flow as Basic, higher monthly
+                quota. Was a secondary text link under the Basic card until
+                2026-08-02; a purchasable plan the grid never priced read as
+                "not for sale", so it is a full card now. */}
+            <Reveal delay={1}>
+              <PriceCard
+                name={PRICING.precheckAdvanced.name}
+                tagline={PRICING.precheckAdvanced.tagline}
+                amount={PRICING.precheckAdvanced.amount}
+                unit={PRICING.precheckAdvanced.unit}
+                features={[
+                  "150 pré-consultas por mês",
+                  "Tudo do PreCheck Basic",
+                  "Pré-consultas avulsas quando precisar",
+                  "Upgrade imediato pelo painel",
+                ]}
+                ctaLabel="Falar com a Brain"
+                ctaHref="#contato"
+                cta={
+                  <PlanCheckoutCta
+                    plan="precheck_advanced"
+                    catalogIds={PRICING.precheckAdvanced.catalogIds ?? []}
+                    label="Contratar Advanced"
+                    secondaryHref="#contato"
+                    secondaryLabel="Falar com a Brain"
+                  />
                 }
               />
             </Reveal>
 
             {/* Brain Completo (featured) — plain sum of the two plans; no Stripe
                 Price configured yet, so the CTA stays consultant-only. */}
-            <Reveal delay={1}>
+            <Reveal delay={2}>
               <PriceCard
                 name={PRICING.combo.name}
                 tagline={PRICING.combo.tagline}
@@ -381,7 +400,7 @@ export default function BrainHomePage() {
             </Reveal>
 
             {/* secretarIA plan — self-service checkout wired for anonymous visitors */}
-            <Reveal delay={2}>
+            <Reveal delay={3}>
               <PriceCard
                 name={PRICING.secretaria.name}
                 tagline={PRICING.secretaria.tagline}

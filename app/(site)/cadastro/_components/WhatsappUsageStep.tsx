@@ -5,7 +5,7 @@
 // routes to the dedicated-number guide next (answer === "none").
 
 import { StepHeading, StepActions } from "./WizardShell";
-import { RadioPillGroup } from "./RadioPillGroup";
+import { RadioPillGroup } from "../../_components/RadioPillGroup";
 import type { SignupIntakeWhatsappUsage } from "@/lib/manage-api";
 
 const OPTIONS: { value: SignupIntakeWhatsappUsage; label: string; hint?: string }[] = [

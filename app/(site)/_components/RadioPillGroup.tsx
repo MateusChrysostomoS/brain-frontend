@@ -1,9 +1,17 @@
 "use client";
 
-// RadioPillGroup — a stacked group of full-width radio options, used by every
-// intake question in the /cadastro wizard (Q1 whatsapp usage, Q3 prior API,
-// Q4 Facebook Page). Renders real <input type="radio"> elements (keyboard +
-// screen reader friendly) styled as `.radio-pill--block` cards.
+// RadioPillGroup — a stacked group of full-width radio options. Renders real
+// <input type="radio"> elements (keyboard + screen reader friendly) styled as
+// `.radio-pill--block` cards, so the WHOLE card is the click target rather than
+// a small control sitting inside a decorative box.
+//
+// Shared across (site) routes — promoted out of cadastro/_components on
+// 2026-08-02 when the Google Calendar mode selector became the second caller:
+//   - /cadastro wizard intake questions (Q1 whatsapp usage, Q3 prior API,
+//     Q4 Facebook Page)
+//   - /secretaria/configuracao Section 08, Google Calendar mode
+// Both live under app/(site), whose layout imports brand-ds.css — that is where
+// the .radio-pill/.radio-pill--block styles come from.
 
 type RadioOption<T extends string> = {
   value: T;
@@ -16,6 +24,10 @@ type RadioPillGroupProps<T extends string> = {
   options: RadioOption<T>[];
   value: T | null;
   onChange: (value: T) => void;
+  // Read-only rendering: inputs are really disabled (not just dimmed), so the
+  // selection is still announced and readable but cannot be changed. Used by
+  // the config page's `readOnly` state when the secretarIA hub is unreachable.
+  disabled?: boolean;
 };
 
 export function RadioPillGroup<T extends string>({
@@ -23,6 +35,7 @@ export function RadioPillGroup<T extends string>({
   options,
   value,
   onChange,
+  disabled,
 }: RadioPillGroupProps<T>) {
   return (
     <div className="radio-row" style={{ flexDirection: "column" }} role="radiogroup">
@@ -31,13 +44,18 @@ export function RadioPillGroup<T extends string>({
         return (
           <label
             key={opt.value}
-            className={"radio-pill radio-pill--block" + (checked ? " on" : "")}
+            className={
+              "radio-pill radio-pill--block" +
+              (checked ? " on" : "") +
+              (disabled ? " is-disabled" : "")
+            }
           >
             <input
               type="radio"
               name={name}
               value={opt.value}
               checked={checked}
+              disabled={disabled}
               onChange={() => onChange(opt.value)}
             />
             <span className="radio-pill-check" aria-hidden="true">

@@ -7,7 +7,7 @@
 // onboarding).
 
 import { StepHeading, StepActions } from "./WizardShell";
-import { RadioPillGroup } from "./RadioPillGroup";
+import { RadioPillGroup } from "../../_components/RadioPillGroup";
 import type { SignupIntakePriorApi } from "@/lib/manage-api";
 
 const OPTIONS: { value: SignupIntakePriorApi; label: string }[] = [

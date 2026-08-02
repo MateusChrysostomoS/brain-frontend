@@ -28,7 +28,8 @@
 // not its own save action.
 
 import { useState } from "react";
-import { Icon, Btn, Segmented } from "../../_shared/ui";
+import { Icon, Btn } from "../../_shared/ui";
+import { RadioPillGroup } from "../../../_components/RadioPillGroup";
 import { Section } from "./Section";
 import { GoogleGlyph } from "./GoogleGlyph";
 import type { GcalState, GoogleCalendarMode } from "../lib/types";
@@ -107,29 +108,43 @@ export function GoogleSection({
       desc="Autorize o acesso para a secretarIA criar, mover e cancelar eventos na sua agenda do Google em tempo real — sem choque de horários."
     >
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        {/* --- mode selector: how professionals get a Google Calendar --- */}
-        <div style={{
-          display: "flex", flexDirection: "column", gap: 10,
-          padding: 18, borderRadius: 14,
-          background: "var(--surface-2)", border: "1px solid var(--line)",
-        }}>
+        {/* --- mode selector: how professionals get a Google Calendar ---
+            Full-width radio cards (the /cadastro wizard's .radio-pill--block
+            pattern), NOT a small pill inside a decorative box: this is a choice
+            between two options, so each option must itself be the click target
+            and carry its own explanation. Replaces the old Segmented control,
+            whose surrounding rounded panel looked like the control but wasn't.
+            Selection logic is untouched — still a local setter batched into the
+            page's single "Salvar configuração" PUT. */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <span style={{ fontSize: 13.5, fontWeight: 700, color: "var(--ink)" }}>
             Como as agendas do Google funcionam nesta clínica
           </span>
-          <Segmented<GoogleCalendarMode>
+          <RadioPillGroup<GoogleCalendarMode>
+            name="gcal_mode"
             value={gcal.mode}
             onChange={onModeChange}
             disabled={readOnly}
             options={[
-              { value: "per_professional", label: "Por profissional" },
-              { value: "shared_account", label: "Conta única da clínica" },
+              {
+                value: "per_professional",
+                label: "Por profissional",
+                hint: "Cada profissional conecta a própria conta do Google e usa sua agenda pessoal para os atendimentos. É o comportamento padrão — nada muda se você não mexer aqui.",
+              },
+              {
+                value: "shared_account",
+                label: "Conta única da clínica",
+                hint: "Só a clínica conecta uma conta do Google (abaixo) e a secretarIA cria automaticamente uma agenda própria para cada profissional dentro dela — cada uma com seu checkbox na lista lateral do Google Calendar.",
+              },
             ]}
           />
-          <p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.5, margin: 0 }}>
-            {gcal.mode === "shared_account"
-              ? "Só a clínica conecta uma conta do Google (abaixo). A secretarIA cria automaticamente uma agenda própria para cada profissional dentro dessa conta — cada uma aparece na lista lateral do Google Calendar, com seu próprio checkbox. Use uma conta institucional da clínica, não o Gmail pessoal de um funcionário: ela passa a ser dona das agendas de todos os profissionais."
-              : "Cada profissional conecta a própria conta do Google e usa sua agenda pessoal para os atendimentos. É o comportamento padrão — nada muda se você não mexer aqui."}
-          </p>
+          {/* Consequence that only matters once shared_account is picked, so it
+              stays out of the option card and appears on selection. */}
+          {gcal.mode === "shared_account" && (
+            <p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.5, margin: 0 }}>
+              Use uma conta institucional da clínica, não o Gmail pessoal de um funcionário: ela passa a ser dona das agendas de todos os profissionais.
+            </p>
+          )}
           <div style={{ display: "flex", alignItems: "flex-start", gap: 7, fontSize: 12, color: "var(--ink-faint)", lineHeight: 1.45 }}>
             <Icon name="checkCircle" size={13} style={{ marginTop: 1, flexShrink: 0 }} />
             <span>Trocar de modo agora não desconecta nada — só muda o fluxo de conexão oferecido daqui pra frente.</span>

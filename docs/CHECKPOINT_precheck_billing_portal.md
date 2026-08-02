@@ -112,6 +112,47 @@ Duas frentes independentes entraram juntas nesta rodada:
   Completo / secretarIA) e um 4º item quebraria esse layout; o `PlanCheckoutCta` do
   `secretaria/page.tsx` (plano `secretaria_basico`) é outro e não foi tocado.
 
+  **REVERTIDO EM 2026-08-02 — o link secundário virou um card de verdade.** A decisão
+  "card + link" custou visibilidade comercial: um plano que a grade nunca precifica lê
+  como "não está à venda", e o link ainda mandava o visitante direto pra rota
+  `/cadastro` (que na época estava gated). Agora:
+
+  - `_lib/pricing.ts` ganhou a entrada `precheckAdvanced` (`PricingPlanKey` virou união
+    de 4), `catalogIds: ["precheck_advanced"]`. **Os amounts são display-only, como todo
+    amount deste arquivo**: quem cobra é o Price do Stripe em
+    `STRIPE_PRICE_MAP["precheck_basic"|"precheck_advanced"]`. O catálogo do brain-api não
+    tem preço nenhum pra copiar (só a cota), e o `/public/checkout-config` não expõe
+    valores — então os números são **decisão comercial, não derivada do backend**.
+  - **Tabela comercial definida pelo usuário em 2026-08-02** (substituiu o R$ 120,00 do
+    Basic que estava no arquivo e o R$ 300,00 inicial do Advanced):
+
+    | Plano | Preço exibido | Cota mensal |
+    |---|---|---|
+    | PreCheck Basic | R$ 59,99/mês | 50 pré-consultas |
+    | PreCheck Advanced | R$ 169,99/mês | 150 pré-consultas |
+
+    Trocar de ideia = editar as strings em `pricing.ts` + as features em `page.tsx` + o
+    Price no Stripe + as env vars de cota (abaixo).
+  - **A cota exibida NÃO é auto-derivada** — quem enforce é
+    `PRECHECK_BASIC_CONSULTATIONS_PER_MONTH` / `PRECHECK_ADVANCED_CONSULTATIONS_PER_MONTH`
+    no brain-api, cujo **default em código continua 100/300**. As duas env vars precisam
+    ser setadas pra 50/150 no ambiente deployado, senão o card promete 50 e o backend
+    libera 100.
+  - `page.tsx` renderiza 4 `PriceCard` (Basic / Advanced / Brain Completo em destaque /
+    secretarIA), Advanced com o MESMO `PlanCheckoutCta`/fluxo do Basic. A cota de cada
+    tier entrou como primeira feature dos dois cards, que é o que de fato os diferencia.
+  - Rótulos dos CTAs encurtados pra "Contratar Basic"/"Contratar Advanced": `.btn` é
+    `white-space:nowrap`, e "Contratar PreCheck Advanced" esticava a própria coluna.
+  - `brand-ds.css`: `.price-grid` -> `repeat(4,minmax(0,1fr))` (o `minmax(0,…)` é o que
+    impede o rótulo nowrap de desbalancear as colunas), gap 18px, `.price-card` padding
+    26px, `.price-amt` com `flex-wrap` e `.v` em `clamp(28px,2.6vw,38px)` (o amount pode
+    ser uma frase — "Pague pelo uso" —, não só "R$ 000,00"), `.price-grid>*{display:flex}`
+    + `.price-grid .price-card{flex:1}` pra os 4 cards terminarem alinhados (o card fica
+    dentro de um `.reveal`, então esticar só o item da grade não bastava). Responsivo:
+    2 colunas em ≤1080px, 1 coluna em ≤860px (regra que já existia).
+  - Verificado no browser em 1440/1000/mobile, tema claro e escuro: sem scroll
+    horizontal, 4 colunas iguais (266px cada em 1440), alturas iguais.
+
 ### Frente B — port de `/metrics` e `/users`, `DashNav` sensível a papel
 
 - **`lib/types.ts`** — `UserInfo.role` ampliado pra incluir `"manager"`; novo campo
