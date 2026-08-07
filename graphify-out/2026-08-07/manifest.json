@@ -150,8 +150,8 @@
     "semantic_hash": ""
   },
   "app/(SignOut)/login/page.tsx": {
-    "mtime": 1786114722.774244,
-    "ast_hash": "de126f8b00ff77a9d4465c9602bcea8e",
+    "mtime": 1781882085.6217194,
+    "ast_hash": "593ce8882f19d474bb959f0c0897e263",
     "semantic_hash": ""
   },
   "app/(site)/_components/BrandFooter.tsx": {
@@ -215,8 +215,8 @@
     "semantic_hash": ""
   },
   "app/(site)/_components/StatusBadge.tsx": {
-    "mtime": 1786114783.4666188,
-    "ast_hash": "a84b15884eca5a93f4fc0800a9a863fd",
+    "mtime": 1781882502.5347576,
+    "ast_hash": "8337b5e485660561cd96449a9688627f",
     "semantic_hash": ""
   },
   "app/(site)/_components/ThemeToggle.tsx": {
@@ -244,14 +244,19 @@
     "ast_hash": "198a9be7d234ca305c9b5596537c3b24",
     "semantic_hash": ""
   },
+  "app/(site)/admin/demo-requests/page.tsx": {
+    "mtime": 1781882654.0796506,
+    "ast_hash": "46f081c3ec57a009712fda6221344dd9",
+    "semantic_hash": ""
+  },
   "app/(site)/admin/inbound/page.tsx": {
-    "mtime": 1786114092.096414,
-    "ast_hash": "257086be842b9da624f6348ac84031b5",
+    "mtime": 1781882674.9826627,
+    "ast_hash": "10529fe0ae3c12451bb4e16ecb6668b5",
     "semantic_hash": ""
   },
   "app/(site)/admin/layout.tsx": {
-    "mtime": 1786114057.68653,
-    "ast_hash": "a9caa2df7f7b7f7a7e554ae90966d595",
+    "mtime": 1784235230.4412687,
+    "ast_hash": "bfc74784ae156e8285300b452b359f42",
     "semantic_hash": ""
   },
   "app/(site)/admin/tenants/page.tsx": {
@@ -260,8 +265,8 @@
     "semantic_hash": ""
   },
   "app/(site)/admin/users/page.tsx": {
-    "mtime": 1786114871.9759922,
-    "ast_hash": "d1244f84496e969a40451d58e33843b7",
+    "mtime": 1781882623.273332,
+    "ast_hash": "76030b6cf950280cdd9ccc469843fc3c",
     "semantic_hash": ""
   },
   "app/(site)/app/billing/page.tsx": {
@@ -285,23 +290,23 @@
     "semantic_hash": ""
   },
   "app/(site)/doctor/anamneses/page.tsx": {
-    "mtime": 1786114664.66617,
-    "ast_hash": "31481accef9ec31894038760fb836e58",
+    "mtime": 1781882776.519513,
+    "ast_hash": "1645cbd9aad0bd607d5b4eb7c0fb0a29",
     "semantic_hash": ""
   },
   "app/(site)/doctor/dashboard/page.tsx": {
-    "mtime": 1786114657.9565372,
-    "ast_hash": "897d15ab05f8a1e94280ea502d50c471",
+    "mtime": 1781882733.879243,
+    "ast_hash": "5654ac97f23ab48cd789e6bdfd584404",
     "semantic_hash": ""
   },
   "app/(site)/doctor/layout.tsx": {
-    "mtime": 1786114634.0507317,
-    "ast_hash": "689999a9bdfffb701b746c75518895f2",
+    "mtime": 1785554307.377622,
+    "ast_hash": "b675c7562fa2013621ee4d90fa60628a",
     "semantic_hash": ""
   },
   "app/(site)/doctor/pacientes/page.tsx": {
-    "mtime": 1786114654.8762221,
-    "ast_hash": "5ac7dc1c516b8c1ed16ccd686c548358",
+    "mtime": 1781882789.0216098,
+    "ast_hash": "2098e567937a3129e37f761552681490",
     "semantic_hash": ""
   },
   "app/(site)/layout.tsx": {
@@ -315,8 +320,8 @@
     "semantic_hash": ""
   },
   "app/(site)/secretaria/_shared/Header.tsx": {
-    "mtime": 1786114728.4858966,
-    "ast_hash": "b66a05294a5fd188cf9b51b8cfec4a70",
+    "mtime": 1784357772.7485492,
+    "ast_hash": "5c5a0f286656175dead19e8d7795c5ce",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/_shared/HubNotice.tsx": {
@@ -440,8 +445,8 @@
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/page.tsx": {
-    "mtime": 1786114716.2067995,
-    "ast_hash": "f4020aaad2f08c55207a19648fab16e5",
+    "mtime": 1785561144.260371,
+    "ast_hash": "2fcb8d2a99576c53f829fa54ae7e3666",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/page.tsx": {
@@ -520,13 +525,13 @@
     "semantic_hash": ""
   },
   "lib/__tests__/manage-api.test.ts": {
-    "mtime": 1786114942.8062851,
-    "ast_hash": "30590890435c740d79ad74128d516d24",
+    "mtime": 1785612052.2696104,
+    "ast_hash": "09fd8effcc8bf322f48e27ede4f65ad0",
     "semantic_hash": ""
   },
   "lib/__tests__/sign-out.test.ts": {
-    "mtime": 1786114963.6791577,
-    "ast_hash": "180c810906a7bd354f9869fa0be7c554",
+    "mtime": 1784235230.4878306,
+    "ast_hash": "7444cc29a53bcf36b41a31d423eaa5b0",
     "semantic_hash": ""
   },
   "lib/api.ts": {
@@ -550,8 +555,8 @@
     "semantic_hash": ""
   },
   "lib/manage-api.ts": {
-    "mtime": 1786114599.3110335,
-    "ast_hash": "28fb4f1bfa847d11ce8a4479c598c111",
+    "mtime": 1785611890.9745095,
+    "ast_hash": "d6a6bad97a5151b4f51d8027dd918bf3",
     "semantic_hash": ""
   },
   "lib/pageSize.ts": {
@@ -655,8 +660,8 @@
     "semantic_hash": ""
   },
   "app/(site)/app/onboarding/page.tsx": {
-    "mtime": 1786114693.2288547,
-    "ast_hash": "98fbb6a0db4ba59eb9cb81fa1eaa086e",
+    "mtime": 1784357646.4644241,
+    "ast_hash": "bbbab0c85ab4f3df189d123ab9ef4075",
     "semantic_hash": ""
   },
   "app/(site)/cadastro/_components/CadastroWizard.tsx": {
@@ -790,8 +795,8 @@
     "semantic_hash": ""
   },
   "app/(site)/app/reativar/page.tsx": {
-    "mtime": 1786114671.6624432,
-    "ast_hash": "4b7c910ff7f3f79b9870a4ffc9f09c08",
+    "mtime": 1784770005.269536,
+    "ast_hash": "6aff3da0adf7e29cadebc511ead171ea",
     "semantic_hash": ""
   },
   "app/(site)/cadastro/_components/AddonsStep.tsx": {
@@ -805,18 +810,18 @@
     "semantic_hash": ""
   },
   "app/(site)/doctor/perfil/SecretariaConfigSection.tsx": {
-    "mtime": 1786114650.9163826,
-    "ast_hash": "183efddbea7b73bac54701000bcdc7bf",
+    "mtime": 1785556251.9729831,
+    "ast_hash": "acce3db12155c6882550cb59e6615717",
     "semantic_hash": ""
   },
   "app/(site)/doctor/perfil/page.tsx": {
-    "mtime": 1786114640.0063803,
-    "ast_hash": "d2ab2a12e2e3c1a758692f603b086f64",
+    "mtime": 1785556094.9968352,
+    "ast_hash": "d56b8e7efb46483d6842be45c1152a87",
     "semantic_hash": ""
   },
   "lib/__tests__/secretaria-hub.test.ts": {
-    "mtime": 1786114957.7347362,
-    "ast_hash": "3731ca482229ab96f80920f38c12ac59",
+    "mtime": 1785555896.2533174,
+    "ast_hash": "2fd82623bfa3f73b6ccc90c05dbf7de2",
     "semantic_hash": ""
   },
   "docs/CHECKPOINT_agenda_dedemo.md": {
@@ -892,21 +897,6 @@
   "app/(site)/_components/RadioPillGroup.tsx": {
     "mtime": 1785702225.7591352,
     "ast_hash": "b60b40a216d9670c8134b1cfffce6d72",
-    "semantic_hash": ""
-  },
-  "app/(site)/admin/anamneses/page.tsx": {
-    "mtime": 1786110412.7149642,
-    "ast_hash": "e1b8021c7fec185c80e23a021b7b8f69",
-    "semantic_hash": ""
-  },
-  "app/(site)/admin/metrics/page.tsx": {
-    "mtime": 1786117175.4876046,
-    "ast_hash": "424c0dd875ae9ff09cde0845ad5a0573",
-    "semantic_hash": ""
-  },
-  "docs/CHECKPOINT_admin_precheck_tabs_role_taxonomy.md": {
-    "mtime": 1786117772.027578,
-    "ast_hash": "93a1ff67b5239862731675c61098f098",
     "semantic_hash": ""
   }
 }
