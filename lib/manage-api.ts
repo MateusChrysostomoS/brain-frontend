@@ -31,15 +31,19 @@
 // ---------------------------------------------------------------------------
 
 // Brain role names (mirror brain-api). `admin` is platform-level (no tenant);
-// tenant_owner/tenant_staff are tenant-scoped doctor users.
-export type Role = "admin" | "tenant_owner" | "tenant_staff";
+// doctor/manager are tenant-scoped portal users (role-taxonomy transition —
+// legacy tokens/rows may still carry tenant_owner/tenant_staff for ~30min
+// post-deploy; every gate that reads Role/role must accept both, see below).
+export type Role = "admin" | "doctor" | "manager";
 
 export type Session = {
   token: string;
   tenantId: string;
   email: string;
   // Decoded from the JWT `role` claim at login — drives post-login portal routing
-  // (admin -> /admin/dashboard, tenant_owner|tenant_staff -> /doctor/dashboard).
+  // (admin -> /admin/dashboard, doctor|manager -> /doctor/dashboard). Legacy
+  // tokens minted before the role-taxonomy migration may still carry
+  // tenant_owner/tenant_staff — gates accept both during the transition window.
   role: string;
   // Opaque revocable refresh token (CONTRACTS §2.1a). Optional: sessions stored
   // before this field existed — and the impersonated "Modo médico" doctor session,
@@ -47,9 +51,18 @@ export type Session = {
   refreshToken?: string;
   // Decoded from the JWT `professional_id` claim (Onboarding & Multi-Professional
   // contract §6) — set when this user is bound to a specific secretarIA
-  // professional (a tenant_staff invitee, or an owner who self-bound). null/absent
+  // professional (a non-owner invitee, or an owner who self-bound). null/absent
   // means "not bound to a professional" (e.g. an owner who only administers).
   professionalId?: string | null;
+  // Decoded from the JWT `is_owner` claim (role-taxonomy contract) — the clinic's
+  // owner (who bought the subscription). Gates billing/pause/invites. Absent on
+  // legacy tokens (pre-migration) — defaults to false; callers that need the old
+  // "dono" gate also check `role === "tenant_owner"` during the transition.
+  isOwner?: boolean;
+  // Decoded from the JWT `is_manager` claim (role-taxonomy contract) — "also a
+  // manager": a doctor with manager powers on top of the normal doctor access.
+  // Absent on legacy tokens — defaults to false.
+  isManager?: boolean;
 };
 
 // Portal-facing entitlement shape consumed by the /app dashboard shell. Mapped
@@ -254,6 +267,8 @@ async function doRefresh(current: Session): Promise<Session | null> {
     token: data.access_token,
     refreshToken: data.refresh_token ?? current.refreshToken,
     professionalId: readProfessionalIdClaim(claims),
+    isOwner: readBoolClaim(claims, "is_owner"),
+    isManager: readBoolClaim(claims, "is_manager"),
   };
   saveSession(session);
   return session;
@@ -343,6 +358,8 @@ export async function login(email: string, password: string): Promise<Session> {
     role,
     refreshToken: data.refresh_token,
     professionalId: readProfessionalIdClaim(claims),
+    isOwner: readBoolClaim(claims, "is_owner"),
+    isManager: readBoolClaim(claims, "is_manager"),
   };
   saveSession(session);
   return session;
@@ -357,6 +374,18 @@ function readProfessionalIdClaim(
   return typeof claims?.professional_id === "string"
     ? (claims.professional_id as string)
     : null;
+}
+
+// Reads an optional boolean claim (`is_owner` / `is_manager`, role-taxonomy
+// contract) from decoded JWT claims. Absent/non-boolean (legacy pre-migration
+// tokens never carry these) defaults to false — same idiom as
+// readProfessionalIdClaim, shared by every function that builds a Session from
+// a freshly minted access token.
+function readBoolClaim(
+  claims: Record<string, unknown> | null,
+  name: string,
+): boolean {
+  return claims?.[name] === true;
 }
 
 // MANAGE-API CALL SITE #5 — explicit logout. POST /auth/logout { refresh_token }
@@ -594,6 +623,8 @@ export async function registerSignup(
       role,
       refreshToken: data.session.refresh_token,
       professionalId: readProfessionalIdClaim(claims),
+      isOwner: readBoolClaim(claims, "is_owner"),
+      isManager: readBoolClaim(claims, "is_manager"),
     },
   };
 }
@@ -693,6 +724,8 @@ export async function exchangeOnboardingToken(token: string): Promise<Session> {
     role,
     refreshToken: data.refresh_token,
     professionalId: readProfessionalIdClaim(claims),
+    isOwner: readBoolClaim(claims, "is_owner"),
+    isManager: readBoolClaim(claims, "is_manager"),
   };
 }
 
@@ -721,6 +754,8 @@ export async function exchangeInviteToken(token: string): Promise<Session> {
     role,
     refreshToken: data.refresh_token,
     professionalId: readProfessionalIdClaim(claims),
+    isOwner: readBoolClaim(claims, "is_owner"),
+    isManager: readBoolClaim(claims, "is_manager"),
   };
 }
 
@@ -896,11 +931,18 @@ async function fetchImpersonationDoctor(
     { method: "POST" },
     adminSession.token,
   );
+  // Unlike the other Session-building calls above, this response carries its
+  // identity fields (tenant_id/email/role) directly rather than requiring the
+  // caller to decode them — but is_owner/is_manager are JWT-only claims, so
+  // decode the returned access_token the same way login()/doRefresh() do.
+  const claims = decodeJwtPayload(data.access_token);
   const session: Session = {
     token: data.access_token,
     tenantId: data.tenant_id,
     email: data.email,
     role: data.role,
+    isOwner: readBoolClaim(claims, "is_owner"),
+    isManager: readBoolClaim(claims, "is_manager"),
   };
   return { session, clinicName: data.clinic_name };
 }
@@ -1024,6 +1066,11 @@ export type AdminUser = {
   name: string;
   role: string;
   created_at: string;
+  // Role-taxonomy contract: "also a manager" (a doctor row with manager powers)
+  // and "is the clinic owner". Both optional — absent on legacy rows until the
+  // backfill migration runs.
+  is_manager?: boolean;
+  is_owner?: boolean;
 };
 
 export type AdminUserCreate = {
@@ -1032,6 +1079,9 @@ export type AdminUserCreate = {
   password: string;
   role: Role;
   tenant_id?: string | null; // required for tenant roles; omitted for admin
+  // Only meaningful for role="doctor" (grants manager powers on top of the
+  // normal doctor access); omitted for role="manager"|"admin".
+  is_manager?: boolean;
 };
 
 export type AdminDemoRequest = {
@@ -1048,29 +1098,6 @@ export type AdminDemoRequest = {
 };
 
 export type DemoRequestStatus = "contacted" | "converted" | "dismissed";
-
-// One inbound lead as returned by PreCheck (proxied via brain-api GET /admin/inbound).
-export type PrecheckInbound = {
-  id: number;
-  name: string;
-  email: string;
-  clinic_name: string | null;
-  profile: string | null;
-  message: string | null;
-  status: string;
-  ip_address: string | null;
-  user_agent: string | null;
-  created_at: string;
-};
-
-export type PrecheckInboundList = {
-  items: PrecheckInbound[];
-  total: number;
-  skip: number;
-  limit: number;
-  has_next?: boolean;
-  stub?: boolean; // true when brain-api has no PreCheck upstream configured
-};
 
 // Build a `?skip=&limit=` query string for the paginated list endpoints.
 function pageQuery(skip: number, limit: number): string {
@@ -1195,20 +1222,145 @@ export function adminPatchDemoRequest(
   );
 }
 
-export function adminGetInbound(
+// ---------------------------------------------------------------------------
+// Admin anamneses (role=admin) — cross-tenant PreCheck pre-consultation summaries.
+// Unlike the doctor-scoped /doctor/anamneses (below), these routes see every clinic's
+// records; brain-api derives NOTHING from the JWT here except the admin role check
+// itself — tenant_id/clinic_id come back on each row instead. Degrades to a `stub`
+// envelope when brain-api has no PreCheck upstream configured (same convention as
+// AnamnesisList/AnamnesisDetail).
+// ---------------------------------------------------------------------------
+
+// One anamnesis row (list) — cross-tenant, so it carries tenant_id/clinic_id the
+// doctor-scoped Anamnesis type doesn't need. `tenant_id` is nullable: a PreCheck
+// record can outlive/precede its brain tenant link.
+export type AdminAnamnesis = {
+  id: number;
+  tenant_id: string | null;
+  clinic_id: number;
+  patient_name: string;
+  created_at: string;
+  status: string;
+  summary_preview: string;
+};
+
+export type AdminAnamnesisList = {
+  items: AdminAnamnesis[];
+  total: number;
+  skip: number;
+  limit: number;
+  stub?: boolean; // true when brain-api has no PreCheck upstream configured
+};
+
+export type AdminAnamnesisDetail = {
+  id: number;
+  tenant_id: string | null;
+  clinic_id: number;
+  patient_name: string;
+  created_at: string;
+  updated_at: string;
+  status: string;
+  ai_summary: string;
+  final_summary: string | null;
+  structured_data: Record<string, unknown>;
+};
+
+// GET /admin/anamneses — every clinic's PreCheck records, paginated.
+export function adminListAnamneses(
   session: Session,
   skip = 0,
   limit = 50,
-): Promise<PrecheckInboundList> {
-  return manageFetch<PrecheckInboundList>(
-    "/admin/inbound" + pageQuery(skip, limit),
+): Promise<AdminAnamnesisList> {
+  return manageFetch<AdminAnamnesisList>(
+    "/admin/anamneses" + pageQuery(skip, limit),
+    {},
+    session.token,
+  );
+}
+
+// GET /admin/anamneses/{id} — full record (no tenant scoping — admin sees any clinic's).
+export function adminGetAnamnesis(
+  session: Session,
+  id: number,
+): Promise<AdminAnamnesisDetail> {
+  return manageFetch<AdminAnamnesisDetail>(
+    `/admin/anamneses/${id}`,
     {},
     session.token,
   );
 }
 
 // ---------------------------------------------------------------------------
-// Doctor API (role=tenant_owner|tenant_staff) — RBAC task Part 3C
+// Admin metrics (role=admin) — platform-wide PreCheck usage/quality dashboard,
+// ported from PreCheck's own /metrics screen. `all=true` spans every clinic since
+// PreCheck went live; otherwise `days` bounds a trailing window (default 30).
+// Every count field is optional-safe (a partial upstream response should degrade,
+// not crash the dashboard) except the ones brain-api's contract guarantees.
+// ---------------------------------------------------------------------------
+
+export type AdminMetricsTotals = {
+  summaries: number;
+  patients: number;
+  draft: number;
+  approved: number;
+  rejected: number;
+};
+
+export type AdminMetricsDoctor = {
+  doctor_id: number | string;
+  name: string;
+  approved: number;
+  rejected: number;
+  total: number;
+};
+
+export type AdminMetricsSatisfaction = {
+  responses: number;
+  unscored: number;
+  average: number | null;
+  distribution: Record<string, number>; // keys "1".."5"
+};
+
+export type AdminMetricsTimelinePoint = {
+  day: string; // ISO date (yyyy-mm-dd)
+  total: number;
+};
+
+export type AdminMetricsClinic = {
+  clinic_id: number;
+  name: string;
+  summaries: number;
+  satisfaction_average: number | null;
+  satisfaction_responses: number;
+};
+
+export type AdminMetrics = {
+  period_days: number | null;
+  clinic_id: number | null;
+  clinic_name: string | null;
+  totals: AdminMetricsTotals;
+  per_doctor: AdminMetricsDoctor[];
+  unattributed_reviews: number;
+  satisfaction: AdminMetricsSatisfaction;
+  timeline: AdminMetricsTimelinePoint[];
+  avg_hours_to_review: number | null;
+  per_clinic: AdminMetricsClinic[] | null;
+  stub?: boolean; // true when brain-api has no PreCheck upstream configured
+};
+
+// GET /admin/metrics?days=&all= — `opts.all` spans the whole history (omits `days`
+// entirely); otherwise sends `days` (default 30). Mutually exclusive on the wire,
+// matching the PreCheck source screen's own PeriodKey semantics.
+export function adminGetMetrics(
+  session: Session,
+  opts: { days?: number; all?: boolean } = {},
+): Promise<AdminMetrics> {
+  const query = opts.all ? "?all=true" : `?days=${opts.days ?? 30}`;
+  return manageFetch<AdminMetrics>("/admin/metrics" + query, {}, session.token);
+}
+
+// ---------------------------------------------------------------------------
+// Doctor API (role=doctor|manager) — RBAC task Part 3C
 //
 // The tenant is ALWAYS derived server-side from the JWT — these calls never send a
 // tenant_id. Anamneses are proxied by brain-api to PreCheck.
@@ -1370,7 +1522,7 @@ export function listDoctorPatients(
 }
 
 // ---------------------------------------------------------------------------
-// Doctor onboarding API (role=tenant_owner|tenant_staff) — Onboarding &
+// Doctor onboarding API (role=doctor|manager) — Onboarding &
 // Multi-Professional contract §7. Drives the /app/onboarding eligibility
 // screen (Feature 2) and the compact banner on /secretaria/configuracao.
 // ---------------------------------------------------------------------------
@@ -1495,7 +1647,7 @@ export function pauseOnboarding(
 }
 
 // ---------------------------------------------------------------------------
-// Activation test window (role=tenant_owner|tenant_staff) — the billing-side
+// Activation test window (role=doctor|manager) — the billing-side
 // counterpart to the onboarding state above. A subscription's first Stripe cycle
 // is a "test window": nothing is charged until Meta approves WhatsApp
 // Coexistence, and the subscription auto-cancels if that approval doesn't land
@@ -1549,7 +1701,7 @@ export function restartTestWindow(session: Session): Promise<RestartTestWindowRe
 }
 
 // ---------------------------------------------------------------------------
-// PreCheck billing (role=tenant_owner|tenant_staff) — quota usage, one-off
+// PreCheck billing (role=doctor|manager) — quota usage, one-off
 // "avulso" top-ups (priced per pré-consulta, quantity chosen here), and the
 // precheck_basic -> precheck_advanced upgrade.
 // Surfaced as a "Pré-consultas (PreCheck)" sub-block on /app/billing, shown
@@ -1632,7 +1784,7 @@ export async function upgradePrecheckPlan(
 }
 
 // ---------------------------------------------------------------------------
-// Doctor professionals API (role=tenant_owner|tenant_staff) — Onboarding &
+// Doctor professionals API (role=doctor|manager) — Onboarding &
 // Multi-Professional contract §7. Backs the "Profissionais" section on
 // /secretaria/configuracao (Feature C3).
 // ---------------------------------------------------------------------------

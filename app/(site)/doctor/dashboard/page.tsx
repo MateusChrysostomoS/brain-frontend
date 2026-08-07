@@ -43,7 +43,8 @@ function QuickLink({
 
 export default function DoctorDashboardPage() {
   const router = useRouter();
-  const { session, ready } = usePortalGuard(["tenant_owner", "tenant_staff"]);
+  // legacy values accepted during the role-taxonomy transition
+  const { session, ready } = usePortalGuard(["doctor", "manager", "tenant_owner", "tenant_staff"]);
 
   const [me, setMe] = useState<DoctorMe | null>(null);
   const [error, setError] = useState(false);

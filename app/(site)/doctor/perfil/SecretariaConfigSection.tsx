@@ -357,7 +357,9 @@ export function SecretariaConfigSection({ session }: { session: Session }) {
       </p>
 
       {!myProfessionalId ? (
-        session.role === "tenant_owner" ? (
+        // Owner gate (not a role check): is_owner is the new claim; role ===
+        // "tenant_owner" is the legacy fallback during the transition.
+        session.isOwner || session.role === "tenant_owner" ? (
           <div
             className="alert-line alert-line--amber"
             style={{ alignItems: "flex-start", flexDirection: "column", gap: 10 }}

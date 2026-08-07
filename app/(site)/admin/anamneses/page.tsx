@@ -1,10 +1,11 @@
 "use client";
 
-// /doctor/anamneses — PreCheck anamnesis records for the doctor's tenant (RBAC task 3C).
-// List + detail (?id=<int>, matching the static-export query-param convention). Data is
-// proxied brain-api -> PreCheck; the tenant is derived server-side from the JWT (the
-// frontend never sends tenant_id). The list shows only a non-PHI preview; the full
-// structured summary appears on the detail of a record the tenant owns.
+// /admin/anamneses — PreCheck pre-consultation summaries across EVERY clinic
+// (admin, cross-tenant view). List + detail (?id=<int>, matching the static-export
+// query-param convention). Data is proxied brain-api -> PreCheck; unlike the doctor
+// portal's /doctor/anamneses, the tenant is NOT derived from the JWT — brain-api's
+// admin routes return every clinic's records, so each row carries its own
+// tenant_id/clinic_id and the list surfaces a "Tenant" column for it.
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -18,10 +19,10 @@ import {
   usePortalGuard,
 } from "../../_components/usePortalGuard";
 import {
-  getAnamnesis,
-  listAnamneses,
-  type Anamnesis,
-  type AnamnesisDetail,
+  adminGetAnamnesis,
+  adminListAnamneses,
+  type AdminAnamnesis,
+  type AdminAnamnesisDetail,
   type Session,
 } from "@/lib/manage-api";
 
@@ -59,40 +60,51 @@ function formatDateTime(iso: string): string {
   }
 }
 
-export default function AnamnesesPage() {
+// Shortens a tenant UUID for the table cell; the full id is still reachable via the
+// `title` attribute (hover tooltip) so nothing is actually lost.
+function shortTenantId(tenantId: string | null): ReactNode {
+  if (!tenantId) return <span className="cell-muted">—</span>;
+  const short = tenantId.length > 8 ? `${tenantId.slice(0, 8)}…` : tenantId;
+  return (
+    <span className="cell-muted" title={tenantId}>
+      {short}
+    </span>
+  );
+}
+
+export default function AdminAnamnesesPage() {
   return (
     <Suspense fallback={null}>
-      <AnamnesesInner />
+      <AdminAnamnesesInner />
     </Suspense>
   );
 }
 
-function AnamnesesInner() {
+function AdminAnamnesesInner() {
   const search = useSearchParams();
   const idParam = search.get("id");
-  // legacy values accepted during the role-taxonomy transition
-  const { session, ready } = usePortalGuard(["doctor", "manager", "tenant_owner", "tenant_staff"]);
+  const { session, ready } = usePortalGuard(["admin"]);
 
   if (!ready || !session) return null;
   const id = idParam ? Number(idParam) : null;
   return id && !Number.isNaN(id) ? (
-    <AnamnesisDetailView session={session} id={id} />
+    <AdminAnamnesisDetailView session={session} id={id} />
   ) : (
-    <AnamnesesListView session={session} />
+    <AdminAnamnesesListView session={session} />
   );
 }
 
 // --- List ------------------------------------------------------------------
 
-function AnamnesesListView({ session }: { session: Session }) {
+function AdminAnamnesesListView({ session }: { session: Session }) {
   const router = useRouter();
-  const [items, setItems] = useState<Anamnesis[] | null>(null);
+  const [items, setItems] = useState<AdminAnamnesis[] | null>(null);
   const [stub, setStub] = useState(false);
   const [error, setError] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    listAnamneses(session, 0, 100)
+    adminListAnamneses(session, 0, 100)
       .then((page) => {
         if (cancelled) return;
         setItems(page.items);
@@ -117,7 +129,7 @@ function AnamnesesListView({ session }: { session: Session }) {
       <header className="portal-page-head">
         <div>
           <h1>Anamneses</h1>
-          <p className="sub">Resumos pré-consulta dos seus pacientes (PreCheck).</p>
+          <p className="sub">Resumos pré-consulta de todas as clínicas (PreCheck).</p>
         </div>
       </header>
 
@@ -142,6 +154,7 @@ function AnamnesesListView({ session }: { session: Session }) {
             <thead>
               <tr>
                 <th>Paciente</th>
+                <th>Tenant</th>
                 <th>Data</th>
                 <th>Status</th>
                 <th>Prévia do resumo</th>
@@ -152,9 +165,10 @@ function AnamnesesListView({ session }: { session: Session }) {
                 <tr
                   key={a.id}
                   className="clickable"
-                  onClick={() => router.push(`/doctor/anamneses?id=${a.id}`)}
+                  onClick={() => router.push(`/admin/anamneses?id=${a.id}`)}
                 >
                   <td className="cell-strong">{a.patient_name}</td>
+                  <td>{shortTenantId(a.tenant_id)}</td>
                   <td className="cell-muted">{formatDateTime(a.created_at)}</td>
                   <td>{statusBadge(a.status)}</td>
                   <td className="cell-muted" style={{ maxWidth: 360, whiteSpace: "normal" }}>
@@ -172,14 +186,14 @@ function AnamnesesListView({ session }: { session: Session }) {
 
 // --- Detail ----------------------------------------------------------------
 
-function AnamnesisDetailView({ session, id }: { session: Session; id: number }) {
+function AdminAnamnesisDetailView({ session, id }: { session: Session; id: number }) {
   const router = useRouter();
-  const [detail, setDetail] = useState<AnamnesisDetail | null>(null);
+  const [detail, setDetail] = useState<AdminAnamnesisDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    getAnamnesis(session, id)
+    adminGetAnamnesis(session, id)
       .then((d) => {
         if (!cancelled) setDetail(d);
       })
@@ -199,7 +213,7 @@ function AnamnesisDetailView({ session, id }: { session: Session; id: number }) 
 
   const back = (
     <Link
-      href="/doctor/anamneses"
+      href="/admin/anamneses"
       className="btn btn--ghost btn--sm"
       style={{ marginBottom: 14, paddingLeft: 8 }}
     >
@@ -235,6 +249,9 @@ function AnamnesisDetailView({ session, id }: { session: Session; id: number }) 
           <h1>{detail.patient_name}</h1>
           <p className="sub">
             {formatDateTime(detail.created_at)} · {statusBadge(detail.status)}
+          </p>
+          <p className="sub" style={{ marginTop: 4, fontSize: 12.5 }}>
+            Tenant: {detail.tenant_id ?? "—"} · Clínica #{detail.clinic_id}
           </p>
         </div>
       </header>

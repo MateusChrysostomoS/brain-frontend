@@ -80,7 +80,7 @@ function makeSession(overrides: Partial<Session> = {}): Session {
     token: "old",
     tenantId: "t1",
     email: "doc@clinic.com",
-    role: "tenant_owner",
+    role: "doctor",
     refreshToken: "r1",
     ...overrides,
   };
@@ -279,7 +279,7 @@ describe("manageFetch refresh-and-retry", () => {
 
 describe("login / logout", () => {
   it("7. login stores refreshToken and decodes tenant_id/role from the JWT", async () => {
-    const jwt = makeJwt({ tenant_id: "tenant-1", role: "tenant_owner", sub: "user-1" });
+    const jwt = makeJwt({ tenant_id: "tenant-1", role: "doctor", sub: "user-1" });
     fetchMock.mockResolvedValueOnce(
       mockResponse(200, {
         access_token: jwt,
@@ -294,7 +294,10 @@ describe("login / logout", () => {
     expect(session.token).toBe(jwt);
     expect(session.refreshToken).toBe("rtok-1");
     expect(session.tenantId).toBe("tenant-1");
-    expect(session.role).toBe("tenant_owner");
+    expect(session.role).toBe("doctor");
+    // Role-taxonomy claims default to false when absent from the JWT.
+    expect(session.isOwner).toBe(false);
+    expect(session.isManager).toBe(false);
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const call = fetchMock.mock.calls[0];
@@ -306,6 +309,29 @@ describe("login / logout", () => {
 
     const stored = JSON.parse(sessionStorage.getItem(api.SESSION_KEY)!);
     expect(stored.refreshToken).toBe("rtok-1");
+  });
+
+  it("7b. login decodes is_owner/is_manager claims when present", async () => {
+    const jwt = makeJwt({
+      tenant_id: "tenant-1",
+      role: "doctor",
+      sub: "user-1",
+      is_owner: true,
+      is_manager: true,
+    });
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(200, {
+        access_token: jwt,
+        token_type: "bearer",
+        refresh_token: "rtok-1",
+        expires_in: 1800,
+      }),
+    );
+
+    const session = await api.login("doc@clinic.com", "hunter2");
+
+    expect(session.isOwner).toBe(true);
+    expect(session.isManager).toBe(true);
   });
 
   it("8. logout clears session synchronously and best-effort revokes even on network failure", async () => {
@@ -739,7 +765,8 @@ describe("getCheckoutConfig", () => {
 
 describe("registerSignup", () => {
   it("14a. registers unauthenticated with the password, returns intentId + a decoded session, persists nothing itself", async () => {
-    const jwt = makeJwt({ tenant_id: "tenant-1", role: "tenant_owner", sub: "user-1" });
+    // A fresh signup mints the clinic's owner — is_owner true on the claim.
+    const jwt = makeJwt({ tenant_id: "tenant-1", role: "doctor", is_owner: true, sub: "user-1" });
     fetchMock.mockResolvedValueOnce(
       mockResponse(201, {
         intent_id: "intent-1",
@@ -766,7 +793,8 @@ describe("registerSignup", () => {
     expect(result.session.token).toBe(jwt);
     expect(result.session.refreshToken).toBe("rtok-1");
     expect(result.session.tenantId).toBe("tenant-1");
-    expect(result.session.role).toBe("tenant_owner");
+    expect(result.session.role).toBe("doctor");
+    expect(result.session.isOwner).toBe(true);
     // Email comes from the submitted payload (the access token carries no email claim).
     expect(result.session.email).toBe("aurelio@clinica.com.br");
 
@@ -975,7 +1003,8 @@ describe("getOnboardingStatus", () => {
 
 describe("exchangeOnboardingToken", () => {
   it("17a. decodes tenant_id/role from the JWT, does NOT call saveSession", async () => {
-    const jwt = makeJwt({ tenant_id: "tenant-9", role: "tenant_owner", email: "new@clinic.com" });
+    // Post-checkout onboarding also mints the clinic's owner.
+    const jwt = makeJwt({ tenant_id: "tenant-9", role: "doctor", is_owner: true, email: "new@clinic.com" });
     fetchMock.mockResolvedValueOnce(
       mockResponse(200, {
         access_token: jwt,
@@ -990,7 +1019,8 @@ describe("exchangeOnboardingToken", () => {
     expect(session.token).toBe(jwt);
     expect(session.refreshToken).toBe("rtok-9");
     expect(session.tenantId).toBe("tenant-9");
-    expect(session.role).toBe("tenant_owner");
+    expect(session.role).toBe("doctor");
+    expect(session.isOwner).toBe(true);
     expect(session.email).toBe("new@clinic.com");
 
     const call = fetchMock.mock.calls[0];

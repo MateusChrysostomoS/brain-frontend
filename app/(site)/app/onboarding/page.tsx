@@ -6,7 +6,7 @@
 // button, the last-attempt status line, a success banner once conectado/ativo,
 // and (owner-only) the retry/config-reminder pause toggles. Sibling route to
 // /app/billing — same dash-header/dash-main chrome; guarded like the
-// /doctor/* portal via usePortalGuard (this is a tenant_owner/tenant_staff-only
+// /doctor/* portal via usePortalGuard (this is a doctor/manager-only
 // screen even though it lives under /app).
 
 import Link from "next/link";
@@ -57,7 +57,8 @@ const ATTEMPT_RESULT_LABEL: Record<string, string> = {
 };
 
 export default function OnboardingPage() {
-  const { session, ready } = usePortalGuard(["tenant_owner", "tenant_staff"]);
+  // legacy values accepted during the role-taxonomy transition
+  const { session, ready } = usePortalGuard(["doctor", "manager", "tenant_owner", "tenant_staff"]);
 
   const [data, setData] = useState<DoctorOnboarding | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -219,7 +220,9 @@ export default function OnboardingPage() {
             )}
 
             {/* --- Owner-only pause toggles --- */}
-            {session.role === "tenant_owner" && (
+            {/* Owner gate (not a role check): is_owner is the new claim; role
+                === "tenant_owner" is the legacy fallback during the transition. */}
+            {(session.isOwner || session.role === "tenant_owner") && (
               <PauseToggles
                 session={session}
                 retryPaused={data.retry_paused}

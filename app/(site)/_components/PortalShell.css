@@ -310,6 +310,12 @@
   color: var(--ink-soft);
   border: 1px solid var(--line);
 }
+/* Compact size modifier — stacks with a tone class, e.g. for a secondary
+   "+ Gestor" tag sitting next to the primary role badge in a table cell. */
+.pbadge--sm {
+  padding: 1px 8px;
+  font-size: 11px;
+}
 /* product on/off marks */
 .pmark {
   font-weight: 700;

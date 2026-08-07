@@ -9,11 +9,20 @@ export type BadgeTone = "green" | "amber" | "red" | "blue" | "muted";
 export function StatusBadge({
   tone,
   children,
+  className,
 }: {
   tone: BadgeTone;
   children: ReactNode;
+  // Optional extra class (e.g. "pbadge--sm") for callers that need a size/spacing
+  // variant on top of the tone — kept optional so every existing call site is
+  // unaffected.
+  className?: string;
 }) {
-  return <span className={`pbadge pbadge--${tone}`}>{children}</span>;
+  return (
+    <span className={`pbadge pbadge--${tone}${className ? ` ${className}` : ""}`}>
+      {children}
+    </span>
+  );
 }
 
 // Product on/off mark (✓ / ✗) used in the tenants table.

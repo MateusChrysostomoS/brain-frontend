@@ -21,10 +21,14 @@ import { signOut } from "@/lib/sign-out";
 import { getMe, getSession, type MeResponse } from "@/lib/manage-api";
 
 // Short PT-BR labels for the roles that can reach this product header.
+// Legacy tenant_owner/tenant_staff kept as a display fallback until the
+// backfill migration runs (role-taxonomy transition).
 const ROLE_LABEL: Record<string, string> = {
+  doctor: "Médico(a)",
+  manager: "Gestor(a)",
+  admin: "Administrador",
   tenant_owner: "Proprietário(a)",
   tenant_staff: "Equipe",
-  admin: "Administrador",
 };
 
 // ---------------------------------------------------------------------------

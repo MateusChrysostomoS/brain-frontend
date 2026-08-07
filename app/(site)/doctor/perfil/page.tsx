@@ -31,19 +31,25 @@ import { SecretariaConfigSection } from "./SecretariaConfigSection";
 // for completeness/type-safety, it never actually reaches this portal (require_doctor
 // rejects admin tokens with 403 before this page can render).
 const ROLE_LABEL: Record<string, string> = {
+  doctor: "Médico(a)",
+  manager: "Gestor(a)",
+  admin: "Admin",
+  // Legacy values kept as a display fallback until the backfill migration runs.
   tenant_owner: "Proprietário(a)",
   tenant_staff: "Equipe",
-  admin: "Admin",
 };
 const ROLE_TONE: Record<string, BadgeTone> = {
+  doctor: "green",
+  manager: "amber",
+  admin: "muted",
   tenant_owner: "green",
   tenant_staff: "blue",
-  admin: "muted",
 };
 
 export default function DoctorPerfilPage() {
   const router = useRouter();
-  const { session, ready } = usePortalGuard(["tenant_owner", "tenant_staff"]);
+  // legacy values accepted during the role-taxonomy transition
+  const { session, ready } = usePortalGuard(["doctor", "manager", "tenant_owner", "tenant_staff"]);
 
   const [me, setMe] = useState<DoctorMe | null>(null);
   const [error, setError] = useState(false);

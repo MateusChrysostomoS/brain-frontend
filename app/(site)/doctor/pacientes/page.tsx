@@ -9,7 +9,8 @@ import Link from "next/link";
 import { usePortalGuard } from "../../_components/usePortalGuard";
 
 export default function DoctorPatientsPage() {
-  const { session, ready } = usePortalGuard(["tenant_owner", "tenant_staff"]);
+  // legacy values accepted during the role-taxonomy transition
+  const { session, ready } = usePortalGuard(["doctor", "manager", "tenant_owner", "tenant_staff"]);
   if (!ready || !session) return null;
 
   return (

@@ -54,7 +54,7 @@ function seedSession(overrides: Partial<Session> = {}): Session {
     token: "tok",
     tenantId: "t1",
     email: "doc@clinic.com",
-    role: "tenant_owner",
+    role: "doctor",
     refreshToken: "r1",
     ...overrides,
   };

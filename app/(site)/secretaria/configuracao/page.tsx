@@ -10,8 +10,8 @@
 // sections; Services/Availability now edit the SELECTED professional instead
 // of a single tenant-wide list; Context dropped specialty/about (now
 // per-professional) and gained real address/insurances/collect_insurance.
-// Every authenticated tenant member (owner or staff) gets full read/write
-// access — a tenant_staff session's own professional is just preselected in
+// Every authenticated tenant member (owner or not) gets full read/write
+// access — a non-owner session's own professional is just preselected in
 // ProfessionalsSection (see loadProfessionals), it isn't locked read-only.
 //
 // Demo-data honesty: the initial state below seeds sales-demo values (used
@@ -370,7 +370,12 @@ export default function ConfiguracaoPage() {
           // every reload. Only DEFAULT a staff member to their own
           // professional the first time (no prior selection).
           if (prev && list.some((p) => p.id === prev)) return prev;
-          if (session.role === "tenant_staff" && session.professionalId) return session.professionalId;
+          // Non-owner member with a professional bound to them defaults to it.
+          // is_owner is the new claim; role === "tenant_owner" is the legacy
+          // fallback during the transition.
+          if (!(session.isOwner || session.role === "tenant_owner") && session.professionalId) {
+            return session.professionalId;
+          }
           return list[0]?.id ?? null; // single-professional tenants auto-select
         });
       })
@@ -605,7 +610,9 @@ export default function ConfiguracaoPage() {
               <PixSection v={pixDeposit} set={setPixDepositK} readOnly={hubUnreachable} />
               <ProfessionalsSection
                 session={session}
-                isOwner={session?.role === "tenant_owner"}
+                // is_owner is the new claim; role === "tenant_owner" is the
+                // legacy fallback during the transition.
+                isOwner={Boolean(session && (session.isOwner || session.role === "tenant_owner"))}
                 roster={roster}
                 rosterError={rosterError}
                 selectedId={selectedProfessionalId}

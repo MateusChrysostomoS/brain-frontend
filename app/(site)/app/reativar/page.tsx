@@ -40,7 +40,8 @@ function isConnected(data: TestWindow): boolean {
 }
 
 export default function ReativarPage() {
-  const { session, ready } = usePortalGuard(["tenant_owner", "tenant_staff"]);
+  // legacy values accepted during the role-taxonomy transition
+  const { session, ready } = usePortalGuard(["doctor", "manager", "tenant_owner", "tenant_staff"]);
 
   const [data, setData] = useState<TestWindow | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);

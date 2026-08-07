@@ -1,6 +1,6 @@
 "use client";
 
-// DoctorLayout — guards the /doctor/* portal (roles tenant_owner / tenant_staff) and
+// DoctorLayout — guards the /doctor/* portal (roles doctor / manager) and
 // renders the shared PortalShell with the doctor sidebar. An admin token is bounced to
 // /admin/dashboard (wrong portal); an absent session goes to /login. brain-api also
 // re-checks the role on every /doctor/* call.
@@ -53,7 +53,8 @@ const DOCTOR_NAV: DoctorNavItem[] = [
 
 export default function DoctorLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { session, ready } = usePortalGuard(["tenant_owner", "tenant_staff"]);
+  // legacy values accepted during the role-taxonomy transition
+  const { session, ready } = usePortalGuard(["doctor", "manager", "tenant_owner", "tenant_staff"]);
   // Read the impersonation marker AFTER mount — sessionStorage is client-only, so reading it
   // during render would risk a hydration mismatch in the static export.
   const [impersonation, setImpersonation] = useState<ImpersonationMarker | null>(null);

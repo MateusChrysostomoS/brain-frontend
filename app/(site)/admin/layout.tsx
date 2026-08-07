@@ -17,13 +17,17 @@ import { PortalShell, type PortalNavItem } from "../_components/PortalShell";
 import { clearSession, usePortalGuard } from "../_components/usePortalGuard";
 import { enterDoctorMode, logout, ManageApiError } from "@/lib/manage-api";
 
-// Admin sidebar nav (RBAC task 3B): Dashboard · Tenants · Usuários · Demo Requests · Inbound.
+// Admin sidebar nav (RBAC task 3B, extended by the anamneses/metrics/inbound
+// rework): Dashboard · Tenants · Anamneses · Métricas · Inbound · Usuários.
+// "Demo Requests" no longer has its own entry — it was renamed/reworked into
+// "Inbound" (same lead pipeline, PreCheck-style layout; see admin/inbound/page.tsx).
 const ADMIN_NAV: PortalNavItem[] = [
   { href: "/admin/dashboard", label: "Dashboard", icon: "shield" },
   { href: "/admin/tenants", label: "Tenants", icon: "server" },
-  { href: "/admin/users", label: "Usuários", icon: "users" },
-  { href: "/admin/demo-requests", label: "Demo Requests", icon: "note" },
+  { href: "/admin/anamneses", label: "Anamneses", icon: "doc" },
+  { href: "/admin/metrics", label: "Métricas", icon: "sliders" },
   { href: "/admin/inbound", label: "Inbound", icon: "send" },
+  { href: "/admin/users", label: "Usuários", icon: "users" },
 ];
 
 // Turn a failed "Modo médico" handoff into a PT-BR message. 401 is handled separately

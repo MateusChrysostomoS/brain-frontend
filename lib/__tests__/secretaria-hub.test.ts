@@ -31,7 +31,7 @@ function makeSession(overrides: Partial<Session> = {}): Session {
     token: "tok1",
     tenantId: "t1",
     email: "doc@clinic.com",
-    role: "tenant_owner",
+    role: "doctor",
     ...overrides,
   };
 }

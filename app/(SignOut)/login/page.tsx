@@ -55,7 +55,8 @@ function LoginInner() {
       // login() authenticates against brain-api and persists the session.
       const session = await login(email.trim(), password);
       // Route by JWT role (RBAC task 3A): platform admins to the admin portal,
-      // tenant_owner/tenant_staff to the doctor portal.
+      // doctor/manager (or legacy tenant_owner/tenant_staff, during the
+      // role-taxonomy transition) to the doctor portal.
       router.push(
         session.role === "admin" ? "/admin/dashboard" : "/doctor/dashboard",
       );
