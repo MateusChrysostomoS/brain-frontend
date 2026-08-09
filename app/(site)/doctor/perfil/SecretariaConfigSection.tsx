@@ -1,6 +1,6 @@
 "use client";
 
-// SecretariaConfigSection — "Configuração da secretaria" card on /doctor/perfil
+// SecretariaConfigSection — "Configurações secretarIA" card on /doctor/perfil
 // (Meu Perfil), auto-scoped to the LOGGED-IN user's own professional. Uses the
 // PORTAL design system (.card/.pfield/.btn/.alert-line/.portal-error — see
 // PortalShell.css/brand-ds.css), NOT the hub's (_shared/ui.tsx / inline-style
@@ -33,6 +33,7 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties, type FormEvent } from "react";
 import Link from "next/link";
 
+import { SecretariaWordmark } from "../../_components/SecretariaWordmark";
 import { StatusBadge } from "../../_components/StatusBadge";
 // Cross-route reuse: the exact hook the hub pages (agenda/configuração) use
 // for hub session/entitlement/reachability — see its own doc-comment. Not
@@ -89,6 +90,17 @@ const WEEKDAYS: [string, string][] = [
 ];
 function closedWeek(): DayConfig[] {
   return WEEKDAYS.map(([key, label]) => ({ key, label, on: false, ranges: [] }));
+}
+
+// CardTitle — this card's heading. Extracted because every one of the card's
+// states (loading / hub unavailable / hub not configured / loaded) renders it,
+// so the "Configurações secretarIA" naming lives in exactly one place.
+function CardTitle() {
+  return (
+    <h2 className="h-card" style={{ marginBottom: 4 }}>
+      Configurações <SecretariaWordmark />
+    </h2>
+  );
 }
 
 export function SecretariaConfigSection({ session }: { session: Session }) {
@@ -297,9 +309,7 @@ export function SecretariaConfigSection({ session }: { session: Session }) {
   if (!hubCheckReady) {
     return (
       <section className="card">
-        <h2 className="h-card" style={{ marginBottom: 4 }}>
-          Configuração da secretaria
-        </h2>
+        <CardTitle />
         <p style={{ fontSize: 13.5, color: "var(--ink-soft)" }}>Carregando…</p>
       </section>
     );
@@ -314,9 +324,7 @@ export function SecretariaConfigSection({ session }: { session: Session }) {
     // Transient — a retry has a real chance of succeeding (see useSecretariaHub).
     return (
       <section className="card">
-        <h2 className="h-card" style={{ marginBottom: 4 }}>
-          Configuração da secretaria
-        </h2>
+        <CardTitle />
         <div className="alert-line alert-line--amber" style={{ marginTop: 12 }}>
           <span style={{ flex: 1 }}>Não foi possível carregar a configuração da secretarIA agora.</span>
           <button type="button" className="btn btn--outline btn--sm" onClick={retry}>
@@ -335,9 +343,7 @@ export function SecretariaConfigSection({ session }: { session: Session }) {
     // env-var read, not a network call).
     return (
       <section className="card">
-        <h2 className="h-card" style={{ marginBottom: 4 }}>
-          Configuração da secretaria
-        </h2>
+        <CardTitle />
         <div className="alert-line alert-line--amber" style={{ marginTop: 12 }}>
           {hubConfigured()
             ? "Não foi possível carregar a configuração da secretarIA agora."
@@ -349,9 +355,7 @@ export function SecretariaConfigSection({ session }: { session: Session }) {
 
   return (
     <section className="card">
-      <h2 className="h-card" style={{ marginBottom: 4 }}>
-        Configuração da secretaria
-      </h2>
+      <CardTitle />
       <p style={{ fontSize: 13.5, color: "var(--ink-soft)", marginBottom: 20 }}>
         Como a secretarIA fala sobre você e organiza sua agenda de atendimentos.
       </p>
@@ -496,7 +500,7 @@ export function SecretariaConfigSection({ session }: { session: Session }) {
                       <>
                         {" "}
                         <Link href="/secretaria/configuracao#gcal" style={{ fontWeight: 700 }}>
-                          Ir para Configurações da secretaria →
+                          Ir para Configurações <SecretariaWordmark /> →
                         </Link>
                       </>
                     )}

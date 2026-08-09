@@ -42,7 +42,7 @@ const LOCAL_TO_WIRE_DAY: Record<string, string> = Object.fromEntries(
 );
 
 // "HH:MM" -> minutes from midnight. Exported: reused as-is by the /doctor/perfil
-// "Configuração da secretaria" card's own (lighter, native <input type="time">)
+// "Configurações secretarIA" card's own (lighter, native <input type="time">)
 // hours editor — see app/(site)/doctor/perfil/SecretariaConfigSection.tsx.
 export function hhmmToMinutes(hhmm: string): number {
   const [h, m] = hhmm.split(":").map(Number);

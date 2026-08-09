@@ -3,7 +3,7 @@
 // /doctor/perfil — "Meu Perfil": the logged-in doctor's own account info. Two
 // independent <section className="card"> blocks stacked vertically:
 // "Informações pessoais" (name self-editable via PATCH /doctor/me; email/role/
-// clinic shown read-only) and "Configuração da secretaria" (specialty/about/
+// clinic shown read-only) and "Configurações secretarIA" (specialty/about/
 // context/hours + Google Calendar connect for THIS user's own professional,
 // mode-sensitive — see SecretariaConfigSection.tsx). Each section fetches and
 // saves independently; nothing in one needs the other to work.

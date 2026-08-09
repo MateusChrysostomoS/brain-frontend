@@ -9,6 +9,10 @@ local rodando o contrato novo). **NÃO deployado** — mudanças estão no worki
 uncommitted no repo `brain-api` local. Este checkpoint documenta o estado do **working tree**,
 não um estado deployado.
 
+> Depois deste round: o `DOCTOR_NAV` foi renomeado ("Anamneses (PreCheck)" → "Anamneses",
+> "Configurações" → "Configurações secretarIA") e a faixa de Modo médico virou botão no
+> header — ver `CHECKPOINT_header_unificado_produtos.md`.
+
 Round scope: duas peças relacionadas landaram juntas nesta sessão:
 
 1. **Reforma do painel admin** — 4 abas novas/reformadas dentro de `/admin`, portando telas do

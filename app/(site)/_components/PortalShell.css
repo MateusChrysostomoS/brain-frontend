@@ -24,10 +24,24 @@
   backdrop-filter: saturate(140%) blur(14px);
   border-bottom: 1px solid var(--line);
 }
+/* Non-sticky variant for the full-viewport product screens (/secretaria/*), whose
+   own height:100vh flex column already keeps the header pinned at the top. */
+.portal-header--flow {
+  position: relative;
+  flex-shrink: 0;
+}
+/* Brand + product lockup travel together on the left. */
+.portal-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
 .portal-brand {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-shrink: 0;
 }
 .portal-wordmark {
   font-family: var(--font-serif);
@@ -81,7 +95,7 @@
   white-space: nowrap;
 }
 
-/* --- Banner (full-width notice under the header: "Modo médico", errors) --- */
+/* --- Banner (full-width notice under the header, e.g. an admin error) --- */
 .portal-banner {
   position: sticky;
   top: 64px; /* sits directly under the sticky header */
@@ -116,7 +130,9 @@
 /* --- Body layout --- */
 .portal-body {
   display: grid;
-  grid-template-columns: 232px 1fr;
+  /* 250px, not 232px: "Configurações secretarIA" is the longest nav label and
+     needs ~163px of text width to stay on one line. */
+  grid-template-columns: 250px 1fr;
   align-items: start;
 }
 .portal-sidebar {
@@ -533,6 +549,26 @@
   font-size: 13.5px;
   color: var(--ink-soft);
   line-height: 1.5;
+}
+
+/* --- Responsive: drop the portal pill first so the product lockup survives --- */
+@media (max-width: 700px) {
+  .portal-header {
+    gap: 10px;
+    padding: 0 14px;
+  }
+  .portal-label {
+    display: none;
+  }
+  .portal-brand-row {
+    gap: 10px;
+  }
+  /* Mode-switch buttons ("Modo médico" / "Voltar ao admin") go icon-only: their
+     labels are the widest thing in the header cluster. The button keeps its
+     title attribute, so the meaning is still reachable. */
+  .portal-header-btn-label {
+    display: none;
+  }
 }
 
 /* --- Responsive: collapse the sidebar to a scrollable top row --- */

@@ -50,7 +50,10 @@ export function SideNav({ active, onJump }: SideNavProps) {
         textTransform: "uppercase",
         padding: "0 12px 10px",
       }}>
-        Configuração
+        {/* Plain text, not the stylized wordmark: this eyebrow is uppercased,
+            which would mangle "secretarIA". The stylized name is right beside
+            it, in the page's own h1. */}
+        Configurações
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>

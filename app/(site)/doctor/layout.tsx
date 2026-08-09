@@ -6,61 +6,76 @@
 // re-checks the role on every /doctor/* call.
 //
 // When an admin entered via "Modo médico" (CONTRACTS §11.4), the session IS a real doctor
-// token, so the guard passes normally — we just surface a banner making the impersonation
-// explicit and offering "Voltar ao admin" (restores the stashed admin session).
+// token, so the guard passes normally — the impersonation is surfaced by the header's
+// BackToAdminButton, next to the account name, mirroring the admin-side switch.
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { BrandIcon } from "../_components/BrandIcon";
+import { BackToAdminButton } from "../_components/BackToAdminButton";
 import { PortalShell, type PortalNavItem } from "../_components/PortalShell";
+import type { PortalProduct } from "../_components/ProductLockup";
+import { SecretariaWordmark } from "../_components/SecretariaWordmark";
+import { useImpersonation } from "../_components/useImpersonation";
 import { usePortalGuard } from "../_components/usePortalGuard";
-import {
-  exitDoctorMode,
-  getDoctorMe,
-  getImpersonation,
-  logout,
-  type ImpersonationMarker,
-} from "@/lib/manage-api";
+import { getDoctorMe, logout } from "@/lib/manage-api";
 
 // Which product gates a nav item, or null for items every doctor should always see
 // (e.g. a future "Dashboard" entry). Kept alongside DOCTOR_NAV so the mapping is
 // obvious at a glance instead of living in a separate lookup table.
-type DoctorNavItem = PortalNavItem & { product: "precheck" | "secretaria" | null };
+type DoctorNavItem = PortalNavItem & { product: PortalProduct | null };
 
-// Doctor sidebar nav (RBAC task 3C): Agenda · Pacientes · Anamneses (PreCheck) ·
-// Configurações · Meu Perfil. Agenda/Pacientes/Configurações are secretarIA-backed (see
-// /doctor/pacientes); Anamneses is PreCheck-backed. Every product-gated item is filtered
-// below once entitlements are known; `product: null` (Meu Perfil) is account-level, not
-// product-gated, so it always shows regardless of which products the tenant has.
+// Doctor sidebar nav (RBAC task 3C): Agenda · Pacientes · Anamneses ·
+// Configurações secretarIA · Meu Perfil. Agenda/Pacientes/Configurações are
+// secretarIA-backed (see /doctor/pacientes); Anamneses is PreCheck-backed. Every
+// product-gated item is filtered below once entitlements are known; `product: null`
+// (Meu Perfil) is account-level, not product-gated, so it always shows regardless of
+// which products the tenant has.
+//
+// `product` doubles as the source for the header's product lockup — see
+// productForPath below: the nav already knows which product backs each route.
 const DOCTOR_NAV: DoctorNavItem[] = [
   { href: "/secretaria/agenda", label: "Agenda", icon: "calendar", product: "secretaria" },
   { href: "/doctor/pacientes", label: "Pacientes", icon: "users", product: "secretaria" },
   {
     href: "/doctor/anamneses",
-    label: "Anamneses (PreCheck)",
+    label: "Anamneses",
     icon: "note",
     product: "precheck",
   },
   {
     href: "/secretaria/configuracao",
-    label: "Configurações",
+    label: (
+      <>
+        Configurações <SecretariaWordmark />
+      </>
+    ),
     icon: "sliders",
     product: "secretaria",
   },
   { href: "/doctor/perfil", label: "Meu Perfil", icon: "user", product: null },
 ];
 
+// Which product lockup the header shows for the current route. Derived from
+// DOCTOR_NAV so there is a single mapping of route -> product; routes not in the
+// nav (e.g. /doctor/dashboard) are deliberately product-neutral.
+function productForPath(pathname: string | null): PortalProduct | undefined {
+  if (!pathname) return undefined;
+  const path = pathname.replace(/\/+$/, "");
+  const match = DOCTOR_NAV.find(
+    (item) => path === item.href || path.startsWith(item.href + "/"),
+  );
+  return match?.product ?? undefined;
+}
+
 export default function DoctorLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   // legacy values accepted during the role-taxonomy transition
   const { session, ready } = usePortalGuard(["doctor", "manager", "tenant_owner", "tenant_staff"]);
-  // Read the impersonation marker AFTER mount — sessionStorage is client-only, so reading it
-  // during render would risk a hydration mismatch in the static export.
-  const [impersonation, setImpersonation] = useState<ImpersonationMarker | null>(null);
-  useEffect(() => {
-    setImpersonation(getImpersonation());
-  }, []);
+  // "Modo médico" marker — only used here to label the account as the clinic; the
+  // way back out is owned by BackToAdminButton.
+  const { impersonation } = useImpersonation();
 
   // Nav gating (UX only): fetch entitlements once the guard passes so product-gated nav
   // items only show for products the tenant actually has. `null` = still loading,
@@ -101,13 +116,6 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
     router.push("/login");
   }
 
-  // Leave "Modo médico": restore the admin session and return to the admin portal (or to
-  // /login if there was nothing to restore — e.g. a reload cleared the stash).
-  function backToAdmin() {
-    const restored = exitDoctorMode();
-    router.push(restored ? "/admin/dashboard" : "/login");
-  }
-
   if (!ready || !session) {
     return (
       <div className="portal-loading" aria-live="polite">
@@ -117,32 +125,15 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
     );
   }
 
-  const impersonationBanner = impersonation ? (
-    <div className="portal-banner" role="status">
-      <BrandIcon name="user" />
-      <span>
-        Modo médico — você está vendo a clínica{" "}
-        <span className="portal-banner-strong">{impersonation.clinicName}</span> como
-        administrador.
-      </span>
-      <button
-        type="button"
-        className="btn btn--outline btn--sm portal-banner-spacer"
-        onClick={backToAdmin}
-      >
-        Voltar ao admin
-        <BrandIcon name="arrowR" />
-      </button>
-    </div>
-  ) : undefined;
-
   return (
     <PortalShell
       portalLabel="Clínica"
       userLabel={impersonation ? impersonation.clinicName : session.email}
       nav={nav}
       onLogout={handleLogout}
-      banner={impersonationBanner}
+      product={productForPath(pathname)}
+      // Renders itself only under "Modo médico" — see BackToAdminButton.
+      headerActions={<BackToAdminButton />}
     >
       {children}
     </PortalShell>

@@ -19,8 +19,12 @@ import "../../app-shell.css";
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 
-import { Header }       from "../_shared/Header";
-import type { Theme }   from "../_shared/Header";
+import { useRouter } from "next/navigation";
+
+import { PortalHeader } from "../../_components/PortalHeader";
+import { BackToAdminButton } from "../../_components/BackToAdminButton";
+import { useImpersonation } from "../../_components/useImpersonation";
+import { signOut } from "@/lib/sign-out";
 import {
   Icon,
   Btn,
@@ -268,27 +272,16 @@ function Toolbar({
 
 /**
  * secretarIA Agenda screen.
- * Owns: theme, calendar view, selection, modal, and toast state.
- * Renders Header → Toolbar → calendar view → optional Drawer → optional modal → Toast.
+ * Owns: calendar view, selection, modal, and toast state. The chrome (brand,
+ * theme toggle, account, Sair) is the shared PortalHeader, so a doctor navigating
+ * here from /doctor/* sees the same header they had — only the product lockup
+ * beside the Brain brand tells them they're on a secretarIA screen.
  */
 export default function AgendaPage() {
-  // --- Theme ---
-  // Initialised to "light" on the server to avoid hydration mismatch.
-  // On mount we read the attribute the root script already set.
-  const [theme, setTheme] = useState<Theme>("light");
-  useEffect(() => {
-    setTheme(
-      (document.documentElement.getAttribute("data-theme") as Theme) || "light"
-    );
-  }, []);
-
-  const onToggleTheme = () =>
-    setTheme((prev) => {
-      const next: Theme = prev === "dark" ? "light" : "dark";
-      document.documentElement.setAttribute("data-theme", next);
-      try { localStorage.setItem("precheck_theme", next); } catch {}
-      return next;
-    });
+  const router = useRouter();
+  // "Modo médico": show the clinic as the account name, exactly as the doctor
+  // portal's own header does.
+  const { impersonation } = useImpersonation();
 
   // --- Calendar state ---
   const [view, setView]     = useState<ViewMode>("semana");
@@ -423,7 +416,7 @@ export default function AgendaPage() {
       console.error("secretaria hub: failed to create appointment", e);
       const notice =
         e instanceof HubApiError && e.status === 422
-          ? "Conecte o Google Calendar na Configuração para criar consultas reais."
+          ? "Conecte o Google Calendar nas Configurações secretarIA para criar consultas reais."
           : "Não foi possível criar na agenda real. Tente novamente.";
       flash(notice, "xCircle");
       // Keep the modal open on failure — do not fake a local success row.
@@ -464,7 +457,7 @@ export default function AgendaPage() {
       console.error("secretaria hub: failed to create block", e);
       const notice =
         e instanceof HubApiError && e.status === 422
-          ? "Conecte o Google Calendar na Configuração para bloquear horários reais."
+          ? "Conecte o Google Calendar nas Configurações secretarIA para bloquear horários reais."
           : "Não foi possível bloquear na agenda real. Tente novamente.";
       flash(notice, "xCircle");
       // Keep the modal open on failure — do not fake a local success row.
@@ -490,7 +483,16 @@ export default function AgendaPage() {
         background: "var(--page)",
       }}
     >
-      <Header theme={theme} onToggleTheme={onToggleTheme} clinicName={clinicName || undefined} />
+      <PortalHeader
+        portalLabel="Clínica"
+        userLabel={impersonation?.clinicName || session?.email || clinicName || "Brain"}
+        onLogout={() => signOut((path) => router.push(path))}
+        product="secretaria"
+        headerActions={<BackToAdminButton />}
+        // The screen below is a height:100vh flex column with its own internal
+        // scroll area, so the header is already pinned without `position: sticky`.
+        sticky={false}
+      />
 
       {/* no session / not entitled / hub unavailable / hub not configured */}
       <HubNotice

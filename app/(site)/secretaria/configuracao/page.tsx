@@ -26,11 +26,15 @@ import "../../app-shell.css";
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { MutableRefObject } from "react";
+import { useRouter } from "next/navigation";
 import { Icon, Btn } from "../_shared/ui";
-import { Header } from "../_shared/Header";
-import type { Theme } from "../_shared/Header";
 import { HubNotice } from "../_shared/HubNotice";
+import { BackToAdminButton } from "../../_components/BackToAdminButton";
 import { OnboardingBanner } from "../../_components/OnboardingBanner";
+import { PortalHeader } from "../../_components/PortalHeader";
+import { SecretariaWordmark } from "../../_components/SecretariaWordmark";
+import { useImpersonation } from "../../_components/useImpersonation";
+import { signOut } from "@/lib/sign-out";
 import { useSecretariaHub } from "../_shared/useSecretariaHub";
 import { CLINIC } from "../_shared/data";
 
@@ -149,23 +153,10 @@ type NavId = (typeof NAV_IDS)[number];
  * Port of ConfigApp from _design-source/config.jsx.
  */
 export default function ConfiguracaoPage() {
-  // --- theme ---
-  // Initialise to "light" on the server; read [data-theme] after mount
-  // to avoid hydration mismatch and to pick up any pre-existing theme.
-  const [theme, setTheme] = useState<Theme>("light");
-  useEffect(() => {
-    setTheme(
-      (document.documentElement.getAttribute("data-theme") as Theme) || "light"
-    );
-  }, []);
-
-  const onToggleTheme = () =>
-    setTheme(prev => {
-      const next: Theme = prev === "dark" ? "light" : "dark";
-      document.documentElement.setAttribute("data-theme", next);
-      try { localStorage.setItem("precheck_theme", next); } catch { /* ignore */ }
-      return next;
-    });
+  const router = useRouter();
+  // "Modo médico": show the clinic as the account name, exactly as the doctor
+  // portal's own header does.
+  const { impersonation } = useImpersonation();
 
   // --- scrollspy & jump ---
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -547,7 +538,20 @@ export default function ConfiguracaoPage() {
       display: "flex", flexDirection: "column",
       background: "var(--page)",
     }}>
-      <Header theme={theme} onToggleTheme={onToggleTheme} clinicName={hubReady ? ctx.clinicName : undefined} />
+      <PortalHeader
+        portalLabel="Clínica"
+        userLabel={
+          impersonation?.clinicName ||
+          session?.email ||
+          (hubReady ? ctx.clinicName : "Brain")
+        }
+        onLogout={() => signOut((path) => router.push(path))}
+        product="secretaria"
+        headerActions={<BackToAdminButton />}
+        // The screen below is a height:100vh flex column with its own internal
+        // scroll area, so the header is already pinned without `position: sticky`.
+        sticky={false}
+      />
 
       {/* demo-mode / not-entitled / unavailable / not-configured notice —
           hidden once the real hub is active */}
@@ -586,7 +590,7 @@ export default function ConfiguracaoPage() {
                 fontFamily: "var(--font-serif)", color: "var(--ink)",
                 lineHeight: 1.1, letterSpacing: "-.01em", margin: 0,
               }}>
-                Configuração da secretarIA
+                Configurações <SecretariaWordmark />
               </h1>
               <p style={{
                 fontSize: 15, color: "var(--ink-soft)",

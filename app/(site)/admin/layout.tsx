@@ -97,7 +97,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       title="Entrar no portal do médico como a clínica de demonstração"
     >
       <BrandIcon name="swap" />
-      {switching ? "Entrando…" : "Modo médico"}
+      {/* Collapses to icon-only on narrow screens, mirroring BackToAdminButton. */}
+      <span className="portal-header-btn-label">
+        {switching ? "Entrando…" : "Modo médico"}
+      </span>
     </button>
   );
 

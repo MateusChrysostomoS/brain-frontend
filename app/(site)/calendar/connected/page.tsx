@@ -41,11 +41,11 @@ function CalendarConnectedInner() {
           ? "A partir de agora a secretarIA sincroniza automaticamente com essa agenda do Google."
           : reason
             ? `Algo deu errado ao conectar o Google Calendar: ${reason}. Tente novamente.`
-            : "Algo deu errado ao conectar o Google Calendar. Tente novamente pela Configuração."}
+            : "Algo deu errado ao conectar o Google Calendar. Tente novamente pelas Configurações secretarIA."}
       </p>
       <div className="checkout-actions">
         <Link href="/secretaria/configuracao" className="btn btn--primary">
-          Voltar para a configuração
+          Voltar para as Configurações secretarIA
         </Link>
       </div>
     </CalendarConnectedShell>

@@ -1,23 +1,29 @@
 "use client";
 
 // PortalShell — shared chrome for the role portals (/admin/*, /doctor/*).
-// Renders the Brain header (brand + portal label + theme toggle + user + Sair) and a
-// left sidebar nav, with the route's page in <main>. Theme-aware via brand-ds.css tokens
-// (light default, dark via ThemeToggle) — it does NOT invent a new design system.
-// Owns no data; the layouts pass nav items + user label + logout.
+// Renders PortalHeader plus a left sidebar nav, with the route's page in <main>.
+// Theme-aware via brand-ds.css tokens (light default, dark via ThemeToggle) — it
+// does NOT invent a new design system. Owns no data; the layouts pass nav items +
+// user label + logout.
+//
+// The header itself lives in PortalHeader so the full-viewport secretarIA product
+// screens, which can't use this scrolling sidebar+main grid, still get the exact
+// same header.
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
-import { BrandGlyph } from "./BrandGlyph";
 import { BrandIcon, type IconName } from "./BrandIcon";
-import { ThemeToggle } from "./ThemeToggle";
+import { PortalHeader } from "./PortalHeader";
+import type { PortalProduct } from "./ProductLockup";
 import "./PortalShell.css";
 
 export type PortalNavItem = {
   href: string;
-  label: string;
+  // ReactNode, not string: a label may embed a product wordmark
+  // (e.g. "Configurações secretarIA", where "secretarIA" is stylized).
+  label: ReactNode;
   icon: IconName;
 };
 
@@ -29,11 +35,15 @@ type PortalShellProps = {
   nav: PortalNavItem[];
   onLogout: () => void;
   children: ReactNode;
+  // Which product backs the current route, if any — adds the product lockup next
+  // to the Brain brand in the header without changing the brand itself.
+  product?: PortalProduct;
   // Optional controls rendered in the header between the user identity and "Sair"
   // (e.g. the admin "Modo médico" switch). Omitted on portals that don't need them.
   headerActions?: ReactNode;
   // Optional full-width notice rendered directly under the header, above the body
-  // (e.g. the doctor portal's "you are in Modo médico" banner, or an admin error).
+  // (e.g. an admin error). Reserve it for transient alerts: persistent state
+  // belongs in the header (see BackToAdminButton).
   banner?: ReactNode;
 };
 
@@ -51,38 +61,23 @@ export function PortalShell({
   nav,
   onLogout,
   children,
+  product,
   headerActions,
   banner,
 }: PortalShellProps) {
   const pathname = usePathname();
-  const initial = (userLabel.trim()[0] || "B").toUpperCase();
 
   return (
     <div className="portal">
-      {/* --- Header --- */}
-      <header className="portal-header">
-        <Link href="/" className="portal-brand" aria-label="Brain">
-          <BrandGlyph size={26} />
-          <span className="portal-wordmark">Brain</span>
-          <span className="portal-label">{portalLabel}</span>
-        </Link>
+      <PortalHeader
+        portalLabel={portalLabel}
+        userLabel={userLabel}
+        onLogout={onLogout}
+        product={product}
+        headerActions={headerActions}
+      />
 
-        <div className="portal-header-right">
-          <ThemeToggle />
-          <span className="portal-user">
-            <span className="portal-avatar" aria-hidden="true">
-              {initial}
-            </span>
-            <span className="portal-user-label">{userLabel}</span>
-          </span>
-          {headerActions}
-          <button type="button" className="btn btn--outline btn--sm" onClick={onLogout}>
-            Sair
-          </button>
-        </div>
-      </header>
-
-      {/* Optional full-width notice (e.g. the "Modo médico" banner) under the header. */}
+      {/* Optional full-width notice (e.g. an admin error) under the header. */}
       {banner}
 
       {/* --- Body: sidebar + content --- */}

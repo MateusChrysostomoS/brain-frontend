@@ -200,8 +200,8 @@
     "semantic_hash": ""
   },
   "app/(site)/_components/PortalShell.tsx": {
-    "mtime": 1786232695.126318,
-    "ast_hash": "d9b42f4fbdc96b88e43fe2440de4c821",
+    "mtime": 1782485286.5977604,
+    "ast_hash": "dcd0874e82e9cf96482df113595e549c",
     "semantic_hash": ""
   },
   "app/(site)/_components/PriceCard.tsx": {
@@ -250,8 +250,8 @@
     "semantic_hash": ""
   },
   "app/(site)/admin/layout.tsx": {
-    "mtime": 1786233515.0831947,
-    "ast_hash": "7816c94b2567bd2807c81eac064731b4",
+    "mtime": 1786114057.68653,
+    "ast_hash": "a9caa2df7f7b7f7a7e554ae90966d595",
     "semantic_hash": ""
   },
   "app/(site)/admin/tenants/page.tsx": {
@@ -285,18 +285,18 @@
     "semantic_hash": ""
   },
   "app/(site)/doctor/anamneses/page.tsx": {
-    "mtime": 1786232790.842124,
-    "ast_hash": "25b8c195532c01892c39bc5e4df134fc",
+    "mtime": 1786114664.66617,
+    "ast_hash": "31481accef9ec31894038760fb836e58",
     "semantic_hash": ""
   },
   "app/(site)/doctor/dashboard/page.tsx": {
-    "mtime": 1786232778.750439,
-    "ast_hash": "0756dcc2896f7b01a6857d1fcae61993",
+    "mtime": 1786114657.9565372,
+    "ast_hash": "897d15ab05f8a1e94280ea502d50c471",
     "semantic_hash": ""
   },
   "app/(site)/doctor/layout.tsx": {
-    "mtime": 1786232762.877446,
-    "ast_hash": "b8ada4eb28d5f89d58145565ded41c48",
+    "mtime": 1786114634.0507317,
+    "ast_hash": "689999a9bdfffb701b746c75518895f2",
     "semantic_hash": ""
   },
   "app/(site)/doctor/pacientes/page.tsx": {
@@ -312,6 +312,11 @@
   "app/(site)/page.tsx": {
     "mtime": 1785703456.1988266,
     "ast_hash": "0d1d312d34202182feb99b5570294000",
+    "semantic_hash": ""
+  },
+  "app/(site)/secretaria/_shared/Header.tsx": {
+    "mtime": 1786114728.4858966,
+    "ast_hash": "b66a05294a5fd188cf9b51b8cfec4a70",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/_shared/HubNotice.tsx": {
@@ -355,8 +360,8 @@
     "semantic_hash": ""
   },
   "app/(site)/secretaria/agenda/page.tsx": {
-    "mtime": 1786232888.0752556,
-    "ast_hash": "259c0f92a60446989f0063305addaa69",
+    "mtime": 1784771732.3021147,
+    "ast_hash": "325f52c535105baf9893955b8568f462",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/components/AddressFields.tsx": {
@@ -415,8 +420,8 @@
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/components/SideNav.tsx": {
-    "mtime": 1786232971.8489192,
-    "ast_hash": "2a43efbda976678cc0a0fb407d7df076",
+    "mtime": 1784685822.77326,
+    "ast_hash": "b2eba7a9d4d5df7dd5cc438b7d294196",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/components/ToggleRow.tsx": {
@@ -425,8 +430,8 @@
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/lib/hub-mapping.ts": {
-    "mtime": 1786232973.0275664,
-    "ast_hash": "344273bd6d4772c6a0ee7e8a36f0b069",
+    "mtime": 1785561139.2364075,
+    "ast_hash": "ede4d54018329f6f71a7385cc31d2222",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/lib/types.ts": {
@@ -435,8 +440,8 @@
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/page.tsx": {
-    "mtime": 1786232913.5588205,
-    "ast_hash": "87f8414e37c7aa02e40dd3a140bed524",
+    "mtime": 1786114716.2067995,
+    "ast_hash": "f4020aaad2f08c55207a19648fab16e5",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/page.tsx": {
@@ -715,8 +720,8 @@
     "semantic_hash": ""
   },
   "app/(site)/calendar/connected/page.tsx": {
-    "mtime": 1786232854.2027814,
-    "ast_hash": "84c582df5edd96e81b86f50709d71a47",
+    "mtime": 1784357725.952027,
+    "ast_hash": "0b29eac1ec99ac0c459649254155e39c",
     "semantic_hash": ""
   },
   "app/(site)/convite/_components/SetPasswordForm.tsx": {
@@ -800,13 +805,13 @@
     "semantic_hash": ""
   },
   "app/(site)/doctor/perfil/SecretariaConfigSection.tsx": {
-    "mtime": 1786232840.8838923,
-    "ast_hash": "58e3ade7dc38769220b5d304563bc83e",
+    "mtime": 1786114650.9163826,
+    "ast_hash": "183efddbea7b73bac54701000bcdc7bf",
     "semantic_hash": ""
   },
   "app/(site)/doctor/perfil/page.tsx": {
-    "mtime": 1786232851.8706224,
-    "ast_hash": "f8afc2ecb14c0f09a0267f94e8aca3d5",
+    "mtime": 1786114640.0063803,
+    "ast_hash": "d2ab2a12e2e3c1a758692f603b086f64",
     "semantic_hash": ""
   },
   "lib/__tests__/secretaria-hub.test.ts": {
@@ -815,13 +820,13 @@
     "semantic_hash": ""
   },
   "docs/CHECKPOINT_agenda_dedemo.md": {
-    "mtime": 1786233759.4530096,
-    "ast_hash": "f743c0689d92409f088519600b8053e8",
+    "mtime": 1784771899.596964,
+    "ast_hash": "ab264e24e788da6faa4fe5cac81eb919",
     "semantic_hash": ""
   },
   "docs/CHECKPOINT_perfil_gcal_modes.md": {
-    "mtime": 1786233766.359392,
-    "ast_hash": "4c0fd40786461e0a70ebf3152960af5b",
+    "mtime": 1785702702.6843467,
+    "ast_hash": "c29483e05c20ef732f6384013b8ea0c7",
     "semantic_hash": ""
   },
   "docs/CHECKPOINT_fixed_greeting_buttons_ui.md": {
@@ -900,48 +905,8 @@
     "semantic_hash": ""
   },
   "docs/CHECKPOINT_admin_precheck_tabs_role_taxonomy.md": {
-    "mtime": 1786233753.9530714,
-    "ast_hash": "26614858518a105bdb82bac6b55fd8c2",
-    "semantic_hash": ""
-  },
-  "app/(site)/_components/BackToAdminButton.tsx": {
-    "mtime": 1786233513.168964,
-    "ast_hash": "3d7f6e99cf70c8f89a33cb86e41c9b93",
-    "semantic_hash": ""
-  },
-  "app/(site)/_components/PortalHeader.tsx": {
-    "mtime": 1786232670.1387758,
-    "ast_hash": "132e5024de456493a71c27940b79701c",
-    "semantic_hash": ""
-  },
-  "app/(site)/_components/PreCheckWordmark.tsx": {
-    "mtime": 1786232629.202673,
-    "ast_hash": "e1d49b470303ca9801a601926c77b309",
-    "semantic_hash": ""
-  },
-  "app/(site)/_components/ProductLockup.tsx": {
-    "mtime": 1786232641.0954301,
-    "ast_hash": "2c17e91de0bb1d1354887fccd7025a15",
-    "semantic_hash": ""
-  },
-  "app/(site)/_components/SecretariaWordmark.tsx": {
-    "mtime": 1786232620.068122,
-    "ast_hash": "b6c7d7b7e17cc9be8692b3bea722d724",
-    "semantic_hash": ""
-  },
-  "app/(site)/_components/useImpersonation.ts": {
-    "mtime": 1786232651.5171509,
-    "ast_hash": "b2ec3260fe086020a64654dcf033f374",
-    "semantic_hash": ""
-  },
-  "docs/CHECKPOINT_header_unificado_produtos.md": {
-    "mtime": 1786233729.9993322,
-    "ast_hash": "4b68296ce4d942023f269b1c560da3b9",
-    "semantic_hash": ""
-  },
-  "public/brand/precheck-logo.png": {
-    "mtime": 1786142192.0453947,
-    "ast_hash": "ad8fa6a746e559cc4d6a299bb58a31d7",
+    "mtime": 1786117772.027578,
+    "ast_hash": "93a1ff67b5239862731675c61098f098",
     "semantic_hash": ""
   }
 }

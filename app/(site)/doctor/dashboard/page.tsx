@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 
 import { BrandIcon, type IconName } from "../../_components/BrandIcon";
+import { SecretariaWordmark } from "../../_components/SecretariaWordmark";
 import { StatusBadge } from "../../_components/StatusBadge";
 import {
   clearSession,
@@ -27,7 +28,8 @@ function QuickLink({
 }: {
   href: string;
   icon: IconName;
-  title: string;
+  // ReactNode so a title can embed a product wordmark (see SecretariaWordmark).
+  title: ReactNode;
   description: string;
 }) {
   return (
@@ -109,7 +111,7 @@ export default function DoctorDashboardPage() {
               <QuickLink
                 href="/doctor/anamneses"
                 icon="note"
-                title="Anamneses (PreCheck)"
+                title="Anamneses"
                 description="Resumos pré-consulta dos seus pacientes."
               />
             )}
@@ -125,7 +127,11 @@ export default function DoctorDashboardPage() {
               <QuickLink
                 href="/secretaria/configuracao"
                 icon="sliders"
-                title="Configurações"
+                title={
+                  <>
+                    Configurações <SecretariaWordmark />
+                  </>
+                }
                 description="Ajuste o atendimento da secretarIA."
               />
             )}

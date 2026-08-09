@@ -1,0 +1,27 @@
+/* PreCheckWordmark — logo bitmap + serif "Pre" + italic brand "Check".
+   The `em` colour is the Brain brand token rather than PreCheck's navy: navy
+   would fail contrast on the dark theme, and the bitmap already carries the
+   navy identity. */
+
+.precheck-wordmark {
+  display: inline-flex;
+  align-items: baseline;
+  font-family: var(--font-serif);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.precheck-wordmark em {
+  font-style: italic;
+  color: var(--brand);
+}
+
+.precheck-wordmark-logo {
+  /* Sized in em so the mark scales with the wordmark's font-size. */
+  height: 1.05em;
+  width: auto;
+  margin-right: 0.34em;
+  /* Nudges the square bitmap onto the text baseline. */
+  align-self: center;
+}

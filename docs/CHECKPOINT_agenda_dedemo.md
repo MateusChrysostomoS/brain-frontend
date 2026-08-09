@@ -8,6 +8,10 @@ the `useSecretariaHub`/`HubNotice` contract's `unavailable`/`retry` fields (land
 session), make real Google Calendar blocks round-trip with correct styling, and replace the
 hardcoded demo clinic name in outgoing WhatsApp message previews with the tenant's real name.
 
+> Depois deste round: o `Header` próprio da Agenda (`secretaria/_shared/Header.tsx`) foi
+> substituído pelo `PortalHeader` compartilhado e o arquivo foi deletado — ver
+> `CHECKPOINT_header_unificado_produtos.md`.
+
 ## What changed
 
 - **`_shared/data.ts`** — deleted `SEED_APPTS` (27 fake rows) and `SEED_BLOCKS` (7 fake rows) and

@@ -13,7 +13,9 @@ Round scope: two related pieces of brain-frontend work landed together this sess
    `PATCH /doctor/me` / `updateDoctorMe`, e-mail/clinic/role read-only) and wired the nav
    item (`app/(site)/doctor/layout.tsx`'s `DOCTOR_NAV`). This round added the second card,
    "Configuração da secretaria" (self-scoped to the logged-in user's own professional),
-   plus a self-bind prompt for an owner with no professional yet.
+   plus a self-bind prompt for an owner with no professional yet. (Esse card foi depois
+   renomeado para "Configurações secretarIA" e seu título extraído no componente local
+   `CardTitle` — ver `CHECKPOINT_header_unificado_produtos.md`.)
 2. **Google Calendar integration modes (`/secretaria/configuracao`, hub design system)** —
    UI for the new secretarIA contract: a tenant-wide `google_calendar_mode`
    (`per_professional` | `shared_account`) and, in `shared_account` mode, a

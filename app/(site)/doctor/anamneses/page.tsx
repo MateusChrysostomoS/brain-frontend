@@ -117,7 +117,9 @@ function AnamnesesListView({ session }: { session: Session }) {
       <header className="portal-page-head">
         <div>
           <h1>Anamneses</h1>
-          <p className="sub">Resumos pré-consulta dos seus pacientes (PreCheck).</p>
+          {/* The PreCheck provenance is carried by the header lockup, not by a
+              parenthetical in the copy. */}
+          <p className="sub">Resumos pré-consulta dos seus pacientes.</p>
         </div>
       </header>
 
