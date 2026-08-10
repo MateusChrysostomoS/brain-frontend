@@ -1559,6 +1559,11 @@ export type EmbeddedSignupConfig = {
   configured: boolean;
   app_id: string | null;
   config_id: string | null;
+  // Non-empty when the backend can offer the "I already use this number in the
+  // WhatsApp Business app" (Coexistence) path alongside the default "new number"
+  // path — passed straight through to FB.login's `extras.featureType`. Empty/null
+  // means only the default flow is available (today's single-button behavior).
+  coexistence_feature_type: string | null;
 };
 
 export type DoctorOnboarding = {

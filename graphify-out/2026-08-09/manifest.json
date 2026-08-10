@@ -545,8 +545,8 @@
     "semantic_hash": ""
   },
   "lib/manage-api.ts": {
-    "mtime": 1786320862.7750843,
-    "ast_hash": "cc90d421bea335778a18ff1d05e92053",
+    "mtime": 1786114599.3110335,
+    "ast_hash": "28fb4f1bfa847d11ce8a4479c598c111",
     "semantic_hash": ""
   },
   "lib/pageSize.ts": {
@@ -605,8 +605,8 @@
     "semantic_hash": ""
   },
   "vitest.config.ts": {
-    "mtime": 1786320927.9803796,
-    "ast_hash": "ce66df934f91d6a6052ea0e680dbc6a8",
+    "mtime": 1784235230.4959962,
+    "ast_hash": "3db5cab5afa7e11c554a03b65c2510d3",
     "semantic_hash": ""
   },
   "CLAUDE.md": {
@@ -630,8 +630,8 @@
     "semantic_hash": ""
   },
   "app/(site)/app/onboarding/_components/ActivateButton.tsx": {
-    "mtime": 1786320989.106215,
-    "ast_hash": "7a6d4c5c6e496b16bab94d22df5d45fb",
+    "mtime": 1784357607.048435,
+    "ast_hash": "3fc13b3ec1e27d9a8ec327a37f5caa84",
     "semantic_hash": ""
   },
   "app/(site)/app/onboarding/_components/PauseToggles.tsx": {
@@ -645,8 +645,8 @@
     "semantic_hash": ""
   },
   "app/(site)/app/onboarding/lib/meta-embedded-signup.ts": {
-    "mtime": 1786320972.363095,
-    "ast_hash": "c916a2f43d6ba8103e780e3b8ed6a130",
+    "mtime": 1785558663.3148844,
+    "ast_hash": "031e5fdf3c4b31fba5e54ae28338ce8d",
     "semantic_hash": ""
   },
   "app/(site)/app/onboarding/page.tsx": {
@@ -745,8 +745,8 @@
     "semantic_hash": ""
   },
   "docs/VERIFICATION_onboarding.md": {
-    "mtime": 1786321103.0217097,
-    "ast_hash": "5d59bbaf67bab340553b2b82845c6308",
+    "mtime": 1785595319.5328074,
+    "ast_hash": "29c300879c7fab402ecac8d20a74507f",
     "semantic_hash": ""
   },
   "app/(site)/secretaria/configuracao/components/PostConsultSection.tsx": {
@@ -915,8 +915,8 @@
     "semantic_hash": ""
   },
   "app/(site)/_components/PreCheckWordmark.tsx": {
-    "mtime": 1786233835.8095195,
-    "ast_hash": "8d3914a5313d62ea55e70529cbe03139",
+    "mtime": 1786232629.202673,
+    "ast_hash": "e1d49b470303ca9801a601926c77b309",
     "semantic_hash": ""
   },
   "app/(site)/_components/ProductLockup.tsx": {
@@ -942,11 +942,6 @@
   "public/brand/precheck-logo.png": {
     "mtime": 1786142192.0453947,
     "ast_hash": "ad8fa6a746e559cc4d6a299bb58a31d7",
-    "semantic_hash": ""
-  },
-  "app/(site)/app/onboarding/lib/__tests__/meta-embedded-signup.test.ts": {
-    "mtime": 1786320999.6050758,
-    "ast_hash": "fc9e74b4517bbc71d75dbfceca466078",
     "semantic_hash": ""
   }
 }

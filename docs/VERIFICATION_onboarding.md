@@ -9,6 +9,15 @@ also verified green (all 29 static routes, including `/cadastro`, `/app/onboardi
 `/convite`, `/calendar/connected`, `/secretaria/configuracao`). This note is the
 user-facing pass — run it against a dev mesh before calling the round shipped.
 
+> **Coexistence onboarding + FINISH* events update (2026-08-09).** `ActivateButton` now
+> offers two Embedded Signup actions when `embedded_signup.coexistence_feature_type`
+> comes from the backend (§2.4), and `meta-embedded-signup.ts` treats every `FINISH*`
+> event (not just `FINISH`/`FINISH_ONLY_WABA`) and posts `result: "fail"` /
+> `error_code: "no_phone_number_id"` when a signup finishes without a phone number
+> instead of a "pass" that would 422. See `classifySignupMessage`/`resolveAttemptDecision`
+> in `app/(site)/app/onboarding/lib/meta-embedded-signup.ts` and their tests in
+> `app/(site)/app/onboarding/lib/__tests__/meta-embedded-signup.test.ts` (20 new tests).
+
 > **Meu Perfil + Google Calendar modes update (2026-08-01).** Per-professional
 > Configuração (§10) gained a second entry point: `/doctor/perfil`'s "Configuração da
 > secretaria" card, self-scoped to the logged-in user via the same
@@ -178,11 +187,22 @@ the blocker card disappears once the backend clears `blocker_reason`.
   will see in a stock local/dev mesh — confirm it explicitly, don't skip it.**
 - **`embedded_signup.configured: true`**: click "Tentar ativar agora" → loads
   `https://connect.facebook.net/en_US/sdk.js`, calls `FB.init` with the returned
-  `app_id`, opens `FB.login` with `config_id`. On the Meta popup's `FINISH`/
-  `FINISH_ONLY_WABA` postMessage + a returned `code`: `POST /doctor/onboarding/attempts`
+  `app_id`, opens `FB.login` with `config_id`. On any Meta popup postMessage `event`
+  starting with `FINISH` (prefix match — `FINISH`, `FINISH_ONLY_WABA`,
+  `FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING`, `FINISH_OBO_MIGRATION`,
+  `FINISH_GRANT_ONLY_API_ACCESS`) + a returned `code`: `POST /doctor/onboarding/attempts`
   with `result: "pass"`, the `code`, and any captured `phone_number_id`/`waba_id`, then
   refetches the page data. On `CANCEL`/`ERROR`/no-code: `result: "fail"` with an
-  `error_code` derived from the popup step/message.
+  `error_code` derived from the popup step/message. If a FINISH* message never carried a
+  `phone_number_id` (nothing to activate on), the client reports `result: "fail"` with
+  `error_code: "no_phone_number_id"` instead of a "pass" doomed to 422 on the backend —
+  see `resolveAttemptDecision` in `meta-embedded-signup.ts`.
+- **Coexistence path**: when `embedded_signup.coexistence_feature_type` comes back
+  non-empty from the backend, `ActivateButton` renders two actions instead of one — "Já
+  uso este número no WhatsApp Business" (passes that `coexistence_feature_type` through
+  as FB.login's `extras.featureType`) and "Quero um número novo para a API" (the
+  original flow, no `featureType`). When the field is absent/null, the single legacy
+  button renders unchanged.
 - Each attempt is idempotent client-side via a fresh `crypto.randomUUID()` per click —
   a retried click never double-reports the same attempt.
 
@@ -340,6 +360,8 @@ consent screen.
   branches) and by running `npm test` (25/25 passing) and `npm run build` (green, all
   routes present), not by clicking through the UI. Treat this document as ready to
   execute, not as an executed report.
-- The Embedded Signup `FINISH`/`CANCEL`/`ERROR` postMessage handling (§2.4) could only
-  be verified by reading `app/(site)/app/onboarding/lib/meta-embedded-signup.ts` — it
-  was not exercised against a real Meta popup.
+- The Embedded Signup `FINISH*`/`CANCEL`/`ERROR` postMessage handling (§2.4) has unit
+  coverage for its classification logic (`classifySignupMessage`/`resolveAttemptDecision`
+  in `meta-embedded-signup.test.ts`), but the full round-trip — including which
+  `featureType`/`feature_type` casing Meta actually echoes back (the `console.debug`
+  added for this) — was not exercised against a real Meta popup.

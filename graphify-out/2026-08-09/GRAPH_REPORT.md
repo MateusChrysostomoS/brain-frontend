@@ -1,16 +1,16 @@
-# Graph Report - brain-frontend  (2026-08-09)
+# Graph Report - brain-frontend  (2026-08-08)
 
 ## Corpus Check
-- 189 files · ~137,503 words
+- 188 files · ~135,874 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1238 nodes · 2457 edges · 82 communities (74 shown, 8 thin omitted)
+- 1233 nodes · 2449 edges · 82 communities (74 shown, 8 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 1 edges (avg confidence: 0.5)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `a07af77c`
+- Built from commit: `c1982ccb`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -89,9 +89,9 @@
 - [[_COMMUNITY_RestartButton.tsx|RestartButton.tsx]]
 - [[_COMMUNITY_page.tsx|page.tsx]]
 - [[_COMMUNITY_hub-mapping.ts|hub-mapping.ts]]
-- [[_COMMUNITY_sign-out.test.ts|sign-out.test.ts]]
 - [[_COMMUNITY_MessagesSection.tsx|MessagesSection.tsx]]
 - [[_COMMUNITY_DashHeader.tsx|DashHeader.tsx]]
+- [[_COMMUNITY_seen.ts|seen.ts]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `manageFetch()` - 38 edges
@@ -108,14 +108,14 @@
 ## Surprising Connections (you probably didn't know these)
 - `PatientHeader()` --calls--> `statusLabel()`  [EXTRACTED]
   app/(SignIn)/summary/components/PatientHeader.tsx → lib/format.ts
-- `SummaryContent()` --calls--> `fmtDate()`  [EXTRACTED]
-  app/(SignIn)/summary/components/SummaryDetail.tsx → lib/format.ts
 - `UsersPage()` --calls--> `useAuthGuard()`  [EXTRACTED]
   app/(SignIn)/users/page.tsx → lib/useAuthGuard.ts
 - `loadTrialDays()` --calls--> `getCheckoutTrialDays()`  [EXTRACTED]
   app/(site)/_components/CheckoutTrialNotice.tsx → lib/manage-api.ts
-- `AdminMetricsInner()` --calls--> `clearSession()`  [EXTRACTED]
-  app/(site)/admin/metrics/page.tsx → lib/manage-api.ts
+- `PatientCard()` --calls--> `fmtDate()`  [EXTRACTED]
+  app/(SignIn)/dashboard/components/PatientCard.tsx → lib/format.ts
+- `PatientCard()` --calls--> `statusLabel()`  [EXTRACTED]
+  app/(SignIn)/dashboard/components/PatientCard.tsx → lib/format.ts
 
 ## Import Cycles
 - None detected.
@@ -124,7 +124,7 @@
 
 ### Community 0 - "manage-api.ts"
 Cohesion: 0.04
-Nodes (50): AdminAnamnesisList, AdminMetricsClinic, AdminMetricsDoctor, AdminMetricsSatisfaction, AdminMetricsTimelinePoint, AdminMetricsTotals, AdminTenantDeleteResult, AdminUserCreate (+42 more)
+Nodes (54): RestartButton(), RestartButtonProps, AdminAnamnesisList, AdminMetricsClinic, AdminMetricsDoctor, AdminMetricsSatisfaction, AdminMetricsTimelinePoint, AdminMetricsTotals (+46 more)
 
 ### Community 1 - "DashNav.tsx"
 Cohesion: 0.09
@@ -135,40 +135,40 @@ Cohesion: 0.20
 Nodes (9): CHECKPOINT — Meu Perfil (conclusão) + modos de integração Google Calendar, Entrega 1 — `/secretaria/configuracao` (hub design system), Entrega 2 — `/doctor/perfil` "Configuração da secretaria" (portal design system), Invalidated hypothesis (carried over from a prior round, re-confirmed this round), Pendências / follow-ups, Reuse vs. duplication (asked for explicitly — see report for the same summary), Shared client layer — `lib/secretaria-hub.ts`, Tested (+1 more)
 
 ### Community 3 - "usePortalGuard"
-Cohesion: 0.18
-Nodes (9): AnamnesesInner(), AnamnesisDetailView(), formatDateTime(), STATUS_LABEL, STATUS_TONE, statusBadge(), Anamnesis, AnamnesisDetail (+1 more)
+Cohesion: 0.20
+Nodes (8): AnamnesesInner(), AnamnesisDetailView(), formatDateTime(), STATUS_LABEL, STATUS_TONE, statusBadge(), AnamnesisDetail, getAnamnesis()
 
 ### Community 4 - "AvailabilitySection.tsx"
-Cohesion: 0.18
-Nodes (18): PROFILE_OPTIONS, apiFetch(), confirmPasswordReset(), createUser(), deletePatients(), getMetricsOverview(), getSummary(), getSummaryMedia() (+10 more)
+Cohesion: 0.22
+Nodes (10): closedWeek(), SecretariaConfigSection(), AgendaPage(), baseStyle, HubNotice(), HubNoticeProps, warnStyle, Btn() (+2 more)
 
 ### Community 5 - "secretaria-hub.ts"
 Cohesion: 0.09
-Nodes (35): getSecretariaHubToken(), AppointmentCancelPayload, AppointmentCreatePayload, AppointmentReschedulePayload, AppointmentStatusWire, AppointmentTypeWire, AppointmentWire, BlockCreatePayload (+27 more)
+Nodes (33): RETRY_DELAYS_MS, UseSecretariaHubResult, getSecretariaHubToken(), AppointmentCancelPayload, AppointmentCreatePayload, AppointmentReschedulePayload, AppointmentStatusWire, AppointmentWire (+25 more)
 
 ### Community 6 - "SummaryDetail.tsx"
 Cohesion: 0.09
-Nodes (10): ActionButton(), ActionButtonProps, QaItem, QaList(), RISK_CLASS, SectionDef, SEX_LABEL, SummaryContentProps (+2 more)
+Nodes (11): ActionButton(), ActionButtonProps, QaItem, QaList(), RISK_CLASS, SectionDef, SEX_LABEL, SummaryContentProps (+3 more)
 
 ### Community 7 - "ui.tsx"
-Cohesion: 0.17
-Nodes (11): BadgeTone, ProductMark(), StatusBadge(), describeApiError(), DoctorDashboardPage(), DoctorPerfilPage(), ROLE_LABEL, ROLE_TONE (+3 more)
+Cohesion: 0.07
+Nodes (31): AdminAnamnesesInner(), AdminInboundPage(), AdminLayout(), STATUS_TONE, statusBadge(), TenantDetail(), TenantsInner(), ROLE_LABEL (+23 more)
 
 ### Community 8 - "page.tsx"
-Cohesion: 0.10
-Nodes (6): AuthShell(), AuthShellProps, PasswordField(), PasswordFieldProps, StepIndicator(), StepIndicatorProps
+Cohesion: 0.09
+Nodes (9): AuthShell(), AuthShellProps, PasswordField(), PasswordFieldProps, StepIndicator(), StepIndicatorProps, confirmPasswordReset(), requestPasswordReset() (+1 more)
 
 ### Community 9 - "BrandIcon.tsx"
-Cohesion: 0.29
-Nodes (8): BackToAdminButton(), SecretariaWordmark(), SecretariaWordmarkProps, useImpersonation(), DOCTOR_NAV, DoctorLayout(), DoctorNavItem, productForPath()
+Cohesion: 0.20
+Nodes (11): ADMIN_NAV, BackToAdminButton(), BrandIcon(), PortalNavItem, PortalShell(), PortalShellProps, useImpersonation(), DOCTOR_NAV (+3 more)
 
 ### Community 10 - "page.tsx"
 Cohesion: 0.22
 Nodes (6): ContactForm(), ContactFormProps, FormState, DemoProductInterest, DemoProfile, submitDemoRequest()
 
 ### Community 11 - "GoogleSection.tsx"
-Cohesion: 0.18
-Nodes (15): adminDeleteTenant(), adminGetAnamnesis(), adminGetEntitlements(), adminGetTenant(), adminListAnamneses(), adminListTenants(), adminListUsers(), adminPatchDemoRequest() (+7 more)
+Cohesion: 0.21
+Nodes (13): AdminDashboardPage(), Stats, adminGetEntitlements(), adminListAnamneses(), adminListDemoRequests(), adminListTenants(), adminListUsers(), listAnamneses() (+5 more)
 
 ### Community 12 - "package.json"
 Cohesion: 0.10
@@ -179,32 +179,32 @@ Cohesion: 0.10
 Nodes (19): compilerOptions, allowJs, esModuleInterop, incremental, isolatedModules, jsx, lib, module (+11 more)
 
 ### Community 14 - "page.tsx"
-Cohesion: 0.12
-Nodes (11): STATUS_TONE, statusBadge(), TenantDetail(), TenantsInner(), Modal(), ModalProps, InviteProfessionalModal(), InviteProfessionalModalProps (+3 more)
+Cohesion: 0.33
+Nodes (5): Modal(), ModalProps, InviteProfessionalModal(), InviteProfessionalModalProps, createProfessionalInvite()
 
 ### Community 15 - "data.ts"
-Cohesion: 0.10
-Nodes (19): closedWeek(), SecretariaConfigSection(), timeInputStyle, WEEKDAYS, AgendaPage(), ProfessionalsSection(), ProfessionalsSectionProps, RosterActionError (+11 more)
+Cohesion: 0.08
+Nodes (20): SecretariaWordmark(), SecretariaWordmarkProps, timeInputStyle, WEEKDAYS, ProfessionalsSection(), ProfessionalsSectionProps, RosterActionError, applyWireBusinessHours() (+12 more)
 
 ### Community 16 - "page.tsx"
-Cohesion: 0.14
-Nodes (14): formatDate(), LeadCard(), LeadCardProps, STATUS_FILTERS, STATUS_LABEL, STATUS_NEXT, StatusKey, clearToken() (+6 more)
+Cohesion: 0.15
+Nodes (15): formatDate(), LeadCard(), LeadCardProps, STATUS_FILTERS, STATUS_LABEL, STATUS_NEXT, StatusKey, listDemoRequests() (+7 more)
 
 ### Community 17 - "page.tsx"
 Cohesion: 0.09
-Nodes (32): durationMinutes(), formatDateTimePtBR(), formatTimePtBR(), isSameLocalDay(), isTodayLocal(), isWithinLastDays(), isWithinNextWeek(), matchesSearch() (+24 more)
+Nodes (33): durationMinutes(), formatDateTimePtBR(), formatTimePtBR(), isSameLocalDay(), isTodayLocal(), isWithinLastDays(), isWithinNextWeek(), matchesSearch() (+25 more)
 
 ### Community 18 - "calendar.tsx"
 Cohesion: 0.17
 Nodes (9): AvailabilitySection(), AvailabilitySectionProps, DayRowProps, TIME_LIST, CToggle(), CToggleProps, DayConfig, Prefs (+1 more)
 
 ### Community 19 - "page.tsx"
-Cohesion: 0.20
-Nodes (8): BrandHeader(), Reveal(), RevealProps, PRICING, PricingPlan, PricingPlanKey, FAQ_ITEMS, metadata
+Cohesion: 0.18
+Nodes (9): BrandFooter(), BrandFooterProps, Reveal(), RevealProps, PRICING, PricingPlan, PricingPlanKey, FAQ_ITEMS (+1 more)
 
 ### Community 20 - "modals.tsx"
-Cohesion: 0.12
-Nodes (15): FacebookPageStep(), FacebookPageStepProps, OPTIONS, OPTIONS, PriorApiStep(), PriorApiStepProps, OPTIONS, WhatsappUsageStep() (+7 more)
+Cohesion: 0.16
+Nodes (11): FacebookPageStep(), FacebookPageStepProps, OPTIONS, OPTIONS, PriorApiStep(), PriorApiStepProps, RadioOption, RadioPillGroup() (+3 more)
 
 ### Community 21 - "PlanCheckoutCta.tsx"
 Cohesion: 0.22
@@ -219,52 +219,52 @@ Cohesion: 0.12
 Nodes (17): BrandIconProps, FILLED, IconName, PATHS, Faq(), FaqItem, FaqProps, Phone() (+9 more)
 
 ### Community 24 - "api.ts"
-Cohesion: 0.11
-Nodes (17): AdminUserListResponse, BulkDeleteResponse, ClinicStats, DemoRequestCreatePayload, DemoRequestListResponse, DoctorStats, LoginResponse, MediaUrlResponse (+9 more)
+Cohesion: 0.10
+Nodes (31): ROLE_LABEL, RoleOption, PROFILE_OPTIONS, apiFetch(), createUser(), deletePatients(), getSummary(), listSummaries() (+23 more)
 
 ### Community 25 - "PatientCard.tsx"
 Cohesion: 0.40
 Nodes (4): CHECKPOINT — secretarIA Agenda mock purge (de-demo round), Pendências / follow-ups, Tested, What changed
 
 ### Community 26 - "page.tsx"
-Cohesion: 0.12
-Nodes (17): GoogleGlyph(), GoogleSection(), GoogleSectionProps, DURATION_OPTIONS, RequirementRowProps, ServiceCard(), ServiceCardProps, ServicesSection() (+9 more)
+Cohesion: 0.16
+Nodes (12): GoogleGlyph(), GoogleSection(), GoogleSectionProps, PostConsultSection(), PostConsultSectionProps, DEFAULT_PIX_DEPOSIT, EMPTY_PROFESSIONAL_PROFILE, GcalState (+4 more)
 
 ### Community 27 - "page.tsx"
-Cohesion: 0.29
-Nodes (7): BrandHeaderProps, NavLink, BrandIcon(), ThemeToggle(), ThemeToggleProps, Theme, useBrandTheme()
+Cohesion: 0.27
+Nodes (7): BrandHeader(), BrandHeaderProps, NavLink, ThemeToggle(), ThemeToggleProps, Theme, useBrandTheme()
 
 ### Community 28 - "hub-mapping.ts"
-Cohesion: 0.09
-Nodes (30): AddressFieldsOfCtx, applyWireAddress(), applyWireAppointmentTypes(), applyWireBusinessHours(), applyWireGcal(), applyWireInsurances(), applyWireMessages(), applyWirePixDeposit() (+22 more)
+Cohesion: 0.10
+Nodes (28): AddressFieldsOfCtx, applyWireAddress(), applyWireAppointmentTypes(), applyWireGcal(), applyWireInsurances(), applyWireMessages(), applyWirePixDeposit(), applyWirePostConsult() (+20 more)
 
 ### Community 29 - "page.tsx"
-Cohesion: 0.17
-Nodes (13): PatientCard(), PatientCardProps, STATUS_CLASS, MetaChip, PatientHeader(), PatientHeaderProps, STATUS_CLASS, buildChips() (+5 more)
+Cohesion: 0.20
+Nodes (12): PatientCard(), MetaChip, PatientHeader(), PatientHeaderProps, STATUS_CLASS, buildChips(), buildTailSections(), SummaryContent() (+4 more)
 
 ### Community 30 - "page.tsx"
-Cohesion: 0.30
-Nodes (12): decodeJwtPayload(), doRefresh(), exchangeInviteToken(), exchangeOnboardingToken(), fetchImpersonationDoctor(), login(), rawManageFetch(), readBoolClaim() (+4 more)
+Cohesion: 0.15
+Nodes (19): CheckoutSucessoInner(), renderView(), ViewState, decodeJwtPayload(), doRefresh(), enterDoctorMode(), exchangeInviteToken(), exchangeOnboardingToken() (+11 more)
 
 ### Community 31 - "apiFetch"
 Cohesion: 0.11
 Nodes (18): 1.1 Intake branches (each is its own pass), 1.2 Submit error branches, 1. Signup wizard (`/cadastro`), 2.1 State timeline, 2.2 Blocker copy (`blocker_reason`), 2.3 Success states, 2.4 Activate button — Embedded Signup, incl. the not-configured fallback, 2.5 Last-attempt line, pause toggles, banner label (+10 more)
 
 ### Community 32 - "page.tsx"
-Cohesion: 0.18
-Nodes (12): ContactStep(), ContactStepProps, honeypotStyle, DedicatedNumberGuideProps, STEPS, PageCreationGuideProps, STEPS, TestWindowExplainerStepProps (+4 more)
+Cohesion: 0.14
+Nodes (15): DedicatedNumberGuide(), DedicatedNumberGuideProps, STEPS, PageCreationGuide(), PageCreationGuideProps, STEPS, TestWindowExplainerStepProps, OPTIONS (+7 more)
 
 ### Community 33 - "PortalShell.tsx"
 Cohesion: 0.22
 Nodes (3): b64url(), makeJwt(), ManageApiModule
 
 ### Community 34 - "page.tsx"
-Cohesion: 0.33
-Nodes (5): NAV, NavItem, SideNav(), SideNavProps, IconName
+Cohesion: 0.11
+Nodes (19): DrawerProps, CToast(), CToastProps, NAV, NavItem, SideNav(), SideNavProps, ApptStatus (+11 more)
 
 ### Community 35 - "page.tsx"
-Cohesion: 0.14
-Nodes (13): AdminDashboardPage(), Stats, ROLE_LABEL, ROLE_TONE, UsersPage(), usePortalGuard(), DoctorPatientsPage(), adminCreateUser() (+5 more)
+Cohesion: 0.22
+Nodes (8): DURATION_OPTIONS, RequirementRowProps, ServiceCard(), ServiceCardProps, ServicesSection(), ServicesSectionProps, Requirement, Service
 
 ### Community 36 - "manage-api.test.ts"
 Cohesion: 0.18
@@ -283,72 +283,72 @@ Cohesion: 0.29
 Nodes (6): SummaryDetail(), Toast(), ToastProps, ToastTone, ToastState, useToast()
 
 ### Community 40 - "BrandGlyph.tsx"
-Cohesion: 0.19
-Nodes (4): BrandFooter(), BrandFooterProps, BrandGlyph(), BrandGlyphProps
+Cohesion: 0.11
+Nodes (11): ADDON_LABELS, BillingPage(), humanizeStatus(), LIMIT_LABELS, PLAN_LABELS, StatusVisual, BrandGlyph(), BrandGlyphProps (+3 more)
 
 ### Community 41 - "Manual verification — billing, refresh tokens & secretarIA hub handoff"
 Cohesion: 0.25
 Nodes (7): 1. Refresh-token session lifecycle, 2. Billing (Stripe test mode), 3. secretarIA hub handoff, 4. Entitlement-aware gating, Environment, Manual verification — billing, refresh tokens & secretarIA hub handoff, What's actually live vs. demo, per action/field
 
 ### Community 42 - "DeleteControls.tsx"
-Cohesion: 0.40
-Nodes (3): DeleteControlsProps, TrashIcon(), TrashIconProps
+Cohesion: 0.22
+Nodes (6): DeleteControlsProps, PatientCardProps, STATUS_CLASS, TrashIcon(), TrashIconProps, Alert
 
 ### Community 43 - "Session"
-Cohesion: 0.07
-Nodes (31): ActivateButton(), ActivateButtonProps, PauseToggles(), PauseTogglesProps, NODES, rankOf(), StateTimeline(), classifySignupMessage() (+23 more)
+Cohesion: 0.08
+Nodes (24): ActivateButton(), ActivateButtonProps, PauseToggles(), PauseTogglesProps, NODES, rankOf(), StateTimeline(), ATTEMPT_RESULT_LABEL (+16 more)
 
 ### Community 44 - "page.tsx"
-Cohesion: 0.17
-Nodes (14): fmtHours(), MetricsPage(), PeriodKey, PERIODS, SCORE_LABELS, ROLE_LABEL, RoleOption, UsersPage() (+6 more)
+Cohesion: 0.20
+Nodes (11): fmtHours(), MetricsPage(), PeriodKey, PERIODS, SCORE_LABELS, UsersPage(), getMe(), getMetricsOverview() (+3 more)
 
 ### Community 45 - "brain-frontend"
 Cohesion: 0.50
 Nodes (3): brain-frontend, Documentação — manter em dia (obrigatório), graphify
 
 ### Community 57 - "ProfessionalsSection.tsx"
-Cohesion: 0.11
-Nodes (19): AddressFields(), AddressFieldsProps, ContextSection(), ContextSectionProps, NumberFieldProps, PixSection(), PixSectionProps, PostConsultSection() (+11 more)
+Cohesion: 0.14
+Nodes (15): AddressFields(), AddressFieldsProps, ContextSection(), ContextSectionProps, NumberFieldProps, PixSection(), PixSectionProps, Section() (+7 more)
 
 ### Community 58 - "PlanCheckoutCta.tsx"
 Cohesion: 0.20
 Nodes (12): CheckoutTrialNotice(), CheckoutTrialNoticeProps, loadTrialDays(), noticeStyle, alertStyle, PlanCheckoutCta(), PlanCheckoutCtaProps, isPurchaseGated() (+4 more)
 
 ### Community 59 - "modals.tsx"
-Cohesion: 0.05
-Nodes (63): ApptBlock(), DayBlock(), DayView(), heightOf(), MONTH_GRID, MonthView(), NowLine(), toneOf() (+55 more)
+Cohesion: 0.12
+Nodes (21): BLOCK_REASONS, BlockModal(), CANCEL_REASONS, CancelModal(), clinicDisplay(), MessagePreview(), NewApptModal(), RescheduleModal() (+13 more)
 
 ### Community 60 - "page.tsx"
 Cohesion: 0.14
 Nodes (13): Accessibility, Browser verification (dev server, 2026-08-01), CHECKPOINT — Launch waitlist (pre-launch buy gate, frontend half), Components, Door 1 — `_components/PlanCheckoutCta.tsx` (the buy buttons), Door 2 — `cadastro/page.tsx` (the signup wizard route), Pendências, Pricing screen (+5 more)
 
 ### Community 61 - "modals.tsx"
-Cohesion: 0.18
-Nodes (11): ADDON_LABELS, BillingPage(), humanizeStatus(), LIMIT_LABELS, PLAN_LABELS, StatusVisual, coerceAddons(), coerceLimits() (+3 more)
+Cohesion: 0.20
+Nodes (13): ApptBlock(), DayBlock(), DayView(), heightOf(), MONTH_GRID, MonthView(), NowLine(), toneOf() (+5 more)
 
 ### Community 62 - "CHECKPOINT — Admin: abas PreCheck (Anamneses/Métricas/Inbound) + taxonomia de papéis (Role)"
 Cohesion: 0.14
 Nodes (13): A) Painel admin — 4 abas, `app/(site)/admin/anamneses/page.tsx` (NOVA), `app/(site)/admin/inbound/page.tsx` (REFORMADA — não é mais um proxy PreCheck), `app/(site)/admin/metrics/page.tsx` (NOVA), `app/(site)/admin/users/page.tsx`, B) Taxonomia de papéis (contrato com o brain-api), CHECKPOINT — Admin: abas PreCheck (Anamneses/Métricas/Inbound) + taxonomia de papéis (Role), Componentes de apoio (+5 more)
 
 ### Community 63 - "types.ts"
-Cohesion: 0.12
-Nodes (19): ADDON_COPY, AddonsStep(), AddonsStepProps, CadastroWizardProps, nextAfterEligibility(), nextStepId(), PROGRESS, PROGRESS_LABEL (+11 more)
+Cohesion: 0.11
+Nodes (21): ADDON_COPY, AddonsStep(), AddonsStepProps, CadastroWizardProps, nextAfterEligibility(), nextStepId(), PROGRESS, PROGRESS_LABEL (+13 more)
 
 ### Community 64 - "CadastroWizard.tsx"
-Cohesion: 0.31
-Nodes (7): formatDate(), isConnected(), ReativarPage(), getTestWindow(), logout(), TestWindow, signOut()
+Cohesion: 0.47
+Nodes (5): formatDate(), isConnected(), ReativarPage(), getTestWindow(), TestWindow
 
 ### Community 65 - "useSecretariaHub.ts"
 Cohesion: 0.11
-Nodes (18): DashFilters(), DashFiltersProps, DateFilter, StatusFilter, DashPaginationProps, SIZE_OPTIONS, DashSearch(), DashSearchProps (+10 more)
+Nodes (17): DashFilters(), DashFiltersProps, DateFilter, StatusFilter, DashPaginationProps, SIZE_OPTIONS, DashSearch(), DashSearchProps (+9 more)
 
 ### Community 66 - "page.tsx"
 Cohesion: 0.18
-Nodes (8): AdminAnamnesesInner(), AdminAnamnesisDetailView(), formatDateTime(), STATUS_LABEL, STATUS_TONE, statusBadge(), AdminAnamnesis, AdminAnamnesisDetail
+Nodes (8): AdminAnamnesisDetailView(), formatDateTime(), STATUS_LABEL, STATUS_TONE, statusBadge(), AdminAnamnesis, AdminAnamnesisDetail, adminGetAnamnesis()
 
 ### Community 67 - "apiFetch"
-Cohesion: 0.15
-Nodes (12): ADMIN_NAV, AdminLayout(), PortalHeader(), PortalHeaderProps, PortalNavItem, PortalShell(), PortalShellProps, PreCheckWordmark() (+4 more)
+Cohesion: 0.27
+Nodes (7): PortalHeader(), PortalHeaderProps, PreCheckWordmark(), PreCheckWordmarkProps, PortalProduct, PRODUCT_NAME, ProductLockup()
 
 ### Community 68 - "AddonsStep.tsx"
 Cohesion: 0.13
@@ -359,16 +359,16 @@ Cohesion: 0.22
 Nodes (8): CHECKPOINT — Portal de cobrança do PreCheck + port de /metrics e /users, Frente A — Cobrança do PreCheck, Frente B — port de `/metrics` e `/users`, `DashNav` sensível a papel, Notas para o operador, O que mudou, Pendências / follow-ups, Reuso vs. duplicação, Testado
 
 ### Community 70 - "PatientImages.tsx"
-Cohesion: 0.43
-Nodes (5): Lightbox(), MediaThumb(), useSignedUrl(), getMediaUrl(), SummaryMediaItem
+Cohesion: 0.36
+Nodes (6): Lightbox(), MediaThumb(), useSignedUrl(), getMediaUrl(), getSummaryMedia(), SummaryMediaItem
 
 ### Community 71 - "page.tsx"
-Cohesion: 0.40
-Nodes (6): asText(), buildAntro(), buildClassicSections(), buildSoapSections(), buildTailSections(), SummaryContent()
+Cohesion: 0.50
+Nodes (4): asText(), buildAntro(), buildClassicSections(), buildSoapSections()
 
 ### Community 72 - "resumo.ts"
-Cohesion: 0.47
-Nodes (4): buildResumoText(), buildResumoTextClassic(), buildResumoTextSoap(), Summary
+Cohesion: 0.60
+Nodes (3): buildResumoText(), buildResumoTextClassic(), buildResumoTextSoap()
 
 ### Community 73 - "PrecheckBillingSection.tsx"
 Cohesion: 0.21
@@ -376,47 +376,47 @@ Nodes (10): formatDatePtBR(), PrecheckBillingSection(), PrecheckBillingSectionPr
 
 ### Community 74 - "page.tsx"
 Cohesion: 0.18
-Nodes (11): AdminInboundPage(), formatDate(), INTEREST_LABEL, LeadCard(), NEXT_ACTIONS, STATUS_FILTERS, STATUS_LABEL, STATUS_TONE (+3 more)
+Nodes (11): formatDate(), INTEREST_LABEL, LeadCard(), NEXT_ACTIONS, STATUS_FILTERS, STATUS_LABEL, STATUS_TONE, StatusFilter (+3 more)
 
 ### Community 75 - "page.tsx"
-Cohesion: 0.23
-Nodes (10): AdminMetricsInner(), AdminMetricsPage(), fmtHours(), fmtScore(), PeriodKey, PERIODS, SCORE_LABELS, isSessionExpired() (+2 more)
+Cohesion: 0.15
+Nodes (14): AdminMetricsInner(), AdminMetricsPage(), fmtHours(), fmtScore(), PeriodKey, PERIODS, SCORE_LABELS, isSessionExpired() (+6 more)
 
 ### Community 76 - "RestartButton.tsx"
 Cohesion: 0.40
 Nodes (3): HubModule, mockHubTokenMint(), mockResponse()
 
 ### Community 77 - "page.tsx"
-Cohesion: 0.25
-Nodes (7): CheckoutSucessoInner(), renderView(), ViewState, enterDoctorMode(), getOnboardingStatus(), getSession(), saveSession()
+Cohesion: 0.33
+Nodes (6): EmbeddedSignupOutcome, FacebookLoginResponse, loadFacebookSdk(), runEmbeddedSignup(), TRUSTED_MESSAGE_ORIGINS, Window
 
 ### Community 78 - "hub-mapping.ts"
-Cohesion: 0.29
-Nodes (5): RestartButton(), RestartButtonProps, ManageApiError, restartTestWindow(), RestartTestWindowResult
+Cohesion: 0.16
+Nodes (16): blockReasonFromSummary(), currentWeekIsoRange(), formatBlockSummary(), isBlockSummary(), mapHubEventsToAppts(), mapHubEventToAppt(), mondayOfWeek(), slotToIsoRange() (+8 more)
 
 ### Community 82 - "MessagesSection.tsx"
-Cohesion: 0.15
-Nodes (11): CSelect(), CSelectProps, CToast(), CToastProps, FIXED_GREETING_BUTTONS, LANGUAGE_OPTIONS, MessagesSection(), MessagesSectionProps (+3 more)
+Cohesion: 0.20
+Nodes (8): CSelect(), CSelectProps, FIXED_GREETING_BUTTONS, LANGUAGE_OPTIONS, MessagesSection(), MessagesSectionProps, Messages, inputStyle
 
 ## Knowledge Gaps
-- **402 isolated node(s):** `DashFiltersProps`, `DashHeaderProps`, `SIZE_OPTIONS`, `DashPaginationProps`, `DashSearchProps` (+397 more)
+- **400 isolated node(s):** `DashFiltersProps`, `DashHeaderProps`, `SIZE_OPTIONS`, `DashPaginationProps`, `DashSearchProps` (+395 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **8 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Session` connect `page.tsx` to `manage-api.ts`, `usePortalGuard`, `secretaria-hub.ts`, `ui.tsx`, `data.ts`, `page.tsx`, `page.tsx`, `PlanCheckoutCta.tsx`, `PortalShell.tsx`, `page.tsx`, `Session`, `modals.tsx`, `modals.tsx`, `page.tsx`, `PrecheckBillingSection.tsx`, `page.tsx`, `page.tsx`, `RestartButton.tsx`, `hub-mapping.ts`, `sign-out.test.ts`?**
-  _High betweenness centrality (0.034) - this node is a cross-community bridge._
-- **Why does `BrandIcon()` connect `page.tsx` to `CadastroWizard.tsx`, `apiFetch`, `page.tsx`, `ui.tsx`, `PrecheckBillingSection.tsx`, `BrandIcon.tsx`, `Session`, `page.tsx`, `page.tsx`, `page.tsx`, `page.tsx`, `page.tsx`, `page.tsx`, `modals.tsx`, `types.ts`?**
+- **Why does `Session` connect `Session` to `manage-api.ts`, `PortalShell.tsx`, `page.tsx`, `usePortalGuard`, `AvailabilitySection.tsx`, `secretaria-hub.ts`, `ui.tsx`, `BrandGlyph.tsx`, `PrecheckBillingSection.tsx`, `page.tsx`, `page.tsx`, `RestartButton.tsx`, `page.tsx`, `data.ts`, `page.tsx`, `PlanCheckoutCta.tsx`?**
+  _High betweenness centrality (0.032) - this node is a cross-community bridge._
+- **Why does `BrandIcon()` connect `BrandIcon.tsx` to `CadastroWizard.tsx`, `ui.tsx`, `BrandGlyph.tsx`, `PrecheckBillingSection.tsx`, `page.tsx`, `GoogleSection.tsx`, `Session`, `page.tsx`, `page.tsx`, `page.tsx`, `page.tsx`, `types.ts`?**
+  _High betweenness centrality (0.024) - this node is a cross-community bridge._
+- **Why does `ManageApiError` connect `types.ts` to `manage-api.ts`, `PatientImages.tsx`, `secretaria-hub.ts`, `ui.tsx`, `BrandGlyph.tsx`, `PrecheckBillingSection.tsx`, `BrandIcon.tsx`, `page.tsx`, `PlanCheckoutCta.tsx`, `PlanCheckoutCta.tsx`, `page.tsx`?**
   _High betweenness centrality (0.023) - this node is a cross-community bridge._
-- **Why does `ManageApiError` connect `hub-mapping.ts` to `manage-api.ts`, `apiFetch`, `page.tsx`, `PatientImages.tsx`, `secretaria-hub.ts`, `PrecheckBillingSection.tsx`, `page.tsx`, `page.tsx`, `data.ts`, `page.tsx`, `PlanCheckoutCta.tsx`, `PlanCheckoutCta.tsx`, `modals.tsx`, `types.ts`?**
-  _High betweenness centrality (0.022) - this node is a cross-community bridge._
 - **What connects `DashFiltersProps`, `DashHeaderProps`, `SIZE_OPTIONS` to the rest of the system?**
-  _402 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _400 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `manage-api.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.04147812971342383 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.03896103896103896 - nodes in this community are weakly interconnected._
 - **Should `DashNav.tsx` be split into smaller, more focused modules?**
   _Cohesion score 0.08669354838709678 - nodes in this community are weakly interconnected._
 - **Should `secretaria-hub.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.08571428571428572 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.09243697478991597 - nodes in this community are weakly interconnected._

@@ -74,12 +74,80 @@ export type EmbeddedSignupOutcome =
   | { result: "pass"; code: string; phoneNumberId: string | null; wabaId: string | null }
   | { result: "fail"; errorCode: string | null };
 
+// What ActivateButton should actually POST to /doctor/onboarding/attempts,
+// given a raw EmbeddedSignupOutcome. Kept as a pure function (no fetch, no
+// React state) so this decision is unit-testable without jsdom/testing-library.
+export type OnboardingAttemptDecision =
+  | { result: "pass"; code: string; phoneNumberId: string; wabaId: string | null }
+  | { result: "fail"; errorCode: string | null };
+
+// A "pass" outcome with no phoneNumberId means the Meta flow returned an
+// OAuth code but the WA_EMBEDDED_SIGNUP message never carried a
+// phone_number_id — the backend has nothing to activate on, and used to 422
+// on that "pass" attempt instead. This maps it to an actionable
+// "no_phone_number_id" fail locally so the caller can show retry copy
+// instead of surfacing a doomed pass (Task 2 finding).
+export function resolveAttemptDecision(outcome: EmbeddedSignupOutcome): OnboardingAttemptDecision {
+  if (outcome.result === "fail") {
+    return { result: "fail", errorCode: outcome.errorCode };
+  }
+  if (outcome.phoneNumberId === null) {
+    return { result: "fail", errorCode: "no_phone_number_id" };
+  }
+  return { result: "pass", code: outcome.code, phoneNumberId: outcome.phoneNumberId, wabaId: outcome.wabaId };
+}
+
+// Result of classifying one already-parsed WA_EMBEDDED_SIGNUP message body
+// ({event, data}). Extracted as a pure function (no window/FB access) so the
+// FINISH*/CANCEL/ERROR branching can be unit-tested directly instead of only
+// through a real postMessage round-trip.
+export type SignupMessageClassification =
+  | { kind: "finish"; phoneNumberId: string | null; wabaId: string | null }
+  | { kind: "fail"; errorCode: string | null }
+  | { kind: "ignore" };
+
+export function classifySignupMessage(data: Record<string, unknown>): SignupMessageClassification {
+  const payload = (data.data ?? {}) as Record<string, unknown>;
+  const event = data.event;
+
+  // Meta has been adding FINISH_* variants over time (Coexistence, OBO
+  // migration, grant-only API access) rather than replacing FINISH, so this
+  // matches by prefix instead of an exact set. Known values as of this
+  // writing (Embedded Signup "Implementation" doc,
+  // developers.facebook.com/documentation/business-messaging/whatsapp/embedded-signup/implementation):
+  // FINISH, FINISH_ONLY_WABA, FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING (Coexistence),
+  // FINISH_OBO_MIGRATION, FINISH_GRANT_ONLY_API_ACCESS. A prefix match means a
+  // future variant this list doesn't yet know about still resolves phone_number_id/
+  // waba_id instead of being silently ignored.
+  if (typeof event === "string" && event.startsWith("FINISH")) {
+    return {
+      kind: "finish",
+      phoneNumberId: typeof payload.phone_number_id === "string" ? payload.phone_number_id : null,
+      wabaId: typeof payload.waba_id === "string" ? payload.waba_id : null,
+    };
+  }
+  if (event === "CANCEL") {
+    const step = typeof payload.current_step === "string" ? payload.current_step : "cancelled";
+    return { kind: "fail", errorCode: step };
+  }
+  if (event === "ERROR") {
+    const msg = typeof payload.error_message === "string" ? payload.error_message : "error";
+    return { kind: "fail", errorCode: msg };
+  }
+  return { kind: "ignore" };
+}
+
 // Runs one Embedded Signup round-trip: loads the SDK, inits it with the
 // tenant's app_id, opens FB.login with the given config_id, and listens for
 // the WA_EMBEDDED_SIGNUP message to capture phone_number_id/waba_id.
+//
+// `featureType`, when passed, selects a specific onboarding sub-flow via
+// FB.login's `extras.featureType` (e.g. Coexistence — see the `extras`
+// comment below). Omit it for the default "new number" flow.
 export async function runEmbeddedSignup(
   appId: string,
   configId: string,
+  featureType?: string,
 ): Promise<EmbeddedSignupOutcome> {
   await loadFacebookSdk();
   const FB = window.FB;
@@ -109,16 +177,26 @@ export async function runEmbeddedSignup(
       }
       if (data?.type !== "WA_EMBEDDED_SIGNUP") return;
 
-      const payload = (data.data ?? {}) as Record<string, unknown>;
-      if (data.event === "FINISH" || data.event === "FINISH_ONLY_WABA") {
-        phoneNumberId = typeof payload.phone_number_id === "string" ? payload.phone_number_id : null;
-        wabaId = typeof payload.waba_id === "string" ? payload.waba_id : null;
-      } else if (data.event === "CANCEL") {
-        const step = typeof payload.current_step === "string" ? payload.current_step : "cancelled";
-        finish({ result: "fail", errorCode: step });
-      } else if (data.event === "ERROR") {
-        const msg = typeof payload.error_message === "string" ? payload.error_message : "error";
-        finish({ result: "fail", errorCode: msg });
+      // Contract-shape debug: Meta's own docs are inconsistent on whether the
+      // `extras.featureType` key we send is echoed back as `featureType` or
+      // `feature_type` (Task 0 finding). Logging event + payload key names
+      // (never values — phone numbers/tokens can be in there) for every real
+      // signup message is how a live test against the Meta popup confirms
+      // which spelling actually shows up, without shipping a debug UI.
+      if (process.env.NODE_ENV !== "production") {
+        const debugPayload = (data.data ?? {}) as Record<string, unknown>;
+        console.debug("[meta-embedded-signup] WA_EMBEDDED_SIGNUP message", {
+          event: data.event,
+          payloadKeys: Object.keys(debugPayload),
+        });
+      }
+
+      const classification = classifySignupMessage(data);
+      if (classification.kind === "finish") {
+        phoneNumberId = classification.phoneNumberId;
+        wabaId = classification.wabaId;
+      } else if (classification.kind === "fail") {
+        finish({ result: "fail", errorCode: classification.errorCode });
       }
     }
 
@@ -138,18 +216,25 @@ export async function runEmbeddedSignup(
         response_type: "code",
         override_default_response_type: true,
         // v4 is the current Embedded Signup version (v2 deprecates 2026-10-15,
-        // per Meta's official docs). Its documented `extras` is empty besides
-        // `setup` — `featureType`/`sessionInfoVersion` were v2-only fields (v2
-        // required `sessionInfoVersion` to get phone_number_id/waba_id on the
-        // FINISH message; v4 sends full session info for every flow by
-        // default, so the field is retired rather than bumped to a new
-        // value). Which flow version actually runs is NOT selected here — it
-        // is determined by `configId` itself: a Facebook Login for Business
+        // per Meta's official docs). What v4 actually retired is
+        // `sessionInfoVersion` — v2 required it to get phone_number_id/waba_id
+        // on the FINISH message; v4 sends full session info for every flow by
+        // default, so that field alone is gone. `featureType` is NOT v2-only:
+        // the v4 docs page states in prose that "Onboarding WhatsApp Business
+        // app users continues to be supported through the feature_type
+        // parameter", and the Coexistence custom-flows doc
+        // (docs/whatsapp/embedded-signup/custom-flows/onboarding-business-app-users)
+        // documents the JS SDK key as `extras.featureType =
+        // "whatsapp_business_app_onboarding"`. So the key is only included
+        // when a caller explicitly opts into that (or a future) sub-flow —
+        // omitting it keeps the default "new number" flow byte-identical to
+        // before. Which flow VERSION runs at all is still NOT selected here —
+        // that's `configId` itself: a Facebook Login for Business
         // Configuration created in the Meta App Dashboard (App Dashboard >
         // Facebook Login for Business > Configurations > "Embedded Signup" >
         // select products). See GUIA_CREDENCIAIS_META_EMBEDDED_SIGNUP.md
         // ("Versão do Embedded Signup", brain-api/docs) for sources.
-        extras: { setup: {} },
+        extras: featureType ? { setup: {}, featureType } : { setup: {} },
       },
     );
   });
