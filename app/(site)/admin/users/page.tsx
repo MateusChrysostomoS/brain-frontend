@@ -6,8 +6,10 @@
 // API never returns one). Creating a user posts to brain-api, which hashes the
 // password server-side. Admin role => no tenant; tenant roles require a tenant.
 //
-// Role-taxonomy transition: tenant roles are doctor/manager (a doctor can ALSO be
-// a manager via the separate is_manager flag — "Também é gestor" checkbox below).
+// Role-taxonomy transition: tenant roles are doctor/manager. The create form drives
+// is_manager straight from the role select ("Gestor" already means doctor + clinic
+// management), so there is no separate checkbox — but is_manager remains a real field
+// on existing rows, and the table still renders the "+ Gestor" badge for them.
 // Legacy tenant_owner/tenant_staff rows may still exist until the backfill
 // migration runs — ROLE_LABEL/ROLE_TONE keep display fallbacks for them, but the
 // create form only ever writes the new role values.
@@ -15,6 +17,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
+import { Notice } from "../../_components/Notice";
 import { StatusBadge, type BadgeTone } from "../../_components/StatusBadge";
 import {
   clearSession,
@@ -197,14 +200,12 @@ function CreateUserPanel({
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<Role>("doctor");
-  // "Também é gestor" — only meaningful (and only shown) for role="doctor"; a
-  // role="manager" row is already a manager, and role="admin" carries no
-  // is_manager concept at all (see payload construction below).
-  const [alsoManager, setAlsoManager] = useState(false);
   const [tenantId, setTenantId] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [formOk, setFormOk] = useState<string | null>(null);
+
+  const dismissFormOk = useCallback(() => setFormOk(null), []);
 
   const needsTenant = role !== "admin";
 
@@ -229,10 +230,10 @@ function CreateUserPanel({
         role,
         // Tenant roles carry a tenant; admins must not (server enforces this too).
         tenant_id: needsTenant ? tenantId : null,
-        // is_manager only applies to tenant roles: a manager row is always a
-        // manager (true); a doctor row carries whatever the checkbox says;
-        // admin sends nothing (server has no is_manager concept for it).
-        ...(role === "admin" ? {} : { is_manager: role === "manager" ? true : alsoManager }),
+        // is_manager only applies to tenant roles and is fully implied by the role:
+        // "Gestor" is a manager, "Médico" is not. Admin sends nothing (the server has
+        // no is_manager concept for it).
+        ...(role === "admin" ? {} : { is_manager: role === "manager" }),
       });
       setFormOk(`${created.name} criado com acesso de ${ROLE_LABEL[created.role] ?? created.role}.`);
       // Reset for next time.
@@ -240,7 +241,6 @@ function CreateUserPanel({
       setName("");
       setPassword("");
       setRole("doctor");
-      setAlsoManager(false);
       setTenantId("");
       onCreated();
     } catch (err) {
@@ -301,52 +301,13 @@ function CreateUserPanel({
             <select
               id="cu-role"
               value={role}
-              onChange={(e) => {
-                const next = e.target.value as Role;
-                setRole(next);
-                // The checkbox only means anything for role="doctor" — clear it
-                // when switching away so a stale check can't linger unseen.
-                if (next !== "doctor") setAlsoManager(false);
-              }}
+              onChange={(e) => setRole(e.target.value as Role)}
             >
               <option value="doctor">Médico — atende pacientes</option>
               <option value="manager">Gestor — tudo do médico + gestão da clínica</option>
               <option value="admin">Admin da plataforma</option>
             </select>
           </div>
-          {role === "doctor" && (
-            <div className="pfield">
-              {/* Overrides .pfield's uppercase field-label styling — this is a
-                  checkbox caption, not a form-field label. */}
-              <label
-                htmlFor="cu-also-manager"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  textTransform: "none",
-                  letterSpacing: "normal",
-                  fontSize: 13.5,
-                  fontWeight: 600,
-                  color: "var(--ink)",
-                  marginBottom: 4,
-                  cursor: "pointer",
-                }}
-              >
-                <input
-                  id="cu-also-manager"
-                  type="checkbox"
-                  checked={alsoManager}
-                  onChange={(e) => setAlsoManager(e.target.checked)}
-                  style={{ width: 16, height: 16 }}
-                />
-                Também é gestor
-              </label>
-              <span style={{ fontSize: 12, color: "var(--ink-faint)" }}>
-                Além do acesso normal, poderes de gestão da clínica.
-              </span>
-            </div>
-          )}
           {needsTenant && (
             <div className="pfield">
               <label htmlFor="cu-tenant">Clínica</label>
@@ -372,22 +333,11 @@ function CreateUserPanel({
             {formError}
           </div>
         )}
-        {formOk && (
-          <div
-            style={{
-              marginBottom: 14,
-              padding: "12px 14px",
-              borderRadius: "var(--r-md)",
-              background: "var(--al-green-bg)",
-              color: "var(--al-green-ink)",
-              border: "1px solid var(--al-green-bd)",
-              fontSize: 13.5,
-              fontWeight: 500,
-            }}
-          >
-            {formOk}
-          </div>
-        )}
+        <Notice
+          message={formOk}
+          onDismiss={dismissFormOk}
+          style={{ marginBottom: 14 }}
+        />
 
         <button type="submit" className="btn btn--primary btn--sm" disabled={submitting}>
           {submitting ? "Criando…" : "Criar usuário"}

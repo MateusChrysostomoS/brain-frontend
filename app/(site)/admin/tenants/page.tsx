@@ -12,6 +12,7 @@ import { Suspense, useCallback, useEffect, useState } from "react";
 
 import { BrandIcon } from "../../_components/BrandIcon";
 import { Modal } from "../../_components/Modal";
+import { Notice } from "../../_components/Notice";
 import { ProductMark, StatusBadge, type BadgeTone } from "../../_components/StatusBadge";
 import {
   clearSession,
@@ -106,6 +107,8 @@ function TenantsTable({ session }: { session: Session }) {
     };
   }, [session, router]);
 
+  const dismissNotice = useCallback(() => setNotice(null), []);
+
   // Drop the deleted clinic from the table without a full refetch.
   const handleDeleted = useCallback((deleted: AdminTenant) => {
     setItems((prev) => (prev ? prev.filter((t) => t.id !== deleted.id) : prev));
@@ -122,12 +125,11 @@ function TenantsTable({ session }: { session: Session }) {
         </div>
       </header>
 
-      {notice && (
-        <div className="alert-line alert-line--green" style={{ marginBottom: 16 }}>
-          <BrandIcon name="checkCircle" />
-          {notice}
-        </div>
-      )}
+      <Notice
+        message={notice}
+        onDismiss={dismissNotice}
+        style={{ marginBottom: 16 }}
+      />
 
       {error ? (
         <div className="portal-error">Não foi possível carregar as clínicas.</div>

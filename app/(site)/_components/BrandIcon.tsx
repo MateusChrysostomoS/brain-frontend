@@ -83,21 +83,29 @@ const PATHS: Record<IconName, string> = {
 // Icons that use fill="currentColor" instead of stroke (from brand-site.js FILLED set).
 const FILLED = new Set<IconName>(["whatsapp", "send", "sparkle"]);
 
+// Fallback box for containers with no `<container> svg{width;height}` rule in brand-ds.css.
+// Emitted as presentation attributes, which any CSS rule outranks, so the ~124 call sites
+// that size their icons in CSS keep winning — this only stops an unsized SVG from
+// stretching to fill its flex/grid parent.
+const DEFAULT_SIZE = 24;
+
 type BrandIconProps = {
   name: IconName;
   className?: string;
-  /** If provided, sets explicit width/height; otherwise CSS controls the size. */
+  /** Explicit width/height. Omit to let CSS size the icon (the usual case). */
   size?: number;
 };
 
 // Pure server component — no interactivity, no hydration cost.
 export function BrandIcon({ name, className, size }: BrandIconProps) {
   const filled = FILLED.has(name);
-  const sizeProps = size ? { width: size, height: size } : {};
+  const box = size ?? DEFAULT_SIZE;
 
   return (
     <svg
       viewBox="0 0 24 24"
+      width={box}
+      height={box}
       fill={filled ? "currentColor" : "none"}
       stroke={filled ? "none" : "currentColor"}
       strokeWidth={1.7}
@@ -105,7 +113,6 @@ export function BrandIcon({ name, className, size }: BrandIconProps) {
       strokeLinejoin="round"
       aria-hidden="true"
       className={className}
-      {...sizeProps}
     >
       <path d={PATHS[name]} />
     </svg>
