@@ -120,8 +120,8 @@
     "semantic_hash": ""
   },
   "app/(SignOut)/esqueci_senha/atualizar_senha/page.tsx": {
-    "mtime": 1786752806.252715,
-    "ast_hash": "cf3d32a70b58f9dc495f722bab95e221",
+    "mtime": 1781816116.7226024,
+    "ast_hash": "21de7c931aceb3aee3349969c829a2d9",
     "semantic_hash": ""
   },
   "app/(SignOut)/esqueci_senha/layout.tsx": {
@@ -130,13 +130,13 @@
     "semantic_hash": ""
   },
   "app/(SignOut)/esqueci_senha/page.tsx": {
-    "mtime": 1786752793.2203124,
-    "ast_hash": "42391e539f4c3551a317cb0c3f7b430b",
+    "mtime": 1781816116.732115,
+    "ast_hash": "c4f4bbbbd914225a2ed53373ab506794",
     "semantic_hash": ""
   },
   "app/(SignOut)/esqueci_senha/token/page.tsx": {
-    "mtime": 1786752798.9244,
-    "ast_hash": "2904830b1837c77de76b577ff46838f3",
+    "mtime": 1781816116.7292464,
+    "ast_hash": "c07ad03bf84bf07ea25dca0d62897a3c",
     "semantic_hash": ""
   },
   "app/(SignOut)/layout.tsx": {
@@ -515,8 +515,8 @@
     "semantic_hash": ""
   },
   "lib/__tests__/manage-api.test.ts": {
-    "mtime": 1786752821.9143827,
-    "ast_hash": "d2070385fa6928283402488cf0dc7101",
+    "mtime": 1786745472.3809664,
+    "ast_hash": "1da6405bc47bc1daeb58eccabd2287bf",
     "semantic_hash": ""
   },
   "lib/__tests__/sign-out.test.ts": {
@@ -545,8 +545,8 @@
     "semantic_hash": ""
   },
   "lib/manage-api.ts": {
-    "mtime": 1786752787.412683,
-    "ast_hash": "41701d133cb74dd5287a4fd710b825b8",
+    "mtime": 1786743319.6350558,
+    "ast_hash": "94b9f8e9d0a45435715654e9c4ca748f",
     "semantic_hash": ""
   },
   "lib/pageSize.ts": {
@@ -835,8 +835,8 @@
     "semantic_hash": ""
   },
   "app/(site)/_lib/launch.ts": {
-    "mtime": 1786752620.3448806,
-    "ast_hash": "2d8191366656f3b963a80e02e7e82119",
+    "mtime": 1786639446.5218003,
+    "ast_hash": "32d0d8f1f19867d973168db546f0a19e",
     "semantic_hash": ""
   },
   "app/(site)/app/billing/_components/PrecheckBillingSection.tsx": {
@@ -957,11 +957,6 @@
   "docs/CHECKPOINT_secretary_role.md": {
     "mtime": 1786745688.0614116,
     "ast_hash": "46ed6b1354551cd85b373d96d8c34eca",
-    "semantic_hash": ""
-  },
-  "docs/CHECKPOINT_password_reset.md": {
-    "mtime": 1786754334.343413,
-    "ast_hash": "03ec27efafe436330e3da64a7894c3bb",
     "semantic_hash": ""
   }
 }

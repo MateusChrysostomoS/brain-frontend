@@ -72,7 +72,7 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
   const router = useRouter();
   const pathname = usePathname();
   // legacy values accepted during the role-taxonomy transition
-  const { session, ready } = usePortalGuard(["doctor", "manager", "tenant_owner", "tenant_staff"]);
+  const { session, ready } = usePortalGuard(["doctor", "manager", "secretary", "tenant_owner", "tenant_staff"]);
   // "Modo médico" marker — only used here to label the account as the clinic; the
   // way back out is owned by BackToAdminButton.
   const { impersonation } = useImpersonation();

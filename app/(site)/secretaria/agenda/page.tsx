@@ -41,7 +41,7 @@ import type { Appt } from "../_shared/data";
 
 import { WeekView, DayView, MonthView } from "./calendar";
 import { Drawer }                        from "./drawer";
-import { NewApptModal, BlockModal }      from "./modals";
+import { NewApptModal, BlockModal, CancelModal } from "./modals";
 
 import { HubNotice } from "../_shared/HubNotice";
 import { useSecretariaHub } from "../_shared/useSecretariaHub";
@@ -49,8 +49,11 @@ import {
   listCalendarEvents,
   createAppointment,
   createBlock as createHubBlock,
+  cancelAppointment,
+  getCancelPreview,
   HubApiError,
 } from "@/lib/secretaria-hub";
+import type { CancelPreviewWire } from "@/lib/secretaria-hub";
 import { getMe } from "@/lib/manage-api";
 import {
   currentWeekIsoRange,
@@ -72,6 +75,10 @@ type ViewMode = "semana" | "dia" | "mes";
 type ModalState =
   | { type: "new" }
   | { type: "block" }
+  // Reachable since the read model started returning the local
+  // Appointment.id — the drawer only offers the action for a slot that has
+  // one (see drawer.tsx's canCancel).
+  | { type: "cancel"; appt: Appt; preview: CancelPreviewWire | null }
   | null;
 
 type ToastState = { msg: string; icon?: IconName } | null;
@@ -298,7 +305,7 @@ export default function AgendaPage() {
   const toastRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   // --- secretarIA hub: entitlement-gated real data path ---
-  const { session, ready: hubCheckReady, notEntitled, unavailable, hubReady, retry } = useSecretariaHub();
+  const { session, ready: hubCheckReady, notEntitled, unavailable, hubTokenReady, retry } = useSecretariaHub();
   // Real events for the current week, once a hub fetch has succeeded. null
   // means "no real fetch has succeeded yet" — the grid then falls back to
   // `appts`, which is always empty (see above): no session, no entitlement,
@@ -354,9 +361,9 @@ export default function AgendaPage() {
   // TODO(hub-write) note in hub-mapping.ts and drawer.tsx (blocked on
   // secretarIA exposing an appointment id on the read model, not a frontend gap).
   useEffect(() => {
-    if (!hubReady || !session) return;
+    if (!hubTokenReady || !session) return;
     reloadWeek();
-  }, [hubReady, session, reloadWeek]);
+  }, [hubTokenReady, session, reloadWeek]);
 
   // ---------------------------------------------------------------------------
   // flash — shows a toast then auto-dismisses after 3.4 s
@@ -385,7 +392,86 @@ export default function AgendaPage() {
   // ---------------------------------------------------------------------------
 
   /**
-   * Persist a newly created appointment. Only reachable when hubReady (the
+   * Cancel a real consultation through the hub.
+   *
+   * Only reachable for a slot carrying a local `appointmentId` (the drawer
+   * gates on it), because the endpoint keys on that id and the Google event
+   * deletion it performs is irreversible — cancelling the wrong consultation
+   * is not something a refetch can undo.
+   *
+   * `justification` is the doctor's reason, NOT the message body: secretarIA
+   * renders the standard "O médico X desmarcou a sua consulta!" text and only
+   * appends the quoted justification when there is one. An empty string is a
+   * valid, supported cancellation — the patient is notified either way — so it
+   * is sent as null rather than being treated as a missing field.
+   */
+  /**
+   * Open the cancel modal, having first asked what notifying would cost.
+   *
+   * The preview is fetched HERE rather than inside the modal so the modal
+   * stays a pure render of state it is handed. A failed lookup opens the modal
+   * with `null` — cancelling must not be blocked by a read that is only there
+   * to price the notification, and the modal says outright that it could not
+   * check rather than implying the notice is free.
+   */
+  const openCancel = async (appt: Appt) => {
+    if (!hubTokenReady || !session || !appt.appointmentId) {
+      flash("A agenda real não está disponível agora.", "xCircle");
+      return;
+    }
+    let preview: CancelPreviewWire | null = null;
+    try {
+      preview = await getCancelPreview(session, appt.appointmentId);
+    } catch (e) {
+      console.error("secretaria hub: failed to read cancel preview", e);
+    }
+    setModal({ type: "cancel", appt, preview });
+  };
+
+  const cancelAppt = async (
+    appt: Appt,
+    justification: string,
+    notifyOutsideWindow: boolean,
+  ) => {
+    if (!hubTokenReady || !session || !appt.appointmentId) {
+      // Defensive only — the drawer disables the trigger in each of these cases.
+      flash("A agenda real não está disponível agora.", "xCircle");
+      return;
+    }
+    try {
+      await cancelAppointment(session, appt.appointmentId, {
+        confirm: true,
+        justification: justification || null,
+        notify_outside_window: notifyOutsideWindow,
+      });
+      setModal(null);
+      setSelected(null);
+      await reloadWeek();
+      // Only claim the patient was told when a notice could actually go out:
+      // outside the 24h window with the paid send declined, nothing is sent,
+      // and saying otherwise would be a lie the doctor acts on.
+      const notified = modal?.type === "cancel"
+        ? (modal.preview?.inside_window ?? true) || notifyOutsideWindow
+        : true;
+      flash(
+        notified
+          ? "Consulta cancelada. O paciente foi avisado."
+          : "Consulta cancelada. O paciente NÃO foi avisado.",
+        notified ? "check" : "xCircle",
+      );
+    } catch (e) {
+      console.error("secretaria hub: failed to cancel appointment", e);
+      const notice =
+        e instanceof HubApiError && e.status === 409
+          ? "Esta consulta já estava cancelada."
+          : "Não foi possível cancelar. Tente novamente.";
+      flash(notice, "xCircle");
+      // Keep the modal open on failure — never show a cancelled row that isn't.
+    }
+  };
+
+  /**
+   * Persist a newly created appointment. Only reachable when hubTokenReady (the
    * Toolbar's "Nova consulta" trigger is disabled otherwise — see below), so
    * this always creates a REAL Google Calendar event via
    * POST /tenants/me/calendar/appointments and refetches the week instead of
@@ -393,9 +479,9 @@ export default function AgendaPage() {
    * message, so the success flash never claims one was sent.
    */
   const createAppt = async (data: Omit<Appt, "id">, _message: string | null) => {
-    if (!hubReady || !session) {
+    if (!hubTokenReady || !session) {
       // Defensive only — the trigger that opens this modal is disabled
-      // whenever hubReady is false, so this should be unreachable.
+      // whenever hubTokenReady is false, so this should be unreachable.
       flash("A agenda real não está disponível agora.", "xCircle");
       return;
     }
@@ -424,7 +510,7 @@ export default function AgendaPage() {
   };
 
   /**
-   * Add a new time block to the calendar. Only reachable when hubReady (the
+   * Add a new time block to the calendar. Only reachable when hubTokenReady (the
    * Toolbar's "Bloquear" trigger is disabled otherwise — see below), so this
    * always blocks the slot for real via POST /tenants/me/calendar/blocks and
    * refetches the week. The summary is tagged with the "Bloqueado" prefix
@@ -437,9 +523,9 @@ export default function AgendaPage() {
     dur: number;
     reason: string;
   }) => {
-    if (!hubReady || !session) {
+    if (!hubTokenReady || !session) {
       // Defensive only — the trigger that opens this modal is disabled
-      // whenever hubReady is false, so this should be unreachable.
+      // whenever hubTokenReady is false, so this should be unreachable.
       flash("A agenda real não está disponível agora.", "xCircle");
       return;
     }
@@ -503,7 +589,7 @@ export default function AgendaPage() {
         onRetry={retry}
       />
 
-      {/* honest error state when hubReady but the events fetch itself failed —
+      {/* honest error state when hubTokenReady but the events fetch itself failed —
           distinct from HubNotice's `unavailable` (token mint never succeeded) */}
       {hubFetchFailed && (
         <div
@@ -548,7 +634,7 @@ export default function AgendaPage() {
             // From month view, jump back to week instead of staying in month
             if (view === "mes") setView("semana");
           }}
-          disabled={!hubReady}
+          disabled={!hubTokenReady}
         />
 
         {view === "semana" && (
@@ -566,13 +652,16 @@ export default function AgendaPage() {
           every item shown here comes from the hub, and the hub only supports
           create so far — see drawer.tsx. */}
       {liveSelected && (
-        <Drawer appt={liveSelected} onClose={() => setSelected(null)} />
+        <Drawer
+          appt={liveSelected}
+          onClose={() => setSelected(null)}
+          onCancel={openCancel}
+        />
       )}
 
-      {/* Modals — one rendered at a time based on modal.type. Edit/Reschedule/
-          Cancel are not rendered here: their only entry point (the Drawer's
-          action buttons) is disabled, so they're unreachable — see
-          drawer.tsx and modals.tsx for the TODO(hub-write) follow-up. */}
+      {/* Modals — one rendered at a time based on modal.type. Edit and
+          Reschedule are still unreachable (their drawer triggers stay
+          disabled); Cancel is wired — see drawer.tsx. */}
       {modal?.type === "new" && (
         <NewApptModal
           presetDay={view === "dia" ? day : undefined}
@@ -586,6 +675,14 @@ export default function AgendaPage() {
           presetDay={view === "dia" ? day : undefined}
           onClose={() => setModal(null)}
           onCreate={createBlock}
+        />
+      )}
+      {modal?.type === "cancel" && (
+        <CancelModal
+          appt={modal.appt}
+          preview={modal.preview}
+          onClose={() => setModal(null)}
+          onConfirm={cancelAppt}
         />
       )}
 

@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
-import { confirmPasswordReset } from "@/lib/api";
+import { ManageApiError, confirmPasswordReset } from "@/lib/manage-api";
 
 import { AuthShell } from "../../_shared/AuthShell";
 import { PasswordField } from "../../_shared/PasswordField";
@@ -66,9 +66,10 @@ function UpdatePasswordInner() {
       await confirmPasswordReset(token, password);
       router.push("/login?reset=success");
     } catch (err) {
+      const status = err instanceof ManageApiError ? err.status : 0;
       const msg = err instanceof Error ? err.message : "";
       setError(
-        msg.toLowerCase().includes("rate limit")
+        status === 429
           ? "Muitas tentativas. Aguarde um minuto e tente novamente."
           : msg.toLowerCase().includes("token")
             ? "Token inválido ou expirado. Solicite um novo link."

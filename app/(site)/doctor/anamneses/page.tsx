@@ -70,7 +70,12 @@ export default function AnamnesesPage() {
 function AnamnesesInner() {
   const search = useSearchParams();
   const idParam = search.get("id");
-  // legacy values accepted during the role-taxonomy transition
+  // legacy values accepted during the role-taxonomy transition.
+  // `secretary` is DELIBERATELY absent — this is the clinical surface (anamneses
+  // proxied from PreCheck) and the role is secretarIA-only. Do not "fix" this by
+  // aligning it with the other /doctor guards: brain-api answers 403
+  // `secretary_precheck_not_allowed` here anyway, so adding it would only trade a
+  // clean redirect for a broken page.
   const { session, ready } = usePortalGuard(["doctor", "manager", "tenant_owner", "tenant_staff"]);
 
   if (!ready || !session) return null;

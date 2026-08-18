@@ -355,6 +355,132 @@ describe("login / logout", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Password reset (public, unauthenticated) — native brain-api flow
+// (2026-08-14), mirroring lib/api.ts's PreCheck-side functions of the same
+// name so the (SignOut)/esqueci_senha screens only had to swap the import.
+// ---------------------------------------------------------------------------
+
+describe("requestPasswordReset", () => {
+  it("POSTs { email } unauthenticated and resolves { detail }", async () => {
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(200, {
+        detail:
+          "Se houver uma conta com esse e-mail, enviamos um link para redefinir a senha.",
+      }),
+    );
+
+    const result = await api.requestPasswordReset("doc@clinic.com");
+
+    expect(result.detail).toBe(
+      "Se houver uma conta com esse e-mail, enviamos um link para redefinir a senha.",
+    );
+    const call = fetchMock.mock.calls[0];
+    expect(call[0]).toBe("/auth/password-reset/request");
+    expect(call[1].method).toBe("POST");
+    expect(call[1].headers.Authorization).toBeUndefined();
+    expect(JSON.parse(call[1].body)).toEqual({ email: "doc@clinic.com" });
+  });
+
+  it("resolves the SAME detail regardless of whether the e-mail is registered (anti-enumeration is the backend's job)", async () => {
+    fetchMock.mockResolvedValueOnce(mockResponse(200, { detail: "generic message" }));
+
+    const result = await api.requestPasswordReset("unknown@nowhere.com");
+
+    expect(result).toEqual({ detail: "generic message" });
+  });
+
+  it("429 rate limited -> ManageApiError 429", async () => {
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(429, { detail: "Too many attempts. Try again in a minute." }),
+    );
+
+    await expectManageError(api.requestPasswordReset("doc@clinic.com"), 429);
+  });
+});
+
+describe("verifyResetToken", () => {
+  it("POSTs { token } unauthenticated and resolves { detail }", async () => {
+    fetchMock.mockResolvedValueOnce(mockResponse(200, { detail: "Token válido" }));
+
+    const result = await api.verifyResetToken("reset-tok-1");
+
+    expect(result).toEqual({ detail: "Token válido" });
+    const call = fetchMock.mock.calls[0];
+    expect(call[0]).toBe("/auth/password-reset/verify");
+    expect(call[1].method).toBe("POST");
+    expect(call[1].headers.Authorization).toBeUndefined();
+    expect(JSON.parse(call[1].body)).toEqual({ token: "reset-tok-1" });
+  });
+
+  it("400 unknown/expired/used token -> ManageApiError 400 with the exact backend message", async () => {
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(400, { detail: "Token inválido ou expirado" }),
+    );
+
+    await expectManageError(
+      api.verifyResetToken("bad-token"),
+      400,
+      "Token inválido ou expirado",
+    );
+  });
+});
+
+describe("confirmPasswordReset", () => {
+  it("POSTs { token, new_password } (snake_case) unauthenticated and resolves { detail }", async () => {
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(200, { detail: "Senha redefinida com sucesso" }),
+    );
+
+    const result = await api.confirmPasswordReset("reset-tok-1", "newpass123");
+
+    expect(result).toEqual({ detail: "Senha redefinida com sucesso" });
+    const call = fetchMock.mock.calls[0];
+    expect(call[0]).toBe("/auth/password-reset/confirm");
+    expect(call[1].method).toBe("POST");
+    expect(call[1].headers.Authorization).toBeUndefined();
+    expect(JSON.parse(call[1].body)).toEqual({
+      token: "reset-tok-1",
+      new_password: "newpass123",
+    });
+  });
+
+  it("400 invalid/expired token -> ManageApiError 400", async () => {
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(400, { detail: "Token inválido ou expirado" }),
+    );
+
+    await expectManageError(
+      api.confirmPasswordReset("bad-token", "newpass123"),
+      400,
+      "Token inválido ou expirado",
+    );
+  });
+
+  it("422 password not 8-72 chars / missing a letter or digit -> ManageApiError 422", async () => {
+    // Pydantic field_validator errors come back as a detail LIST, not a string
+    // (same shape as registerSignup's weak-password case below) — the status
+    // is what callers actually branch on, not the message text.
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(
+        422,
+        {
+          detail: [
+            {
+              loc: ["body", "new_password"],
+              msg: "Value error, password must contain at least one letter and one digit",
+              type: "value_error",
+            },
+          ],
+        },
+        "Unprocessable Entity",
+      ),
+    );
+
+    await expectManageError(api.confirmPasswordReset("reset-tok-1", "12345678"), 422);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // billing
 // ---------------------------------------------------------------------------
 
@@ -1191,6 +1317,84 @@ describe("listDoctorPatients", () => {
       api.listDoctorPatients(session),
       502,
       "secretaria upstream error",
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Secretaries — the clinic's human receptionists (secretary role, 2026-08-14)
+// ---------------------------------------------------------------------------
+
+describe("getDoctorSecretaries", () => {
+  it("GETs /doctor/secretaries with the bearer and unwraps the { items } envelope", async () => {
+    const session = makeSession({ token: "tok1" });
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(200, {
+        items: [
+          {
+            user_id: "u-1",
+            name: "Rita Andrade",
+            email: "recepcao@clinica.com.br",
+            invite_pending: true,
+            created_at: "2026-08-14T10:00:00Z",
+          },
+        ],
+      }),
+    );
+
+    const result = await api.getDoctorSecretaries(session);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toBe("Rita Andrade");
+    expect(result[0].invite_pending).toBe(true);
+    const call = fetchMock.mock.calls[0];
+    expect(call[0]).toBe("/doctor/secretaries");
+    expect(call[1].headers.Authorization).toBe("Bearer tok1");
+  });
+
+  it("tolerates a bare array and a malformed body (never a non-array into render)", async () => {
+    const session = makeSession({ token: "tok1" });
+    fetchMock.mockResolvedValueOnce(mockResponse(200, []));
+    expect(await api.getDoctorSecretaries(session)).toEqual([]);
+
+    fetchMock.mockResolvedValueOnce(mockResponse(200, { unexpected: "shape" }));
+    expect(await api.getDoctorSecretaries(session)).toEqual([]);
+  });
+});
+
+describe("createSecretaryInvite", () => {
+  it("POSTs name+email only (no specialty) and resolves the invite link", async () => {
+    const session = makeSession({ token: "tok1" });
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(201, { invite_link: "https://app.brain.co/convite?token=abc" }),
+    );
+
+    const result = await api.createSecretaryInvite(session, {
+      name: "Rita Andrade",
+      email: "recepcao@clinica.com.br",
+    });
+
+    expect(result.invite_link).toBe("https://app.brain.co/convite?token=abc");
+    const call = fetchMock.mock.calls[0];
+    expect(call[0]).toBe("/doctor/secretaries/invites");
+    expect(call[1].method).toBe("POST");
+    expect(JSON.parse(call[1].body)).toEqual({
+      name: "Rita Andrade",
+      email: "recepcao@clinica.com.br",
+    });
+    expect(call[1].headers.Authorization).toBe("Bearer tok1");
+  });
+
+  it("409 email_already_registered -> ManageApiError 409 (modal shows the pt-BR message)", async () => {
+    const session = makeSession({ token: "tok1" });
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(409, { detail: "email_already_registered" }),
+    );
+
+    await expectManageError(
+      api.createSecretaryInvite(session, { name: "Rita", email: "ja@existe.com" }),
+      409,
+      "email_already_registered",
     );
   });
 });

@@ -20,12 +20,18 @@
 // instead of starting a per-professional OAuth handoff — see
 // handleCreateCalendar/ProfessionalRow below.
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Avatar, Btn, Field, Icon, TextArea, TextInput } from "../../_shared/ui";
 import type { IconName } from "../../_shared/ui";
 import { Section } from "./Section";
-import { InviteProfessionalModal } from "./InviteProfessionalModal";
-import { createSelfProfessional, type DoctorProfessional, type Session } from "@/lib/manage-api";
+import { InviteTeamMemberModal, type InviteKind } from "./InviteTeamMemberModal";
+import {
+  createSelfProfessional,
+  getDoctorSecretaries,
+  type DoctorProfessional,
+  type DoctorSecretary,
+  type Session,
+} from "@/lib/manage-api";
 import {
   createProfessionalCalendar,
   HubApiError,
@@ -68,6 +74,12 @@ type ProfessionalsSectionProps = {
   // roster). null/absent = no dedicated calendar yet. Only meaningful in
   // "shared_account" mode.
   googleCalendarIdByProfessional: Record<string, string | null>;
+  // True until the SELECTED professional's config has hydrated (see
+  // lib/hydration.ts). Gates ONLY the three profile fields below — the roster
+  // actions (invite, self-bind, calendar) each carry their own guards, and the
+  // professional selector must stay live precisely so it can trigger the
+  // hydration of the newly picked id.
+  readOnly?: boolean;
 };
 
 export function ProfessionalsSection({
@@ -83,13 +95,32 @@ export function ProfessionalsSection({
   googleCalendarMode,
   clinicCalendarConnected,
   googleCalendarIdByProfessional,
+  readOnly,
 }: ProfessionalsSectionProps) {
-  const [inviteOpen, setInviteOpen] = useState(false);
+  // null = closed; otherwise which flavour of invite the modal is showing.
+  const [inviteKind, setInviteKind] = useState<InviteKind | null>(null);
   const [connectingId, setConnectingId] = useState<string | null>(null);
   const [creatingCalendarId, setCreatingCalendarId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<RosterActionError | null>(null);
   const [binding, setBinding] = useState(false);
   const [selfBindDismissed, setSelfBindDismissed] = useState(false);
+  // Secretaries are fetched HERE rather than by the parent page (which owns the
+  // professional roster): the list is purely local to brain-api — no secretaria
+  // hub round-trip — so it does not need the page's `hubTokenReady` gate, and it
+  // feeds none of the page's selected-professional state machine.
+  const [secretaries, setSecretaries] = useState<DoctorSecretary[] | null>(null);
+
+  const loadSecretaries = useCallback(() => {
+    if (!session) return;
+    getDoctorSecretaries(session)
+      .then(setSecretaries)
+      .catch((e) => {
+        console.error("secretaria configuracao: failed to load secretaries", e);
+        setSecretaries([]); // an empty list still renders the invite affordance
+      });
+  }, [session]);
+
+  useEffect(loadSecretaries, [loadSecretaries]);
 
   // Scrolls to GoogleSection (Section 08, id="gcal") further down this same
   // page — the shared CTA target for both calendar-creation error codes.
@@ -103,7 +134,11 @@ export function ProfessionalsSection({
   const ownerHasProfessional = (roster ?? []).some(
     (p) => p.linked_user_email?.toLowerCase() === session?.email.toLowerCase(),
   );
-  const showSelfBindPrompt = isOwner && !ownerHasProfessional && !selfBindDismissed && !!roster;
+  // A secretary can never answer "sim, eu também atendo" — the backend refuses the
+  // self-bind with 403 `secretary_cannot_be_professional`. Excluded explicitly so an
+  // admin-created secretary that somehow carries is_owner never sees a dead button.
+  const showSelfBindPrompt =
+    isOwner && session?.role !== "secretary" && !ownerHasProfessional && !selfBindDismissed && !!roster;
 
   async function handleSelfBind() {
     if (!session) return;
@@ -241,6 +276,7 @@ export function ProfessionalsSection({
                   value={profile.specialty}
                   onChange={(e) => onProfileChange("specialty", e.target.value)}
                   placeholder="Clínica geral, Cardiologia…"
+                  disabled={readOnly}
                 />
               </Field>
             </div>
@@ -253,6 +289,7 @@ export function ProfessionalsSection({
                 onChange={(e) => onProfileChange("about", e.target.value)}
                 rows={3}
                 placeholder="Ex.: Atende adultos e idosos há 12 anos, com foco em acompanhamento contínuo…"
+                disabled={readOnly}
               />
             </Field>
             <Field
@@ -264,6 +301,7 @@ export function ProfessionalsSection({
                 onChange={(e) => onProfileChange("contextDoctorMessage", e.target.value)}
                 rows={2}
                 placeholder="Opcional"
+                disabled={readOnly}
               />
             </Field>
           </div>
@@ -303,24 +341,75 @@ export function ProfessionalsSection({
           </div>
         )}
 
+        {/* --- Secretaries (recepção) — no agenda, no clinical access --- */}
+        {secretaries && secretaries.length > 0 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--ink-faint)", letterSpacing: ".02em" }}>
+              SECRETÁRIAS (RECEPÇÃO)
+            </span>
+            {secretaries.map((s) => (
+              <SecretaryRow key={s.user_id} secretary={s} />
+            ))}
+          </div>
+        )}
+
         {/* Invite management is open to any authenticated tenant member —
             not owner-gated client-side (the backend is the real authority). */}
         {session && (
-          <Btn variant="outline" icon="plus" onClick={() => setInviteOpen(true)} style={{ alignSelf: "flex-start" }}>
-            Convidar profissional
-          </Btn>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignSelf: "flex-start" }}>
+            <Btn variant="outline" icon="plus" onClick={() => setInviteKind("professional")}>
+              Convidar profissional
+            </Btn>
+            <Btn variant="outline" icon="plus" onClick={() => setInviteKind("secretary")}>
+              Convidar secretária
+            </Btn>
+          </div>
         )}
       </div>
 
-      {session && (
-        <InviteProfessionalModal
+      {session && inviteKind && (
+        <InviteTeamMemberModal
           session={session}
-          open={inviteOpen}
-          onClose={() => setInviteOpen(false)}
-          onInvited={onRosterChanged}
+          kind={inviteKind}
+          open
+          onClose={() => setInviteKind(null)}
+          // A new professional changes the roster the parent owns; a new
+          // secretary only changes this component's own list.
+          onInvited={inviteKind === "secretary" ? loadSecretaries : onRosterChanged}
         />
       )}
     </Section>
+  );
+}
+
+// SecretaryRow — one receptionist: name, email, and invite state. Deliberately
+// leaner than ProfessionalRow: there is no calendar to connect, no services or
+// hours to complete, and nothing to select (a secretary is never the subject of
+// the Services/Availability editors above).
+function SecretaryRow({ secretary }: { secretary: DoctorSecretary }) {
+  return (
+    <div
+      style={{
+        display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap",
+        padding: "13px 16px", borderRadius: 12,
+        background: "var(--surface-2)", border: "1px solid var(--line)",
+      }}
+    >
+      <Avatar name={secretary.name} size={34} />
+      <div style={{ flex: 1, minWidth: 160 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)" }}>{secretary.name}</div>
+        {secretary.invite_pending ? (
+          <div style={{ fontSize: 11.5, color: "var(--st-pending-ink, #9a6b00)", marginTop: 4 }}>
+            Convite enviado — aguardando aceite
+          </div>
+        ) : (
+          <div style={{ fontSize: 11.5, color: "var(--ink-faint)", marginTop: 4 }}>{secretary.email}</div>
+        )}
+      </div>
+      <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--ink-faint)" }}>
+        Recepção — sem agenda própria
+      </span>
+    </div>
   );
 }
 
@@ -385,7 +474,16 @@ function ProfessionalRow({
           <div style={{ fontSize: 11.5, color: "var(--ink-faint)", marginTop: 4 }}>
             {professional.linked_user_email}
           </div>
-        ) : null}
+        ) : (
+          // No linked user, so no address anywhere: the email lives on the
+          // brain-api user created by an invite, and this professional was
+          // added without one. Said out loud because the consequence is
+          // invisible otherwise — they silently never get the "nova consulta
+          // marcada" email (secretarIA plugins/professional_notification.py).
+          <div style={{ fontSize: 11.5, color: "var(--st-pending-ink, #9a6b00)", marginTop: 4 }}>
+            Sem e-mail vinculado — não recebe aviso de nova consulta
+          </div>
+        )}
       </div>
 
       {sharedAccount ? (

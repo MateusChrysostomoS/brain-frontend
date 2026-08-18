@@ -9,7 +9,7 @@
 import Link from "next/link";
 import { useState } from "react";
 
-import { requestPasswordReset } from "@/lib/api";
+import { ManageApiError, requestPasswordReset } from "@/lib/manage-api";
 
 import { AuthShell } from "../_shared/AuthShell";
 import { StepIndicator } from "../_shared/StepIndicator";
@@ -40,10 +40,9 @@ export default function ForgotPasswordPage() {
       setSent(true);
     } catch (err) {
       // Rate-limit and validation errors land here.
-      const msg = err instanceof Error ? err.message : "";
-      // SlowAPI returns "Rate limit exceeded ..." on 429s.
+      const status = err instanceof ManageApiError ? err.status : 0;
       setError(
-        msg.toLowerCase().includes("rate limit")
+        status === 429
           ? "Muitas tentativas. Tente novamente em alguns minutos."
           : "Erro ao processar. Tente novamente.",
       );

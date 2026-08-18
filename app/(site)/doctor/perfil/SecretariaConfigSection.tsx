@@ -75,6 +75,9 @@ import {
   type ProfessionalProfile,
   type TimeRange,
 } from "../../secretaria/configuracao/lib/types";
+// The Calendar card's copy + offered action, extracted so it can be tested
+// without jsdom — see the module header for the bug that motivated it.
+import { calendarStatus } from "./lib/calendar-status";
 
 // Weekday seed, mirroring page.tsx's private WD/closedWeek. NOT extracted
 // (five trivial lines; page.tsx is a route entry, not a shared module — see
@@ -108,7 +111,7 @@ export function SecretariaConfigSection({ session }: { session: Session }) {
     ready: hubCheckReady,
     notEntitled,
     unavailable: hubUnavailable,
-    hubReady,
+    hubTokenReady,
     retry,
   } = useSecretariaHub();
 
@@ -127,7 +130,7 @@ export function SecretariaConfigSection({ session }: { session: Session }) {
   const [justBoundId, setJustBoundId] = useState<string | null>(null);
 
   const reload = useCallback(() => {
-    if (!hubReady) return;
+    if (!hubTokenReady) return;
     getDoctorProfessionals(session)
       .then((list) => {
         setDoctorRoster(list);
@@ -153,7 +156,7 @@ export function SecretariaConfigSection({ session }: { session: Session }) {
         // gcalMode stays null -> the Calendar sub-section shows a discreet
         // "couldn't determine" note instead of guessing a mode.
       });
-  }, [hubReady, session]);
+  }, [hubTokenReady, session]);
 
   useEffect(() => {
     reload();
@@ -175,6 +178,14 @@ export function SecretariaConfigSection({ session }: { session: Session }) {
   const myHubProfessional = useMemo(
     () => (myProfessionalId ? (hubRoster?.find((p) => p.id === myProfessionalId) ?? null) : null),
     [myProfessionalId, hubRoster],
+  );
+
+  // What the Calendar card says and offers. A pure function so every state —
+  // both modes, the clinic-fallback case, an older backend, a failed config GET
+  // — is asserted in lib/__tests__/calendar-status.test.ts rather than eyeballed.
+  const calendar = useMemo(
+    () => calendarStatus(gcalMode, myHubProfessional),
+    [gcalMode, myHubProfessional],
   );
 
   // --- self-bind ("Você também atende pacientes?") ---
@@ -335,8 +346,8 @@ export function SecretariaConfigSection({ session }: { session: Session }) {
     );
   }
 
-  if (!hubReady) {
-    // ready && !notEntitled && !unavailable && !hubReady can only mean the
+  if (!hubTokenReady) {
+    // ready && !notEntitled && !unavailable && !hubTokenReady can only mean the
     // mint itself succeeded but this environment has no hub base URL
     // configured — mirrors HubNotice's own derivation. No retry action:
     // re-checking would just land back here (hubConfigured() is a static
@@ -465,35 +476,33 @@ export function SecretariaConfigSection({ session }: { session: Session }) {
               Agenda no Google Calendar
             </h3>
 
-            {gcalMode === null ? (
+            {/* Every word and button below comes from lib/calendar-status.ts,
+                which reads `has_calendar` + `calendar_source` — the keys the
+                backend actually sends. This block used to read
+                `calendar_connected`, a property no response has ever carried,
+                so it rendered "Agenda não conectada" over a working agenda. */}
+            {calendar === null ? (
               <p style={{ fontSize: 13, color: "var(--ink-faint)" }}>
                 Não foi possível carregar como sua clínica conecta o Google Calendar agora.
               </p>
-            ) : gcalMode === "per_professional" ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start" }}>
-                <StatusBadge tone={myHubProfessional.calendar_connected ? "green" : "muted"}>
-                  {myHubProfessional.calendar_connected ? "Agenda conectada" : "Agenda não conectada"}
-                </StatusBadge>
-                {connectError && <div className="portal-error">{connectError}</div>}
-                <button
-                  type="button"
-                  className="btn btn--outline btn--sm"
-                  onClick={handleConnectOwnCalendar}
-                  disabled={connecting}
-                >
-                  {connecting
-                    ? "Conectando…"
-                    : myHubProfessional.calendar_connected
-                      ? "Reconectar agenda"
-                      : "Conectar Google Calendar"}
-                </button>
-              </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start" }}>
-                <StatusBadge tone={myHubProfessional.google_calendar_id != null ? "green" : "muted"}>
-                  {myHubProfessional.google_calendar_id != null ? "Agenda conectada" : "Agenda não conectada"}
+                <StatusBadge tone={calendar.connected ? "green" : "muted"}>
+                  {calendar.badgeLabel}
                 </StatusBadge>
-                {calendarActionError && (
+
+                {calendar.note && (
+                  <p style={{ fontSize: 12.5, color: "var(--ink-faint)", margin: 0, maxWidth: 460 }}>
+                    {calendar.note}
+                  </p>
+                )}
+
+                {/* Connect/reconnect failures and create-calendar failures are
+                    reported by different handlers; each stays with its action. */}
+                {calendar.action?.kind !== "create_shared" && connectError && (
+                  <div className="portal-error">{connectError}</div>
+                )}
+                {calendar.action?.kind === "create_shared" && calendarActionError && (
                   <div className="portal-error">
                     {calendarActionError.message}
                     {calendarActionError.showLink && (
@@ -506,14 +515,27 @@ export function SecretariaConfigSection({ session }: { session: Session }) {
                     )}
                   </div>
                 )}
-                {myHubProfessional.google_calendar_id == null && (
+
+                {calendar.action && (
                   <button
                     type="button"
                     className="btn btn--outline btn--sm"
-                    onClick={handleCreateOwnCalendar}
-                    disabled={creatingCalendar}
+                    onClick={
+                      calendar.action.kind === "create_shared"
+                        ? handleCreateOwnCalendar
+                        : handleConnectOwnCalendar
+                    }
+                    disabled={
+                      calendar.action.kind === "create_shared" ? creatingCalendar : connecting
+                    }
                   >
-                    {creatingCalendar ? "Criando…" : "Criar minha agenda"}
+                    {calendar.action.kind === "create_shared"
+                      ? creatingCalendar
+                        ? "Criando…"
+                        : calendar.action.label
+                      : connecting
+                        ? "Conectando…"
+                        : calendar.action.label}
                   </button>
                 )}
               </div>

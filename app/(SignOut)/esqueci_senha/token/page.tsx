@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
-import { verifyResetToken } from "@/lib/api";
+import { ManageApiError, verifyResetToken } from "@/lib/manage-api";
 
 import { AuthShell } from "../../_shared/AuthShell";
 import { StepIndicator } from "../../_shared/StepIndicator";
@@ -84,9 +84,10 @@ function ResetTokenInner() {
         `/esqueci_senha/atualizar_senha?token=${encodeURIComponent(trimmed)}`,
       );
     } catch (err) {
+      const status = err instanceof ManageApiError ? err.status : 0;
       const msg = err instanceof Error ? err.message : "";
       setError(
-        msg.toLowerCase().includes("rate limit")
+        status === 429
           ? "Muitas tentativas. Aguarde um minuto e tente novamente."
           : msg || "Token inválido ou expirado.",
       );

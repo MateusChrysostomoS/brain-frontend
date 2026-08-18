@@ -85,9 +85,5 @@
   "83": "DashHeader.tsx",
   "84": "page.tsx",
   "85": "GoogleSection.tsx",
-  "86": "seen.ts",
-  "87": "StateTimeline.tsx",
-  "88": "OnboardingBanner.tsx",
-  "89": "PriceCard.tsx",
-  "90": "page.tsx"
+  "86": "seen.ts"
 }

@@ -33,6 +33,7 @@ import { SecretariaConfigSection } from "./SecretariaConfigSection";
 const ROLE_LABEL: Record<string, string> = {
   doctor: "Médico(a)",
   manager: "Gestor(a)",
+  secretary: "Secretária",
   admin: "Admin",
   // Legacy values kept as a display fallback until the backfill migration runs.
   tenant_owner: "Proprietário(a)",
@@ -41,6 +42,7 @@ const ROLE_LABEL: Record<string, string> = {
 const ROLE_TONE: Record<string, BadgeTone> = {
   doctor: "green",
   manager: "amber",
+  secretary: "blue",
   admin: "muted",
   tenant_owner: "green",
   tenant_staff: "blue",
@@ -49,7 +51,7 @@ const ROLE_TONE: Record<string, BadgeTone> = {
 export default function DoctorPerfilPage() {
   const router = useRouter();
   // legacy values accepted during the role-taxonomy transition
-  const { session, ready } = usePortalGuard(["doctor", "manager", "tenant_owner", "tenant_staff"]);
+  const { session, ready } = usePortalGuard(["doctor", "manager", "secretary", "tenant_owner", "tenant_staff"]);
 
   const [me, setMe] = useState<DoctorMe | null>(null);
   const [error, setError] = useState(false);

@@ -39,6 +39,7 @@ const ROLE_LABEL: Record<string, string> = {
   admin: "Admin",
   doctor: "Médico",
   manager: "Gestor",
+  secretary: "Secretária",
   // Legacy rows until the backfill migration runs.
   tenant_owner: "Proprietário",
   tenant_staff: "Equipe",
@@ -47,6 +48,7 @@ const ROLE_TONE: Record<string, BadgeTone> = {
   admin: "blue",
   doctor: "green",
   manager: "amber",
+  secretary: "blue",
   // Legacy rows until the backfill migration runs.
   tenant_owner: "muted",
   tenant_staff: "muted",
@@ -305,6 +307,7 @@ function CreateUserPanel({
             >
               <option value="doctor">Médico — atende pacientes</option>
               <option value="manager">Gestor — tudo do médico + gestão da clínica</option>
+              <option value="secretary">Secretária — recepção, só secretarIA (sem dado clínico)</option>
               <option value="admin">Admin da plataforma</option>
             </select>
           </div>

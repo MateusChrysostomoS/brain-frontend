@@ -58,7 +58,7 @@ const ATTEMPT_RESULT_LABEL: Record<string, string> = {
 
 export default function OnboardingPage() {
   // legacy values accepted during the role-taxonomy transition
-  const { session, ready } = usePortalGuard(["doctor", "manager", "tenant_owner", "tenant_staff"]);
+  const { session, ready } = usePortalGuard(["doctor", "manager", "secretary", "tenant_owner", "tenant_staff"]);
 
   const [data, setData] = useState<DoctorOnboarding | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);

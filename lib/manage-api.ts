@@ -25,16 +25,26 @@
 //   GET  /billing/precheck/usage    -> PreCheck plan quota/usage/top-ups (getPrecheckBillingUsage)
 //   POST /billing/precheck/topup    -> Stripe Checkout URL for N avulso units   (createPrecheckTopupSession)
 //   POST /billing/precheck/upgrade  -> upgrade precheck_basic -> precheck_advanced (upgradePrecheckPlan)
+//   POST /auth/password-reset/request -> { detail } always, anti-enumeration (requestPasswordReset)
+//   POST /auth/password-reset/verify  -> { detail }; 400 invalid/expired token (verifyResetToken)
+//   POST /auth/password-reset/confirm -> { detail }; 400 invalid token, 422 weak password (confirmPasswordReset)
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
 // Brain role names (mirror brain-api). `admin` is platform-level (no tenant);
-// doctor/manager are tenant-scoped portal users (role-taxonomy transition —
-// legacy tokens/rows may still carry tenant_owner/tenant_staff for ~30min
-// post-deploy; every gate that reads Role/role must accept both, see below).
-export type Role = "admin" | "doctor" | "manager";
+// doctor/manager/secretary are tenant-scoped portal users (role-taxonomy
+// transition — legacy tokens/rows may still carry tenant_owner/tenant_staff for
+// ~30min post-deploy; every gate that reads Role/role must accept both, see
+// below).
+//
+// `secretary` (2026-08-14) is the clinic's HUMAN receptionist: full run of the
+// secretarIA portal (agenda, configuração, team invites, billing, onboarding
+// pause) but NEVER the clinical surface — it is deliberately absent from the
+// allow-list of /doctor/anamneses and from the PreCheck handoff, mirroring
+// brain-api's `deny_secretary`. A secretary also never has a professionalId.
+export type Role = "admin" | "doctor" | "manager" | "secretary";
 
 export type Session = {
   token: string;
@@ -416,6 +426,63 @@ export async function logout(): Promise<void> {
       }).catch(() => undefined),
     ),
   );
+}
+
+// ---------------------------------------------------------------------------
+// Password reset (public, unauthenticated) — brain-api's NATIVE reset flow
+// (2026-08-14). Until now the (SignOut)/esqueci_senha screens called
+// lib/api.ts's functions of the same name, which talk to PreCheck's API — so
+// a reset silently did nothing for a user that exists only in brain-api. The
+// response shape below is deliberately identical to PreCheck's
+// MessageResponse ({ detail }), so the screens only had to swap the import.
+// None of these ever send a token (unauthenticated), so they naturally never
+// hit manageFetch's 401-refresh branch (`token &&` short-circuits first) —
+// same as every other public call site in this file (getCheckoutConfig,
+// registerSignup, etc.); no NO_REFRESH_PATHS entry needed.
+// ---------------------------------------------------------------------------
+
+export type PasswordResetMessage = { detail: string };
+
+// MANAGE-API CALL SITE #9 — password-reset step 1 ("Esqueci a senha"). POST
+// /auth/password-reset/request { email }. ALWAYS resolves 200 with the same
+// generic detail whether or not the address is registered (anti-enumeration).
+// Throws ManageApiError 429 when the per-IP auth rate limit is hit.
+export async function requestPasswordReset(
+  email: string,
+): Promise<PasswordResetMessage> {
+  return manageFetch<PasswordResetMessage>("/auth/password-reset/request", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+// MANAGE-API CALL SITE #10 — password-reset step 2. POST
+// /auth/password-reset/verify { token }. Read-only pre-flight (does NOT
+// consume the token) so the UI can reject a broken/expired link before the
+// user types a new password. Throws ManageApiError 400
+// `Token inválido ou expirado` for an unknown/expired/already-used token.
+export async function verifyResetToken(
+  token: string,
+): Promise<PasswordResetMessage> {
+  return manageFetch<PasswordResetMessage>("/auth/password-reset/verify", {
+    method: "POST",
+    body: JSON.stringify({ token }),
+  });
+}
+
+// MANAGE-API CALL SITE #11 — password-reset step 3. POST
+// /auth/password-reset/confirm { token, new_password }. Consumes the token;
+// the backend does NOT auto-login afterwards (caller routes to /login).
+// Throws ManageApiError 400 for an invalid/expired token, 422 if the password
+// isn't 8-72 chars or is missing a letter or a digit.
+export async function confirmPasswordReset(
+  token: string,
+  newPassword: string,
+): Promise<PasswordResetMessage> {
+  return manageFetch<PasswordResetMessage>("/auth/password-reset/confirm", {
+    method: "POST",
+    body: JSON.stringify({ token, new_password: newPassword }),
+  });
 }
 
 // GET /auth/me — authenticated identity (no secrets). Optional helper.
@@ -1840,10 +1907,11 @@ export type ProfessionalInviteResult = {
   invite_link: string;
 };
 
-// POST /doctor/professionals/invites — owner-only. Creates the secretaria
-// professional row, a tenant_staff User bound to it, and emails
-// `professional_invite` (fail-soft) with the same link this returns. Throws
-// ManageApiError 409 `email_already_registered`.
+// POST /doctor/professionals/invites — open to any tenant portal user (doctor,
+// manager or secretary; it stopped being owner-only in the 2026-07-22 round).
+// Creates the secretaria professional row, a `doctor` User bound to it, and
+// emails `professional_invite` (fail-soft) with the same link this returns.
+// Throws ManageApiError 409 `email_already_registered`.
 export function createProfessionalInvite(
   session: Session,
   payload: ProfessionalInvitePayload,
@@ -1864,17 +1932,79 @@ export type SelfProfessionalResult = {
   professional_id: string;
 };
 
-// POST /doctor/professionals/self — owner-only. Answers "Você também atende
-// pacientes, ou só administra a clínica?" by creating/attaching a professional
-// named after the owner (or the clinic) and binding it to the OWNER's own user
-// row. The caller should re-fetch the session's /auth/me (or re-login) to pick
-// up the new professional_id claim — this endpoint does not mint a new token.
+// POST /doctor/professionals/self — answers "Você também atende pacientes, ou só
+// administra a clínica?" by creating/attaching a professional named after the
+// caller (or the clinic) and binding it to their OWN user row. The caller should
+// re-fetch the session's /auth/me (or re-login) to pick up the new
+// professional_id claim — this endpoint does not mint a new token.
+//
+// 403 `secretary_cannot_be_professional` for a secretary: a receptionist must
+// never acquire a professional_id (it would put them in the bookable agenda).
+// The UI never offers this to a secretary, so that 403 is a backstop.
 export function createSelfProfessional(
   session: Session,
   payload: SelfProfessionalPayload,
 ): Promise<SelfProfessionalResult> {
   return manageFetch<SelfProfessionalResult>(
     "/doctor/professionals/self",
+    { method: "POST", body: JSON.stringify(payload) },
+    session.token,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Doctor secretaries API (role=doctor|manager|secretary) — the clinic's HUMAN
+// receptionists. Backs the "Secretárias" half of the Profissionais section on
+// /secretaria/configuracao.
+//
+// Deliberately NOT modelled on DoctorProfessional: a secretary has no row in
+// secretaria's `professionals` table, so there is no calendar/services/hours
+// completeness to report — brain-api's `users` table is the whole truth.
+// ---------------------------------------------------------------------------
+
+export type DoctorSecretary = {
+  user_id: string;
+  name: string;
+  email: string;
+  // True while the single-use invite token is unredeemed (invited, never logged in).
+  invite_pending: boolean;
+  created_at: string;
+};
+
+// GET /doctor/secretaries — always resolves to an array. Same `{ items: [...] }`
+// envelope (and the same unwrap-or-tolerate-bare-array defence) as
+// getDoctorProfessionals above.
+export async function getDoctorSecretaries(session: Session): Promise<DoctorSecretary[]> {
+  const data = await manageFetch<DoctorSecretary[] | { items?: unknown }>(
+    "/doctor/secretaries",
+    {},
+    session.token,
+  );
+  if (Array.isArray(data)) return data;
+  const items = (data as { items?: unknown })?.items;
+  return Array.isArray(items) ? (items as DoctorSecretary[]) : [];
+}
+
+export type SecretaryInvitePayload = {
+  name: string;
+  email: string;
+};
+
+export type SecretaryInviteResult = {
+  // Copyable link shared with the invitee: {FRONTEND_BASE_URL}/convite?token=...
+  invite_link: string;
+};
+
+// POST /doctor/secretaries/invites — open to any tenant portal user, including
+// another secretary. Creates a `secretary` User with NO professional linkage and
+// emails the (reused) `professional_invite` template, fail-soft — the link comes
+// back either way. Throws ManageApiError 409 `email_already_registered`.
+export function createSecretaryInvite(
+  session: Session,
+  payload: SecretaryInvitePayload,
+): Promise<SecretaryInviteResult> {
+  return manageFetch<SecretaryInviteResult>(
+    "/doctor/secretaries/invites",
     { method: "POST", body: JSON.stringify(payload) },
     session.token,
   );
