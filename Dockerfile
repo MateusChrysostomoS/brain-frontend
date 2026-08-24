@@ -29,6 +29,16 @@ ENV NEXT_PUBLIC_MANAGE_API_BASE_URL=${NEXT_PUBLIC_MANAGE_API_BASE_URL}
 # internal-network address, which the doctor's browser cannot reach.
 ARG NEXT_PUBLIC_SECRETARIA_HUB_BASE_URL=https://secretaria-secretaria-api.cpux9k.easypanel.host
 ENV NEXT_PUBLIC_SECRETARIA_HUB_BASE_URL=${NEXT_PUBLIC_SECRETARIA_HUB_BASE_URL}
+# NEXT_PUBLIC_SECRETARIA_APP_BASE_URL -> the secretarIA FRONTEND's public origin
+#   (the secretarIA-frontend app: /agenda, /configuracao, /inicio). Different
+#   thing from the HUB url above, which is the API. Since the secretarIA screens
+#   were removed from this repo, every link that used to go to
+#   /secretaria/agenda or /secretaria/configuracao points here instead. Empty
+#   makes secretariaAppConfigured() false, and the affordances say so plainly
+#   rather than linking somewhere that does not exist. Same static-export rule as
+#   every NEXT_PUBLIC_* above: setting it only in EasyPanel has NO effect.
+ARG NEXT_PUBLIC_SECRETARIA_APP_BASE_URL=
+ENV NEXT_PUBLIC_SECRETARIA_APP_BASE_URL=${NEXT_PUBLIC_SECRETARIA_APP_BASE_URL}
 # Fail the build loudly if the placeholder above was never replaced. Without this
 # guard an unreplaced "<host-...>" would bake an unreachable URL into the bundle:
 # hubConfigured() would flip to true, every hub fetch would fail, and the UI would

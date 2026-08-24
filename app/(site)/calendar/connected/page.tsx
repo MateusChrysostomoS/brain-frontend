@@ -13,6 +13,11 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { BrandGlyph } from "../../_components/BrandGlyph";
 import "../../checkout/checkout.css";
+import {
+  SECRETARIA_APP_NOT_CONFIGURED,
+  SECRETARIA_APP_ROUTES,
+  secretariaAppUrl,
+} from "@/lib/secretaria-app";
 
 export default function CalendarConnectedPage() {
   return (
@@ -44,9 +49,19 @@ function CalendarConnectedInner() {
             : "Algo deu errado ao conectar o Google Calendar. Tente novamente pelas Configurações secretarIA."}
       </p>
       <div className="checkout-actions">
-        <Link href="/secretaria/configuracao" className="btn btn--primary">
-          Voltar para as Configurações secretarIA
-        </Link>
+        {secretariaAppUrl(SECRETARIA_APP_ROUTES.googleCalendar) ? (
+          <a
+            href={secretariaAppUrl(SECRETARIA_APP_ROUTES.googleCalendar) as string}
+            className="btn btn--primary"
+          >
+            Voltar para as Configurações secretarIA
+          </a>
+        ) : (
+          // The secretarIA app is not configured for this build, so there is
+          // nowhere honest to send them. Say so instead of offering a button
+          // that 404s on this origin.
+          <p className="muted">{SECRETARIA_APP_NOT_CONFIGURED}</p>
+        )}
       </div>
     </CalendarConnectedShell>
   );

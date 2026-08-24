@@ -6,7 +6,6 @@
 // side for display names) — every number/row/filter here comes from that data;
 // there is no mock data and no fabricated "marcada pela IA" / sync-timestamp label.
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { BrandIcon } from "../../_components/BrandIcon";
 import { describeApiError } from "../../_components/usePortalGuard";
@@ -26,6 +25,45 @@ import {
   pluralize,
 } from "./format";
 import { PanelMessage, PanelSkeleton } from "./PanelStates";
+import {
+  SECRETARIA_APP_NOT_CONFIGURED,
+  SECRETARIA_APP_ROUTES,
+  secretariaAppUrl,
+} from "@/lib/secretaria-app";
+
+/**
+ * A cross-origin link into the secretarIA app, styled as a button.
+ *
+ * A plain <a>, not next/link: those screens are no longer part of this bundle,
+ * and client-side routing cannot leave this origin. When the secretarIA origin
+ * is not configured for this build the control renders DISABLED with the
+ * reason, rather than linking to a route that would 404 here.
+ */
+function SecretariaAppLink({
+  route,
+  className,
+  children,
+}: {
+  route: string;
+  className: string;
+  children: React.ReactNode;
+}) {
+  const href = secretariaAppUrl(route);
+  if (!href) {
+    return (
+      <span className={className} aria-disabled="true" title={SECRETARIA_APP_NOT_CONFIGURED}
+        style={{ opacity: 0.55, pointerEvents: "none" }}>
+        {children}
+      </span>
+    );
+  }
+  return (
+    <a href={href} className={className} target="_blank" rel="noopener noreferrer">
+      {children}
+    </a>
+  );
+}
+
 
 // AppointmentStatus (secretaria) -> pt-BR badge copy/class. Unrecognized values
 // fall back to the raw status string and the neutral "wait" badge.
@@ -214,14 +252,20 @@ export function SecretariaPanel({ session }: { session: Session }) {
             </div>
           </div>
           <div className="panel-actions">
-            <Link href="/secretaria/configuracao" className="btn btn--outline btn--sm">
+            <SecretariaAppLink
+              route={SECRETARIA_APP_ROUTES.configuracao}
+              className="btn btn--outline btn--sm"
+            >
               <BrandIcon name="sliders" />
               Configurar
-            </Link>
-            <Link href="/secretaria/agenda" className="btn btn--primary btn--sm">
+            </SecretariaAppLink>
+            <SecretariaAppLink
+              route={SECRETARIA_APP_ROUTES.agenda}
+              className="btn btn--primary btn--sm"
+            >
               <BrandIcon name="calendar" />
               Abrir agenda completa
-            </Link>
+            </SecretariaAppLink>
           </div>
         </div>
       </div>
@@ -304,9 +348,12 @@ export function SecretariaPanel({ session }: { session: Session }) {
 
           <div className="pagination">
             <div className="pg" style={{ marginLeft: "auto" }}>
-              <Link href="/secretaria/agenda" className="btn btn--ghost btn--sm">
+              <SecretariaAppLink
+                route={SECRETARIA_APP_ROUTES.agenda}
+                className="btn btn--ghost btn--sm"
+              >
                 Ver semana inteira <BrandIcon name="arrowR" />
-              </Link>
+              </SecretariaAppLink>
             </div>
           </div>
         </>

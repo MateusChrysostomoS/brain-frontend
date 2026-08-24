@@ -3,8 +3,8 @@
 // PortalHeader — the Brain header bar for every logged-in screen (admin portal,
 // doctor portal, and the full-viewport secretarIA product screens).
 //
-// Extracted out of PortalShell so the secretarIA screens (/secretaria/agenda,
-// /secretaria/configuracao) can render the SAME header. They cannot use
+// Extracted out of PortalShell so the secretarIA screens could render the SAME
+// header back when they lived here (they are their own app now). They cannot use
 // PortalShell itself: their layout is a height:100vh flex column with its own
 // internal scroll area (calendar grid, sticky save bar), not PortalShell's
 // document-scrolling sidebar+main grid. Before this they shipped their own

@@ -1591,7 +1591,7 @@ export function listDoctorPatients(
 // ---------------------------------------------------------------------------
 // Doctor onboarding API (role=doctor|manager) — Onboarding &
 // Multi-Professional contract §7. Drives the /app/onboarding eligibility
-// screen (Feature 2) and the compact banner on /secretaria/configuracao.
+// screen (Feature 2) and the compact banner on the secretarIA Configuracao screen.
 // ---------------------------------------------------------------------------
 
 export type OnboardingState =
@@ -1858,7 +1858,7 @@ export async function upgradePrecheckPlan(
 // ---------------------------------------------------------------------------
 // Doctor professionals API (role=doctor|manager) — Onboarding &
 // Multi-Professional contract §7. Backs the "Profissionais" section on
-// /secretaria/configuracao (Feature C3).
+// the secretarIA Configuracao screen (Feature C3).
 // ---------------------------------------------------------------------------
 
 // One professional as seen from brain-api's proxy of secretaria's config-status
@@ -1955,7 +1955,7 @@ export function createSelfProfessional(
 // ---------------------------------------------------------------------------
 // Doctor secretaries API (role=doctor|manager|secretary) — the clinic's HUMAN
 // receptionists. Backs the "Secretárias" half of the Profissionais section on
-// /secretaria/configuracao.
+// the secretarIA Configuracao screen.
 //
 // Deliberately NOT modelled on DoctorProfessional: a secretary has no row in
 // secretaria's `professionals` table, so there is no calendar/services/hours

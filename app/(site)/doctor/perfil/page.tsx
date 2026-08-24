@@ -1,12 +1,16 @@
 "use client";
 
-// /doctor/perfil — "Meu Perfil": the logged-in doctor's own account info. Two
-// independent <section className="card"> blocks stacked vertically:
-// "Informações pessoais" (name self-editable via PATCH /doctor/me; email/role/
-// clinic shown read-only) and "Configurações secretarIA" (specialty/about/
-// context/hours + Google Calendar connect for THIS user's own professional,
-// mode-sensitive — see SecretariaConfigSection.tsx). Each section fetches and
-// saves independently; nothing in one needs the other to work.
+// /doctor/perfil — "Meu Perfil": the logged-in doctor's own ACCOUNT info.
+// "Informações pessoais" — name self-editable via PATCH /doctor/me; email, role
+// and clinic shown read-only.
+//
+// This page used to carry a second card, "Configurações secretarIA", which
+// edited the doctor's specialty/about/hours and their Google Calendar
+// connection. It was removed along with the rest of the secretarIA screens in
+// this repo: those fields belong to the secretarIA product, they are edited in
+// the secretarIA app's own Configuração screen, and a second editor writing the
+// same records through the same hub is precisely how the two drifted apart.
+// What stays here is what is genuinely account-level and Brain-owned.
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -24,7 +28,6 @@ import {
   type DoctorMe,
   type Session,
 } from "@/lib/manage-api";
-import { SecretariaConfigSection } from "./SecretariaConfigSection";
 
 // Doctor role -> badge label/tone. Local to this page (mirrors the same local-map
 // convention as ROLE_LABEL/ROLE_TONE in admin/users/page.tsx) — "admin" is included only
@@ -109,8 +112,6 @@ export default function DoctorPerfilPage() {
             onUpdated={setMe}
             onAuthError={handleAuthError}
           />
-
-          <SecretariaConfigSection session={session} />
         </div>
       )}
     </>

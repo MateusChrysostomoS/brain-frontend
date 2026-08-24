@@ -15,7 +15,6 @@ import { useEffect, useState } from "react";
 import { BackToAdminButton } from "../_components/BackToAdminButton";
 import { PortalShell, type PortalNavItem } from "../_components/PortalShell";
 import type { PortalProduct } from "../_components/ProductLockup";
-import { SecretariaWordmark } from "../_components/SecretariaWordmark";
 import { useImpersonation } from "../_components/useImpersonation";
 import { usePortalGuard } from "../_components/usePortalGuard";
 import { getDoctorMe, logout } from "@/lib/manage-api";
@@ -25,33 +24,30 @@ import { getDoctorMe, logout } from "@/lib/manage-api";
 // obvious at a glance instead of living in a separate lookup table.
 type DoctorNavItem = PortalNavItem & { product: PortalProduct | null };
 
-// Doctor sidebar nav (RBAC task 3C): Agenda · Pacientes · Anamneses ·
-// Configurações secretarIA · Meu Perfil. Agenda/Pacientes/Configurações are
-// secretarIA-backed (see /doctor/pacientes); Anamneses is PreCheck-backed. Every
-// product-gated item is filtered below once entitlements are known; `product: null`
-// (Meu Perfil) is account-level, not product-gated, so it always shows regardless of
-// which products the tenant has.
+// Doctor sidebar nav: Pacientes · Anamneses · Meu Perfil.
+//
+// "Agenda" and "Configurações secretarIA" are GONE from this nav on purpose.
+// Those two screens moved out of this repo entirely — secretarIA is its own
+// domain with its own frontend, and two bundles editing the same tenant config
+// through the same hub is how they drifted apart. The way in is now
+// /doctor/dashboard's secretarIA card, which links to the other app's origin
+// (lib/secretaria-app.ts); a sidebar tab cannot express "this leaves the app
+// and asks you to sign in again", and would read as a broken internal route.
+//
+// Pacientes is still secretarIA-backed and still lives here; Anamneses is
+// PreCheck-backed. Every product-gated item is filtered below once entitlements
+// are known; `product: null` (Meu Perfil) is account-level, not product-gated,
+// so it always shows regardless of which products the tenant has.
 //
 // `product` doubles as the source for the header's product lockup — see
 // productForPath below: the nav already knows which product backs each route.
 const DOCTOR_NAV: DoctorNavItem[] = [
-  { href: "/secretaria/agenda", label: "Agenda", icon: "calendar", product: "secretaria" },
   { href: "/doctor/pacientes", label: "Pacientes", icon: "users", product: "secretaria" },
   {
     href: "/doctor/anamneses",
     label: "Anamneses",
     icon: "note",
     product: "precheck",
-  },
-  {
-    href: "/secretaria/configuracao",
-    label: (
-      <>
-        Configurações <SecretariaWordmark />
-      </>
-    ),
-    icon: "sliders",
-    product: "secretaria",
   },
   { href: "/doctor/perfil", label: "Meu Perfil", icon: "user", product: null },
 ];

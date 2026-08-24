@@ -69,7 +69,11 @@ function ConviteInner() {
       // half-finished invite (token burned, no password) should never leave
       // a usable session behind.
       saveSession(session);
-      router.replace("/secretaria/configuracao");
+      // Into the Brain portal, not the secretarIA app: the session was just
+      // saved for THIS origin, and sessionStorage does not cross origins — a
+      // redirect to the secretarIA app would greet a brand-new user with a
+      // second login screen. The dashboard's secretarIA cards are the way on.
+      router.replace("/doctor/dashboard");
     } catch (e) {
       const status = e instanceof ManageApiError ? e.status : 0;
       setSaveError(

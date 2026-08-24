@@ -4,9 +4,9 @@
 // is owned by secretarIA (brain-api's /doctor/patients is a wired stub today), so this
 // shows a friendly empty state and points to the agenda rather than a dead link.
 
-import Link from "next/link";
 
 import { usePortalGuard } from "../../_components/usePortalGuard";
+import { SECRETARIA_APP_ROUTES, secretariaAppUrl } from "@/lib/secretaria-app";
 
 export default function DoctorPatientsPage() {
   // legacy values accepted during the role-taxonomy transition
@@ -25,9 +25,18 @@ export default function DoctorPatientsPage() {
       <div className="ptable-wrap">
         <div className="portal-state">
           Em breve aqui. Por enquanto, gerencie pacientes e consultas pela{" "}
-          <Link href="/secretaria/agenda" style={{ color: "var(--brand)", fontWeight: 600 }}>
-            agenda da secretarIA
-          </Link>
+          {secretariaAppUrl(SECRETARIA_APP_ROUTES.agenda) ? (
+            <a
+              href={secretariaAppUrl(SECRETARIA_APP_ROUTES.agenda) as string}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "var(--brand)", fontWeight: 600 }}
+            >
+              agenda no aplicativo da secretarIA
+            </a>
+          ) : (
+            <span style={{ fontWeight: 600 }}>agenda da secretarIA</span>
+          )}
           .
         </div>
       </div>

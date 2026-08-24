@@ -18,6 +18,11 @@ import {
   usePortalGuard,
 } from "../../_components/usePortalGuard";
 import { getDoctorMe, type DoctorMe } from "@/lib/manage-api";
+import {
+  SECRETARIA_APP_NOT_CONFIGURED,
+  SECRETARIA_APP_ROUTES,
+  secretariaAppUrl,
+} from "@/lib/secretaria-app";
 
 // QuickLink — a navigation card into a product app. Local to this route.
 function QuickLink({
@@ -40,6 +45,55 @@ function QuickLink({
       <h3>{title}</h3>
       <p>{description}</p>
     </Link>
+  );
+}
+
+/**
+ * The same card, pointing at ANOTHER origin — the secretarIA app, which is no
+ * longer part of this bundle.
+ *
+ * A plain <a>, not next/link: client-side routing cannot leave this app, so a
+ * <Link> here would render a link that does nothing. The copy says the
+ * destination is a different app rather than pretending it is one more tab,
+ * because the session is per-origin and the doctor will be asked to sign in
+ * again (see lib/secretaria-app.ts).
+ *
+ * `href === null` means this build has no secretarIA origin configured. The
+ * card still renders, disabled and honest, instead of vanishing — a missing
+ * card reads as "you do not have this product", which is a different and wrong
+ * message.
+ */
+function ExternalQuickLink({
+  href,
+  icon,
+  title,
+  description,
+}: {
+  href: string | null;
+  icon: IconName;
+  title: ReactNode;
+  description: string;
+}) {
+  const body = (
+    <>
+      <span className="feat-ico">
+        <BrandIcon name={icon} />
+      </span>
+      <h3>{title}</h3>
+      <p>{href ? description : SECRETARIA_APP_NOT_CONFIGURED}</p>
+    </>
+  );
+  if (!href) {
+    return (
+      <div className="portal-link-card" aria-disabled="true" style={{ opacity: 0.55 }}>
+        {body}
+      </div>
+    );
+  }
+  return (
+    <a href={href} className="portal-link-card" target="_blank" rel="noopener noreferrer">
+      {body}
+    </a>
   );
 }
 
@@ -116,23 +170,23 @@ export default function DoctorDashboardPage() {
               />
             )}
             {secretaria && (
-              <QuickLink
-                href="/secretaria/agenda"
+              <ExternalQuickLink
+                href={secretariaAppUrl(SECRETARIA_APP_ROUTES.agenda)}
                 icon="calendar"
                 title="Agenda"
-                description="Consultas e disponibilidade da secretarIA."
+                description="Consultas e disponibilidade, no aplicativo da secretarIA."
               />
             )}
             {secretaria && (
-              <QuickLink
-                href="/secretaria/configuracao"
+              <ExternalQuickLink
+                href={secretariaAppUrl(SECRETARIA_APP_ROUTES.configuracao)}
                 icon="sliders"
                 title={
                   <>
                     Configurações <SecretariaWordmark />
                   </>
                 }
-                description="Ajuste o atendimento da secretarIA."
+                description="Ajuste o atendimento, no aplicativo da secretarIA."
               />
             )}
             {precheck && (

@@ -11,7 +11,8 @@
 // has occurred" screen, which is a blank white page with one line of grey text
 // and no way forward. The router is gone with the tree, so the back button does
 // nothing either: the user is genuinely stuck until they retype the URL. That
-// is what a clinic hit on /secretaria/configuracao (FIX 33).
+// is what a clinic hit on the secretarIA Configuracao screen (FIX 33), back
+// when it lived in this repo.
 //
 // A boundary does not stop the underlying bug. It stops the bug from taking the
 // whole app hostage, and it turns an opaque white screen into something the
@@ -20,7 +21,7 @@
 //
 // ONE BOUNDARY, NOT TWO
 // ---------------------
-// A second copy under secretaria/configuracao/ would catch exactly the same
+// A second copy under a per-route folder would catch exactly the same
 // errors this one does: (site)/layout.tsx renders a bare fragment, so a local
 // boundary would keep no extra chrome alive and show the identical screen. Two
 // identical files that must not drift is the cost, and it buys nothing.

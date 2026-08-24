@@ -1,7 +1,7 @@
 "use client";
 
 // OnboardingBanner — compact status banner surfaced at the top of
-// /secretaria/configuracao whenever the tenant's WhatsApp onboarding isn't
+// the secretarIA Configuracao screen whenever the tenant's WhatsApp onboarding isn't
 // finished yet (Feature 2's cross-link into the full /app/onboarding screen).
 // Self-sufficient: fetches GET /doctor/onboarding itself and renders nothing
 // when there's no session, the fetch fails, or the tenant is already `ativo`

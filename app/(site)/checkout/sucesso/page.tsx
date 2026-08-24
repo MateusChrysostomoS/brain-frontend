@@ -100,7 +100,7 @@ function CheckoutSucessoInner() {
             // Fast path: registration already saved a session in this browser — just
             // route into the portal (the entitlement is now active).
             if (getSession()) {
-              router.replace("/secretaria/configuracao");
+              router.replace("/doctor/dashboard");
             } else if (status.onboarding_token) {
               // Fallback (different browser/tab): trade the LATEST one-time token for a
               // session. Never reuse a token from an earlier poll.
@@ -109,7 +109,7 @@ function CheckoutSucessoInner() {
                   status.onboarding_token,
                 );
                 saveSession(session);
-                router.replace("/secretaria/configuracao");
+                router.replace("/doctor/dashboard");
               } catch {
                 setExchangeFailed(true);
               }

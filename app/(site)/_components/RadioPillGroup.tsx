@@ -9,7 +9,8 @@
 // 2026-08-02 when the Google Calendar mode selector became the second caller:
 //   - /cadastro wizard intake questions (Q1 whatsapp usage, Q3 prior API,
 //     Q4 Facebook Page)
-//   - /secretaria/configuracao Section 08, Google Calendar mode
+//   - the secretarIA Configuracao screen, Section 08 (Google Calendar mode) —
+//     now in the secretarIA app's own repo
 // Both live under app/(site), whose layout imports brand-ds.css — that is where
 // the .radio-pill/.radio-pill--block styles come from.
 

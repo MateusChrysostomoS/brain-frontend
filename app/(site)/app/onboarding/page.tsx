@@ -27,6 +27,11 @@ import { ActivateButton } from "./_components/ActivateButton";
 import { PauseToggles } from "./_components/PauseToggles";
 import "../dashboard-shell.css";
 import "./onboarding.css";
+import {
+  SECRETARIA_APP_NOT_CONFIGURED,
+  SECRETARIA_APP_ROUTES,
+  secretariaAppUrl,
+} from "@/lib/secretaria-app";
 
 // Exact copy required for `atividade_insuficiente` (spec §B) — do not reword.
 const BLOCKER_COPY: Record<OnboardingBlockerReason, string> = {
@@ -190,9 +195,25 @@ export default function OnboardingPage() {
                         : "Estamos sincronizando o histórico do seu WhatsApp Business — isso pode levar algumas horas. Mantenha o Business App aberto e o celular desbloqueado enquanto isso."}
                     </p>
                   </div>
-                  <Link href="/secretaria/configuracao" className="btn btn--primary btn--sm">
-                    Concluir configuração
-                  </Link>
+                  {secretariaAppUrl(SECRETARIA_APP_ROUTES.configuracao) ? (
+                    <a
+                      href={secretariaAppUrl(SECRETARIA_APP_ROUTES.configuracao) as string}
+                      className="btn btn--primary btn--sm"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Concluir configuração
+                    </a>
+                  ) : (
+                    <span
+                      className="btn btn--primary btn--sm"
+                      aria-disabled="true"
+                      title={SECRETARIA_APP_NOT_CONFIGURED}
+                      style={{ opacity: 0.55, pointerEvents: "none" }}
+                    >
+                      Concluir configuração
+                    </span>
+                  )}
                 </div>
               </div>
             )}
