@@ -1,0 +1,59 @@
+/* ─────────────────────────────────────────────────────────────
+   Brain lockup for the LEGACY route groups — (SignOut) auth screens
+   and the (SignIn) clinical panel.
+
+   Those two groups predate the Brain design system: they run on the
+   ported PreCheck stylesheets and never load app/(site)/brand-ds.css,
+   which is where `.brand-glyph`'s colours normally come from. So the
+   glyph's three classes are re-bound here to the route tokens those
+   groups DO define (--teal / --ink / --border-2 / --font-serif), and
+   everything is scoped under `.brain-lockup` so it can never reach a
+   (site) screen even if the chunk were ever shared.
+
+   Imported by (SignOut)/_shared/AuthShell.tsx and components/DashNav.tsx.
+   ───────────────────────────────────────────────────────────── */
+
+.brain-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.brain-lockup .brand-glyph {
+  flex-shrink: 0;
+  display: block;
+}
+.brain-lockup .brand-glyph .gs { stroke: var(--teal); }
+.brain-lockup .brand-glyph .gf { fill: var(--teal); }
+.brain-lockup .brand-glyph .gt { fill: var(--teal); stroke: var(--teal); }
+
+.brain-lockup-word {
+  font-family: var(--font-serif);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--ink);
+}
+
+/* Hairline between the two marks — what makes the row read as
+   "product, by Brain" instead of two logos competing. */
+.brain-lockup-rule {
+  width: 1px;
+  height: 1.15em;
+  flex-shrink: 0;
+  background: var(--border-2);
+}
+
+.brain-lockup-product {
+  display: inline-flex;
+  align-items: baseline;
+  min-width: 0;
+}
+
+/* Narrow screens: the Brain half is the part that can go. The product
+   mark is the screen's identity and stays. */
+@media (max-width: 620px) {
+  .brain-lockup { gap: 8px; }
+  .brain-lockup-word,
+  .brain-lockup-rule { display: none; }
+}

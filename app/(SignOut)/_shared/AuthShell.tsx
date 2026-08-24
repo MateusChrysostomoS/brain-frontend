@@ -6,6 +6,9 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
+
+import { BrandGlyph } from "@/app/(site)/_components/BrandGlyph";
+import "@/app/brand-lockup.css";
 import "./auth-shell.css";
 
 // Single PQRS heartbeat — drawn once, reused by the live + ghost traces.
@@ -76,9 +79,14 @@ export function AuthShell({
       </div>
 
       <div className="login-shell">
-        <Link href={brandHref} className="login-brand" aria-label="PreCheck">
-          <span className="wordmark">
-            Pre<em>Check</em>
+        {/* This is the unified BRAIN portal login (see login/page.tsx) — the
+            chrome is the ported PreCheck one, but the brand is not. It showed
+            the PreCheck wordmark, which named the wrong product for admins,
+            managers and secretarIA-only clinics alike. */}
+        <Link href={brandHref} className="login-brand" aria-label="Brain">
+          <span className="brain-lockup">
+            <BrandGlyph size={40} />
+            <span className="wordmark">Brain</span>
           </span>
           <span className="role">{role}</span>
         </Link>

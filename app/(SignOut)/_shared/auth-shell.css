@@ -168,6 +168,9 @@ main.login-page .login-brand {
   text-decoration: none;
   color: var(--ink);
 }
+main.login-page .login-brand .brain-lockup {
+  gap: 12px;
+}
 main.login-page .login-brand .wordmark {
   font-family: var(--font-serif);
   font-size: 32px;

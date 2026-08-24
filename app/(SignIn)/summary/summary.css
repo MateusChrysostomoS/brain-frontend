@@ -96,7 +96,7 @@ html[data-theme="dark"] .patient-route .dash-nav {
 }
 .patient-route .dash-brand {
   display: inline-flex;
-  align-items: baseline;
+  align-items: center;
   gap: 6px;
   font-family: var(--font-serif);
   font-size: 24px;

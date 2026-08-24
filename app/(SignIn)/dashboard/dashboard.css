@@ -73,7 +73,7 @@ body:has(.dash-route)::after { display: none; }
 }
 .dash-route .dash-brand {
   display: inline-flex;
-  align-items: baseline;
+  align-items: center;
   gap: 6px;
   font-family: var(--font-serif);
   font-size: 24px;

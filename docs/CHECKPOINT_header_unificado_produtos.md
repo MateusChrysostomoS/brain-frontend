@@ -154,3 +154,10 @@ na ordem (e explícita no `aria-label` do lockup). Se o usuário quiser literalm
    renomeação em si é estática (typecheck + build cobrem), mas o visual dos cards não foi
    visto.
 3. Confirmar com o usuário a ordem do lockup (seção "Decisão de layout" acima).
+
+---
+
+> **2026-08-24 — novo glifo Brain:** o desenho do `BrandGlyph` mudou (cérebro com cauda de balão de
+> fala) sem mexer no contrato de props/classes, e os grupos legados `(SignOut)`/`(SignIn)` — que não
+> carregam `brand-ds.css` — passaram a mostrar `Brain` e `Brain │ PreCheck` via o novo
+> `app/brand-lockup.css`. Ver `CHECKPOINT_marca_brain_glyph.md`.

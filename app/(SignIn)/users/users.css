@@ -63,7 +63,7 @@ body:has(.users-route)::after { display: none; }
 }
 .users-route .dash-brand {
   display: inline-flex;
-  align-items: baseline;
+  align-items: center;
   gap: 6px;
   font-family: var(--font-serif);
   font-size: 24px;

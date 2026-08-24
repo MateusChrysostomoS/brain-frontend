@@ -11,6 +11,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getCurrentTheme, toggleTheme, type Theme } from "@/lib/theme";
+import { BrandGlyph } from "@/app/(site)/_components/BrandGlyph";
+import "@/app/brand-lockup.css";
 
 type DashNavProps = {
   clinic?: string;
@@ -69,8 +71,15 @@ export default function DashNav({ clinic, role, isManager, onLogout }: DashNavPr
     <nav className="dash-nav">
       <div className="dash-nav-inner">
         <div className="dash-nav-left">
-          <Link href="/" className="dash-brand" aria-label="PreCheck">
-            Pre<em>Check</em>
+          <Link href="/" className="dash-brand" aria-label="PreCheck por Brain">
+            <span className="brain-lockup">
+              <BrandGlyph size={26} />
+              <span className="brain-lockup-word">Brain</span>
+              <span className="brain-lockup-rule" aria-hidden="true" />
+              <span className="brain-lockup-product">
+                Pre<em>Check</em>
+              </span>
+            </span>
           </Link>
 
           {showAdminTabs && (

@@ -2,8 +2,10 @@
 
 // Login (/login) — the unified Brain portal login. Authenticates against brain-api
 // (POST /auth/token), stores the JWT session, and routes to the /app dashboard.
-// Visual chrome is the existing PreCheck-design <AuthShell>; this file owns only the
-// form state, validation, and the call into `lib/manage-api.login()`.
+// Visual chrome is the ported PreCheck-design <AuthShell> — the CHROME only:
+// the mark it renders is Brain's, because this login serves admins, managers
+// and secretarIA-only clinics just as much as PreCheck ones. This file owns
+// the form state, validation, and the call into `lib/manage-api.login()`.
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -78,14 +80,14 @@ function LoginInner() {
           Acesso à <em>sua clínica</em>.
         </>
       }
-      subtitle="Entre para revisar os resumos pré-consulta do dia."
+      subtitle="Entre para acessar o portal da sua clínica."
       error={error}
       success={success}
       belowCard={
         <>
           <div className="login-divider">ou</div>
           <p className="login-help">
-            Sua clínica ainda não usa PreCheck?{" "}
+            Sua clínica ainda não usa a Brain?{" "}
             <Link href="/#contato">Agendar demonstração</Link>
           </p>
         </>
