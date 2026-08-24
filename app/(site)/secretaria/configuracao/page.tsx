@@ -747,11 +747,13 @@ export default function ConfiguracaoPage() {
   // ---------------------------------------------------------------------------
 
   return (
-    <div style={{
-      height: "100vh",
-      display: "flex", flexDirection: "column",
-      background: "var(--page)",
-    }}>
+    // .app-screen pins this root to the viewport instead of making it a
+    // height:100vh box in normal flow — see app-shell.css (FIX 33). In flow the
+    // document stays scrollable even though body{overflow:hidden} removes the
+    // scrollbar, so one browser scroll-into-view (focusing a radio pill as the
+    // layout collapses under it) parks the whole screen off-viewport, looking
+    // blank and frozen, with no way to scroll back.
+    <div className="app-screen">
       <PortalHeader
         portalLabel="Clínica"
         userLabel={
