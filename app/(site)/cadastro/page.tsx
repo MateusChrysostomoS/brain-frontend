@@ -36,6 +36,11 @@ export default function CadastroPage() {
 function CadastroInner() {
   const searchParams = useSearchParams();
   const plan = resolvePlan(searchParams);
+  // Vem da vitrine do PreCheck (/comecar). Validado no formato dos slugs de
+  // template antes de viajar: um valor arbitrário na URL não deve chegar à API.
+  const rawTemplate = searchParams.get("precheck_template_slug");
+  const precheckTemplateSlug =
+    rawTemplate && /^[a-z0-9-]{1,100}$/.test(rawTemplate) ? rawTemplate : undefined;
 
   // Checked AFTER the plan is resolved — the gate is per product now, so which
   // plan the link carried is exactly what decides the answer. An unknown plan
@@ -101,7 +106,7 @@ function CadastroInner() {
     );
   }
 
-  return <CadastroWizard plan={plan} />;
+  return <CadastroWizard plan={plan} precheckTemplateSlug={precheckTemplateSlug} />;
 }
 
 function BrandHeader() {
