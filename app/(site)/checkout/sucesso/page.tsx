@@ -19,10 +19,13 @@ import { BrandGlyph } from "../../_components/BrandGlyph";
 import {
   exchangeOnboardingToken,
   getOnboardingStatus,
+  getPrecheckSsoToken,
   getSession,
   ManageApiError,
   saveSession,
+  type Session,
 } from "@/lib/manage-api";
+import { setToken as setPrecheckToken } from "@/lib/auth";
 import "../checkout.css";
 
 const POLL_INTERVAL_MS = 2000;
@@ -37,7 +40,8 @@ type ViewState =
   | "timeout"
   | "ready-secretaria"
   | "ready-already-claimed"
-  | "ready-precheck-only";
+  | "ready-precheck"
+  | "ready-precheck-pending";
 
 export default function CheckoutSucessoPage() {
   return (
@@ -80,6 +84,36 @@ function CheckoutSucessoInner() {
       clearInterval(intervalId);
     }
 
+    // Troca a sessão do brain por uma sessão do PreCheck e entra no dashboard.
+    //
+    // Há uma CORRIDA real aqui: `onboarding-status` vira "ready" assim que o
+    // entitlement é ativado, e só DEPOIS o webhook dispara o bridge que cria a
+    // clínica e grava `precheck_account_links`. Enquanto essa linha não existe,
+    // POST /sso/precheck/token responde 409 `precheck_account_not_linked` — que
+    // não é erro, é "ainda não". Por isso o 409 é retentado com espera crescente
+    // em vez de virar tela de falha; qualquer outro erro é terminal.
+    async function enterPrecheck(session: Session) {
+      const esperas = [0, 1000, 2000, 4000, 8000];
+      for (const espera of esperas) {
+        if (espera > 0) await new Promise((r) => setTimeout(r, espera));
+        if (cancelled) return;
+        try {
+          const { token } = await getPrecheckSsoToken(session);
+          setPrecheckToken(token);
+          router.replace("/dashboard");
+          return;
+        } catch (err) {
+          const naoLigadoAinda =
+            err instanceof ManageApiError && err.status === 409;
+          if (!naoLigadoAinda) break;
+        }
+      }
+      // O provisionamento não ficou pronto a tempo (ou falhou). A conta e o
+      // pagamento estão de pé — o bridge retenta sozinho no primeiro load do
+      // portal —, então mandamos o cliente para lá em vez de prometer contato.
+      if (!cancelled) setView("ready-precheck-pending");
+    }
+
     async function tick() {
       if (cancelled || busy) return;
       busy = true;
@@ -119,8 +153,28 @@ function CheckoutSucessoInner() {
               setView("ready-already-claimed");
             }
           } else {
-            // PreCheck-only: no dashboard yet, just confirm and set expectations.
-            setView("ready-precheck-only");
+            // PreCheck: mesmo desenho do ramo acima — sessão local primeiro, o
+            // onboarding-token como fallback de outro browser —, mas o destino
+            // exige um passo a mais: PreCheck não aceita o JWT do brain, então
+            // mintamos um token PreCheck-shaped (POST /sso/precheck/token) e o
+            // gravamos onde o dashboard portado o procura (localStorage
+            // `precheck_token`, mesmo origin).
+            setView("ready-precheck");
+            let session: Session | null = getSession();
+            if (session === null && status.onboarding_token) {
+              try {
+                session = await exchangeOnboardingToken(status.onboarding_token);
+                saveSession(session);
+              } catch {
+                setExchangeFailed(true);
+                return;
+              }
+            }
+            if (session === null) {
+              setView("ready-already-claimed");
+              return;
+            }
+            await enterPrecheck(session);
           }
           return;
         }
@@ -279,7 +333,9 @@ function renderView(view: ViewState, exchangeFailed: boolean): ReactNode {
         </>
       );
 
-    case "ready-precheck-only":
+    // Estado de passagem: o pagamento entrou e estamos abrindo o PreCheck.
+    // Some sozinho no router.replace("/dashboard").
+    case "ready-precheck":
       return (
         <>
           <span className="checkout-icon" aria-hidden="true">
@@ -289,10 +345,35 @@ function renderView(view: ViewState, exchangeFailed: boolean): ReactNode {
             Pagamento confirmado!
           </h1>
           <p className="muted mt-s">
-            Obrigado por contratar o PreCheck. Nossa equipe entrará em contato
-            em até 24 horas via WhatsApp para ativar o seu roteiro de
-            anamnese.
+            Estamos preparando o seu PreCheck e abrindo o painel…
           </p>
+          <Spinner label="Abrindo o painel…" />
+        </>
+      );
+
+    // O provisionamento não ficou pronto na janela desta página. Nada se perdeu:
+    // a conta existe, o pagamento está de pé e o bridge retenta no primeiro load
+    // do portal — então a saída é um LINK para o painel, não uma promessa de
+    // alguém entrar em contato.
+    case "ready-precheck-pending":
+      return (
+        <>
+          <span className="checkout-icon" aria-hidden="true">
+            ✅
+          </span>
+          <h1 className="h-sec" style={{ fontSize: 22 }}>
+            Pagamento confirmado!
+          </h1>
+          <p className="muted mt-s">
+            Sua conta está criada e o seu PreCheck está sendo preparado — isso
+            leva alguns instantes. Acesse o painel para continuar; se ainda
+            estiver em preparo, é só recarregar em um minuto.
+          </p>
+          <div className="checkout-actions">
+            <Link href="/app" className="btn btn--primary">
+              Ir para o painel
+            </Link>
+          </div>
         </>
       );
   }

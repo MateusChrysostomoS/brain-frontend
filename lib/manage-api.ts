@@ -652,6 +652,10 @@ export type SignupRegisterPayload = {
   // enforces (>= 8 chars, at least one letter and one digit — schemas/signup.py).
   password: string;
   catalog_ids: string[];
+  // Especialidade escolhida na vitrine do PreCheck (/comecar). Viaja da vitrine
+  // até aqui pela query string e define QUAL dos 30 templates a clínica recebe
+  // quando o webhook provisiona. Ausente => brain-api usa "clinica-geral".
+  precheck_template_slug?: string;
   // Honeypot: always sent empty by real visitors (the field is visually
   // hidden in the form). A filled value marks the submission as spam server-side.
   website?: string;

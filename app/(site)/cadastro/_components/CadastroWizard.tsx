@@ -95,9 +95,13 @@ function nextAfterEligibility(plan: ResolvedPlan): StepId {
 
 type CadastroWizardProps = {
   plan: ResolvedPlan;
+  // Especialidade escolhida na vitrine do PreCheck, quando o visitante veio de lá
+  // (/comecar -> /cadastro?precheck_template_slug=...). Decide qual dos 30 templates
+  // a clínica recebe no provisionamento; ausente => brain-api usa "clinica-geral".
+  precheckTemplateSlug?: string;
 };
 
-export function CadastroWizard({ plan }: CadastroWizardProps) {
+export function CadastroWizard({ plan, precheckTemplateSlug }: CadastroWizardProps) {
   // Lazy init: preselect any add-on already named in the incoming `?catalog=`
   // (intersected against the two known offerable ids) so a marketing link that
   // already names an add-on shows it pre-checked on the addons step.
@@ -151,6 +155,7 @@ export function CadastroWizard({ plan }: CadastroWizardProps) {
         whatsapp_phone: answers.contact.whatsappPhone.trim(),
         password: answers.contact.password,
         catalog_ids: plan.catalogIds,
+        precheck_template_slug: precheckTemplateSlug,
         website: answers.contact.website,
       });
       // Persist the session immediately — the visitor is now logged in.
