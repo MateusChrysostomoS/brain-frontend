@@ -25,8 +25,14 @@ import {
   saveSession,
   type Session,
 } from "@/lib/manage-api";
-import { setToken as setPrecheckToken } from "@/lib/auth";
 import "../checkout.css";
+
+// Onde o médico realmente trabalha. O painel /dashboard deste projeto é uma cópia
+// portada do PreCheck e está em vias de ser aposentada — todo acesso ao produto
+// passa a ser no site oficial.
+const PRECHECK_APP_URL = (
+  process.env.NEXT_PUBLIC_PRECHECK_URL || "https://precheck.com.br"
+).replace(/\/$/, "");
 
 const POLL_INTERVAL_MS = 2000;
 const MAX_POLL_MS = 120_000; // ~2 minutes, then show the "taking longer" state
@@ -106,8 +112,17 @@ function CheckoutSucessoInner() {
         if (unmounted) return;
         try {
           const { token } = await getPrecheckSsoToken(session);
-          setPrecheckToken(token);
-          router.replace("/dashboard");
+          // O produto é o PreCheck; o Brain é o caixa. Mandamos o médico para o
+          // site oficial em vez do painel embutido aqui.
+          //
+          // O token viaja no FRAGMENTO (#), nunca na query: o que vem depois do #
+          // não é enviado ao servidor, então não entra em log de acesso nem vaza
+          // no Referer. `localStorage` não cruza domínios — é assim que a sessão
+          // atravessa de brainai.com.br para precheck.com.br. A rota /sso de lá
+          // guarda o token e limpa a URL na chegada.
+          window.location.replace(
+            `${PRECHECK_APP_URL}/sso#token=${encodeURIComponent(token)}`,
+          );
           return;
         } catch (err) {
           const naoLigadoAinda =

@@ -27,8 +27,12 @@ import {
   type Entitlements,
   type Session,
 } from "@/lib/manage-api";
-import { setToken } from "@/lib/auth";
 import "./dashboard-shell.css";
+
+// O médico trabalha no site oficial do PreCheck; este projeto é o caixa.
+const PRECHECK_APP_URL = (
+  process.env.NEXT_PUBLIC_PRECHECK_URL || "https://precheck.com.br"
+).replace(/\/$/, "");
 
 // NoEntitlementsPanel — lock empty state shown when clinic has no active products.
 function NoEntitlementsPanel() {
@@ -108,8 +112,12 @@ export default function AppPage() {
     setSsoPending(true);
     try {
       const { token } = await getPrecheckSsoToken(session);
-      setToken(token);
-      router.push("/dashboard");
+      // Mesmo destino do pós-checkout: o produto é o site oficial do PreCheck,
+      // não o painel embutido aqui. Token no FRAGMENTO (#) — não vai ao servidor,
+      // não entra em log nem no Referer; a rota /sso de lá guarda e limpa a URL.
+      window.location.assign(
+        `${PRECHECK_APP_URL}/sso#token=${encodeURIComponent(token)}`,
+      );
     } catch (e) {
       const status = e instanceof ManageApiError ? e.status : 0;
       setSsoError(
