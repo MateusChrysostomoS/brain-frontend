@@ -24,9 +24,8 @@
   flex-shrink: 0;
   display: block;
 }
-.brain-lockup .brand-glyph .gs { stroke: var(--teal); }
-.brain-lockup .brand-glyph .gf { fill: var(--teal); }
-.brain-lockup .brand-glyph .gt { fill: var(--teal); stroke: var(--teal); }
+/* Sem override de cor: a logo tem verde próprio (brand-ds.css .gl) em vez de
+   seguir o --teal do lockup. O glifo é a marca, não um ícone da interface. */
 
 .brain-lockup-word {
   font-family: var(--font-serif);
