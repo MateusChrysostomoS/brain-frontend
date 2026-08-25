@@ -67,19 +67,25 @@ function CheckoutSucessoInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
+  // Cortesia: veio de um cupom resgatado, não de um pagamento. Não existe
+  // Checkout Session para consultar — a clínica JÁ está ativa quando esta tela
+  // abre —, então o polling é pulado e vamos direto ao handoff, que é o mesmo
+  // do caminho pago (inclusive o retry do 409 enquanto o bridge do PreCheck
+  // ainda não gravou precheck_account_links).
+  const cortesia = searchParams.get("courtesy") === "1";
 
   const [view, setView] = useState<ViewState>(
-    sessionId ? "polling" : "missing-session",
+    sessionId || cortesia ? "polling" : "missing-session",
   );
   // Only meaningful in the "ready-secretaria" view: the status poll succeeded
   // but exchanging the onboarding token (or saving the session) failed.
   const [exchangeFailed, setExchangeFailed] = useState(false);
 
   useEffect(() => {
-    if (!sessionId) return;
+    if (!sessionId && !cortesia) return;
     // Narrowed to a plain `string` for the closures below — TS does not carry
     // the `if (!sessionId) return` narrowing into nested function scopes.
-    const sid: string = sessionId;
+    const sid: string = sessionId ?? "";
 
     // DUAS flags, de propósito. `cancelled` significa "pare de fazer POLL" e é
     // ligada assim que o status resolve; `unmounted` significa "o componente foi
@@ -220,6 +226,26 @@ function CheckoutSucessoInner() {
       }
     }
 
+    // Cortesia: o resgate do cupom já ativou tudo de forma síncrona, e a sessão
+    // do brain existe neste navegador desde o cadastro (register_signup devolve
+    // uma). Não há o que consultar — só entrar. Sem Checkout Session, `tick()`
+    // chamaria onboarding-status com string vazia e tomaria 404 para sempre.
+    if (cortesia) {
+      const session = getSession();
+      if (session === null) {
+        // Cadastro feito em outro navegador: aqui não há sessão para trocar, e o
+        // token de onboarding do resgate ficou na aba anterior.
+        setView("ready-already-claimed");
+      } else {
+        setView("ready-precheck");
+        enterPrecheck(session);
+      }
+      return () => {
+        unmounted = true;
+        cancelled = true;
+      };
+    }
+
     const intervalId = setInterval(tick, POLL_INTERVAL_MS);
     tick(); // check immediately instead of waiting the first interval
 
@@ -228,7 +254,7 @@ function CheckoutSucessoInner() {
       cancelled = true;
       clearInterval(intervalId);
     };
-  }, [sessionId, router]);
+  }, [sessionId, cortesia, router]);
 
   return <CheckoutShell>{renderView(view, exchangeFailed)}</CheckoutShell>;
 }

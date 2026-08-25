@@ -11,12 +11,18 @@
 // rows also surface `answers.selectedAddonIds` (Task 1a) — the add-on choice AddonsStep
 // already PATCHed onto the intent itself before handing off here, so this step only
 // displays it, it doesn't send it again.
+//
+// Também oferece o cupom de cortesia (link "Tenho um cupom"): resgatado, a clínica
+// é ativada na hora sem Stripe e o fluxo segue para /checkout/sucesso?courtesy=1,
+// que faz o MESMO handoff do caminho pago.
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { StepHeading, StepActions } from "./WizardShell";
 import {
   attachSignupIntake,
   createPublicCheckoutSession,
+  redeemCourtesyCoupon,
   getSession,
   ManageApiError,
 } from "@/lib/manage-api";
@@ -57,8 +63,14 @@ type SummaryStepProps = {
 };
 
 export function SummaryStep({ answers, plan, intentId, onBack }: SummaryStepProps) {
+  const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Cupom de cortesia: fica escondido atrás de um link. Um campo de cupom sempre
+  // visível convida todo visitante a procurar um código antes de pagar.
+  const [cupomAberto, setCupomAberto] = useState(false);
+  const [cupom, setCupom] = useState("");
+  const [resgatando, setResgatando] = useState(false);
   // PreCheck never visited the WhatsApp/Meta eligibility steps (CadastroWizard
   // skips straight from contact to summary for it) — hide those review rows and
   // don't attach an intake that was never collected.
@@ -108,6 +120,36 @@ export function SummaryStep({ answers, plan, intentId, onBack }: SummaryStepProp
     }
   }
 
+  async function resgatarCupom() {
+    if (!intentId) {
+      setError("Sua sessão de cadastro expirou. Recomece o cadastro.");
+      return;
+    }
+    const codigo = cupom.trim();
+    if (!codigo) return;
+    setError(null);
+    setResgatando(true);
+    try {
+      await redeemCourtesyCoupon(intentId, codigo);
+      // A clínica já está ativa. `?courtesy=1` diz à tela de sucesso para pular o
+      // polling (não há Checkout Session para consultar) e ir direto ao handoff —
+      // que é o mesmo do caminho pago, retry do 409 do bridge incluído.
+      router.push("/checkout/sucesso?courtesy=1");
+    } catch (e) {
+      const status = e instanceof ManageApiError ? e.status : 0;
+      if (status === 422) {
+        setError("Cupom inválido ou já utilizado.");
+      } else if (status === 409) {
+        setError("Este cadastro já foi finalizado. Atualize a página e entre na sua conta.");
+      } else if (status === 429) {
+        setError("Muitas tentativas. Aguarde um instante e tente de novo.");
+      } else {
+        setError("Não foi possível validar o cupom agora. Tente novamente.");
+      }
+      setResgatando(false);
+    }
+  }
+
   return (
     <div>
       <StepHeading title="Confira e finalize." desc="Revise seus dados antes de ir para o pagamento." />
@@ -151,6 +193,55 @@ export function SummaryStep({ answers, plan, intentId, onBack }: SummaryStepProp
           for the already-registered intent and redirects straight there. Renders nothing
           for a PreCheck-only selection (see catalogRequiresWhatsappCoexistence). */}
       <CheckoutTrialNotice catalogIds={plan.catalogIds} />
+
+      {/* Cortesia: ativa na hora, sem cartão e sem assinatura no Stripe. Fica
+          atrás de um link porque um campo sempre visível faz todo visitante
+          parar para procurar um código antes de pagar. */}
+      <div className="cad-cupom">
+        {!cupomAberto ? (
+          <button
+            type="button"
+            className="cad-cupom-link"
+            onClick={() => setCupomAberto(true)}
+          >
+            Tenho um cupom
+          </button>
+        ) : (
+          <div className="cad-cupom-box">
+            <label className="cad-cupom-label" htmlFor="cad-cupom-input">
+              Cupom de acesso
+            </label>
+            <div className="cad-cupom-row">
+              <input
+                id="cad-cupom-input"
+                className="cad-cupom-input"
+                value={cupom}
+                onChange={(e) => setCupom(e.target.value)}
+                placeholder="Digite seu cupom"
+                autoFocus
+                autoCapitalize="characters"
+                autoComplete="off"
+                spellCheck={false}
+                disabled={resgatando || submitting}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    resgatarCupom();
+                  }
+                }}
+              />
+              <button
+                type="button"
+                className="cad-cupom-btn"
+                onClick={resgatarCupom}
+                disabled={resgatando || submitting || !cupom.trim()}
+              >
+                {resgatando ? "Validando…" : "Ativar"}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       <StepActions
         onBack={onBack}

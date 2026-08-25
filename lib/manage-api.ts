@@ -19,6 +19,7 @@
 //   POST /doctor/onboarding/intake       -> attach wizard intake     (attachSignupIntake)
 //   POST /public/checkout-sessions       -> Stripe Checkout URL      (createPublicCheckoutSession)
 //   GET  /public/onboarding-status       -> async webhook activation (getOnboardingStatus)
+//   POST /public/courtesy-redemptions    -> ativação por cupom (redeemCourtesyCoupon)
 //   POST /auth/exchange-onboarding-token -> real session, one-time   (exchangeOnboardingToken)
 //   GET  /doctor/onboarding/test-window          -> activation test-window state (getTestWindow)
 //   POST /doctor/onboarding/test-window/restart  -> restart the test window      (restartTestWindow)
@@ -767,6 +768,21 @@ export async function getOnboardingStatus(
   return manageFetch<OnboardingStatus>(
     `/public/onboarding-status?session_id=${encodeURIComponent(sessionId)}`,
   );
+}
+
+// POST /public/courtesy-redemptions — ativa a clínica com um cupom de cortesia,
+// sem cartão e sem assinatura no Stripe. Devolve a MESMA forma de OnboardingStatus
+// que o polling devolve quando fica pronto (inclusive o token de onboarding), para
+// a entrada dali em diante ser idêntica à do caminho pago — mesma troca de token,
+// mesmo handoff de SSO.
+export async function redeemCourtesyCoupon(
+  intentId: string,
+  code: string,
+): Promise<OnboardingStatus> {
+  return manageFetch<OnboardingStatus>("/public/courtesy-redemptions", {
+    method: "POST",
+    body: JSON.stringify({ intent_id: intentId, code }),
+  });
 }
 
 // POST /auth/exchange-onboarding-token — trades the one-time onboarding token
