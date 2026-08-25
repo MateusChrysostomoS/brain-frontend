@@ -24,8 +24,15 @@
   flex-shrink: 0;
   display: block;
 }
-/* Sem override de cor: a logo tem verde próprio (brand-ds.css .gl) em vez de
-   seguir o --teal do lockup. O glifo é a marca, não um ícone da interface. */
+/* A logo tem verde próprio e não segue o --teal do lockup — o glifo é a marca,
+   não um ícone da interface. Mas o fill precisa ser declarado AQUI, e não só em
+   brand-ds.css: essa folha é importada apenas por (site)/layout.tsx, enquanto
+   este lockup vive no (SignOut) AuthShell e no DashNav do (SignIn). Um <path>
+   sem nenhum fill pintado não fica sem cor — fica PRETO, e o tema padrão
+   desses dois grupos é o escuro, então a marca sumia no navy.
+   Mesmos tons de brand-ds.css. */
+.brain-lockup .brand-glyph .gl { fill: #45965d; }
+html[data-theme="dark"] .brain-lockup .brand-glyph .gl { fill: #5cb87a; }
 
 .brain-lockup-word {
   font-family: var(--font-serif);
