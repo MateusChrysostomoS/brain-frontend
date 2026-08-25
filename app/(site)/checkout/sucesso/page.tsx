@@ -75,7 +75,14 @@ function CheckoutSucessoInner() {
     // the `if (!sessionId) return` narrowing into nested function scopes.
     const sid: string = sessionId;
 
+    // DUAS flags, de propósito. `cancelled` significa "pare de fazer POLL" e é
+    // ligada assim que o status resolve; `unmounted` significa "o componente foi
+    // embora, não toque em mais nada". Enquanto era uma flag só, o trabalho que
+    // roda DEPOIS do polling terminar (o handoff de SSO abaixo) via a flag já
+    // ligada por stop() e abortava antes da primeira tentativa — a tela ficava
+    // presa em "abrindo o painel" para sempre.
     let cancelled = false;
+    let unmounted = false;
     let busy = false; // guards against overlapping ticks if a fetch is slow
     const startedAt = Date.now();
 
@@ -96,7 +103,7 @@ function CheckoutSucessoInner() {
       const esperas = [0, 1000, 2000, 4000, 8000];
       for (const espera of esperas) {
         if (espera > 0) await new Promise((r) => setTimeout(r, espera));
-        if (cancelled) return;
+        if (unmounted) return;
         try {
           const { token } = await getPrecheckSsoToken(session);
           setPrecheckToken(token);
@@ -111,7 +118,7 @@ function CheckoutSucessoInner() {
       // O provisionamento não ficou pronto a tempo (ou falhou). A conta e o
       // pagamento estão de pé — o bridge retenta sozinho no primeiro load do
       // portal —, então mandamos o cliente para lá em vez de prometer contato.
-      if (!cancelled) setView("ready-precheck-pending");
+      if (!unmounted) setView("ready-precheck-pending");
     }
 
     async function tick() {
@@ -202,6 +209,7 @@ function CheckoutSucessoInner() {
     tick(); // check immediately instead of waiting the first interval
 
     return () => {
+      unmounted = true;
       cancelled = true;
       clearInterval(intervalId);
     };
