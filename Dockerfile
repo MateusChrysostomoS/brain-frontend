@@ -31,13 +31,19 @@ ARG NEXT_PUBLIC_SECRETARIA_HUB_BASE_URL=https://secretaria-secretaria-api.cpux9k
 ENV NEXT_PUBLIC_SECRETARIA_HUB_BASE_URL=${NEXT_PUBLIC_SECRETARIA_HUB_BASE_URL}
 # NEXT_PUBLIC_SECRETARIA_APP_BASE_URL -> the secretarIA FRONTEND's public origin
 #   (the secretarIA-frontend app: /agenda, /configuracao, /inicio). Different
-#   thing from the HUB url above, which is the API. Since the secretarIA screens
-#   were removed from this repo, every link that used to go to
-#   /secretaria/agenda or /secretaria/configuracao points here instead. Empty
-#   makes secretariaAppConfigured() false, and the affordances say so plainly
-#   rather than linking somewhere that does not exist. Same static-export rule as
-#   every NEXT_PUBLIC_* above: setting it only in EasyPanel has NO effect.
-ARG NEXT_PUBLIC_SECRETARIA_APP_BASE_URL=
+#   thing from the HUB url above, which is the API — one is the site a human
+#   opens, the other is the service this bundle calls. Since the secretarIA
+#   screens were removed from this repo, every link that used to go to
+#   /secretaria/agenda or /secretaria/configuracao points here instead, plus the
+#   "Configurar" action on the config-gap banner (FEAT 42).
+#   Same static-export rule as every NEXT_PUBLIC_* above: setting it only in the
+#   EasyPanel panel has NO effect, which is why the real origin is the ARG default
+#   here (confirmed by the user 2026-08-29). This variable sat empty from the
+#   2026-08-24 screen removal until then, so every cross-link was renderless.
+#   Empty remains a VALID state, not a broken one: secretariaAppConfigured() goes
+#   false and each affordance says so plainly instead of linking somewhere that
+#   does not exist. Do not "fix" an empty value by inventing a relative path.
+ARG NEXT_PUBLIC_SECRETARIA_APP_BASE_URL=https://secretaria-secretaria-frontend.cpux9k.easypanel.host
 ENV NEXT_PUBLIC_SECRETARIA_APP_BASE_URL=${NEXT_PUBLIC_SECRETARIA_APP_BASE_URL}
 # Fail the build loudly if the placeholder above was never replaced. Without this
 # guard an unreplaced "<host-...>" would bake an unreachable URL into the bundle:

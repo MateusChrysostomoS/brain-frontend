@@ -17,6 +17,22 @@ errado; documentar depois garante que o doc descreve o que realmente está no ar
 - Cite âncoras estáveis (nome de função/componente), não números de linha frágeis, quando possível.
 - Mantenha o `CHECKPOINT_*` da feature em dia até ela ser 100% concluída/encerrada; aí vira histórico.
 
+## Prompts prontos para rodar
+
+Prompts de feature já roteirizados ficam em `TECH/BRAIN/z_prompts/` — convenção
+compartilhada entre os repos da Brain, não uma pasta deste repo. Cole o conteúdo inteiro
+numa sessão nova quando for a hora de executar:
+
+- (nenhum pendente para este repo hoje)
+
+`PROMPT_FEAT_42_PROFESSIONAL_CONFIG_GAP_BANNER_FRONTENDS.md` foi **executado em 2026-08-29**
+— ver `docs/CHECKPOINT_config_gap_banner.md`, que também registra duas premissas ERRADAS do
+prompt, para ninguém reconstruir a partir dele: (1) o sinal de completude vive em
+`GET /tenants/me/professionals`, não em `GET /config`, e o checkpoint do FEAT 41 proíbe
+movê-lo; (2) este repo nunca ficou sem cliente da secretarIA — `getDoctorProfessionals()`
+(`lib/manage-api.ts`, sobre `GET /doctor/professionals` do brain-api) já servia o sinal, então
+a "decisão de arquitetura em aberto" do §3.2 não existia: nada de backend foi escrito.
+
 ## graphify
 
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
