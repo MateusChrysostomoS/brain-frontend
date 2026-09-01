@@ -52,6 +52,25 @@ export function ContactStep({
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    // Campos obrigatórios vazios. Este bloco existe porque o form é `noValidate`:
+    // o navegador não bloqueia o submit nem mostra o balão nativo, então sem isto
+    // ninguém avisa nada. Até 01/09/2026 o botão era `disabled` enquanto faltasse
+    // um campo — e como o DS não tinha `.btn:disabled`, ele continuava com a cor
+    // cheia da marca e cursor de mãozinha. O visitante clicava num botão que
+    // parecia ativo, nada acontecia, e nada dizia qual campo faltava (relatado
+    // com o WhatsApp em branco: a conclusão natural foi "então é opcional").
+    // O botão agora fica sempre clicável e o erro nomeia o campo.
+    const invalid = e.currentTarget.querySelector<HTMLInputElement>("input:invalid");
+    if (invalid) {
+      const label = invalid.labels?.[0]?.textContent?.trim() ?? "um campo";
+      setLocalError(
+        invalid.validity.valueMissing
+          ? `Preencha “${label}” para continuar.`
+          : `Confira o campo “${label}”.`,
+      );
+      invalid.focus();
+      return;
+    }
     // Password policy check before hitting the network (the backend re-validates too).
     const pwError = passwordError(value.password, value.confirmPassword);
     if (pwError) {
@@ -61,16 +80,6 @@ export function ContactStep({
     setLocalError(null);
     onSubmit();
   }
-
-  // The submit button only needs the required identity fields to be non-empty; the
-  // password policy is checked on submit (so the visitor gets a specific message).
-  const basicsFilled =
-    value.name.trim() &&
-    value.clinicName.trim() &&
-    value.email.trim() &&
-    value.whatsappPhone.trim() &&
-    value.password &&
-    value.confirmPassword;
 
   const error = localError ?? serverError;
 
@@ -188,7 +197,7 @@ export function ContactStep({
       <StepActions
         nextType="submit"
         nextLabel={submitting ? "Criando conta…" : "Continuar"}
-        nextDisabled={!basicsFilled || submitting}
+        nextDisabled={submitting}
       />
     </form>
   );
