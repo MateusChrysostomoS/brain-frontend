@@ -25,6 +25,14 @@ numa sessão nova quando for a hora de executar:
 
 - (nenhum pendente para este repo hoje)
 
+`PROMPT_AUDIT_FRONTEND_FONTES_LGPD_BRAIN_FRONTEND.md` foi **executado em 2026-08-31** — ver
+`docs/CHECKPOINT_fontes_self_hosted.md`. As 7 famílias do Google saíram do `<link>` no layout
+raiz e passaram a ser self-hosted por `next/font/google`. A tabela de diferenças do prompt em
+relação ao repo irmão foi conferida e está correta, com um ajuste: são **9** arquivos com
+definição de token em `app/` (20 definições), não 10 — o décimo é `_design-source/`, que não
+é buildado. O checkpoint registra a única mudança visual do app (JetBrains Mono em peso 600)
+e por que o grep de `fonts.googleapis.com` no `out/` NÃO volta vazio neste repo.
+
 `PROMPT_FEAT_42_PROFESSIONAL_CONFIG_GAP_BANNER_FRONTENDS.md` foi **executado em 2026-08-29**
 — ver `docs/CHECKPOINT_config_gap_banner.md`, que também registra duas premissas ERRADAS do
 prompt, para ninguém reconstruir a partir dele: (1) o sinal de completude vive em

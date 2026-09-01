@@ -25,8 +25,8 @@ body:has(.users-route)::after { display: none; }
   --warning:    #c89638;
   --danger:     #c4544c;
   --radius-lg:  20px;
-  --font-ui:    'Inter', system-ui, -apple-system, sans-serif;
-  --font-serif: 'Instrument Serif', Georgia, serif;
+  --font-ui:    var(--font-inter), system-ui, -apple-system, sans-serif;
+  --font-serif: var(--font-instrument-serif), Georgia, serif;
   --shadow:     0 2px 8px rgba(11, 31, 42, .05), 0 8px 24px rgba(11, 31, 42, .06);
 
   min-height: 100vh;

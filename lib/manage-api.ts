@@ -1017,8 +1017,14 @@ export type SecretariaHubToken = { hubToken: string; expiresIn: number };
 // handoff (#3): brain-api verifies the tenant's secretarIA entitlement LIVE and
 // mints a short-lived purpose-scoped token (scope="secretaria_hub", CONTRACTS
 // §12.2) that secretarIA's hub introspects back against brain-api. It is NOT a
-// user JWT and NOT refreshable via /auth/refresh — on expiry, mint again (see
-// lib/secretaria-hub.ts). Throws ManageApiError 403 `secretaria_not_entitled`.
+// user JWT and NOT refreshable via /auth/refresh — on expiry, mint again.
+// Throws ManageApiError 403 `secretaria_not_entitled`.
+//
+// NOTHING IN THIS APP CALLS THIS ANY MORE (2026-09-01). Its only consumer was
+// lib/secretaria-hub.ts, deleted along with the secretarIA screens it served;
+// the live caller is secretarIA-frontend's own copy of that client. Kept here
+// because this file mirrors brain-api's surface endpoint-for-endpoint — do not
+// read its presence as evidence that this app still talks to the hub.
 export async function getSecretariaHubToken(
   session: Session,
 ): Promise<SecretariaHubToken> {

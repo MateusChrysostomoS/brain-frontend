@@ -12,9 +12,13 @@
 // cross-origin means a plain <a>: next/link's client-side routing cannot leave
 // this app, and using it here would produce a link that quietly does nothing.
 //
-// NOT the same thing as SECRETARIA_HUB_BASE (lib/secretaria-hub.ts). That is
-// the secretarIA API, which this app still calls directly for the hub-token
-// data path. This is the human-facing web app.
+// This is the human-facing web app, not the secretarIA API. There used to be a
+// lib/secretaria-hub.ts here holding a SECRETARIA_HUB_BASE and a typed client
+// for that API; it was deleted on 2026-09-01 because nothing rendered it any
+// more. Once the screens above moved out, the client kept being maintained --
+// and kept drifting from the copy that IS rendered -- while no code path
+// reached it. If this app ever needs the secretarIA API again, port the live
+// client from secretarIA-frontend rather than reviving the dead one.
 //
 // SESSION NOTE, said out loud because it is a real edge: the session lives in
 // sessionStorage, which is per-origin, so following one of these links lands on
@@ -39,8 +43,7 @@ export function secretariaAppConfigured(): boolean {
  * `null` rather than a relative path on purpose: a relative "/configuracao"
  * would resolve against THIS origin and 404, which reads to a clinic as the
  * product being broken. A caller that gets `null` should say the secretarIA app
- * is not configured for this environment, exactly as `hubConfigured()` callers
- * already do for the API.
+ * is not configured for this environment.
  */
 export function secretariaAppUrl(path: string): string | null {
   if (!secretariaAppConfigured()) return null;
