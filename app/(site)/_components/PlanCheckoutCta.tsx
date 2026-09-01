@@ -34,6 +34,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   createCheckoutSession,
+  ensureSession,
   getSession,
   ManageApiError,
   type CatalogAddonId,
@@ -108,7 +109,10 @@ export function PlanCheckoutCta({
       return;
     }
 
-    const session = getSession();
+    // A public page, so this is where a reload hurts most: without asking the
+    // cookie, an ALREADY-REGISTERED visitor reads as anonymous and gets sent to
+    // /cadastro, where registration then fails with email_already_registered.
+    const session = getSession() ?? (await ensureSession());
     if (!session) {
       // No account yet — hand off to the /cadastro wizard (contact fields +
       // onboarding intake), which itself creates the signup intent + checkout

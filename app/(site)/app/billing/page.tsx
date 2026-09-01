@@ -16,6 +16,7 @@ import {
   clearSession,
   createPortalSession,
   getEntitlements,
+  ensureSession,
   getSession,
   logout,
   ManageApiError,
@@ -100,27 +101,40 @@ export default function BillingPage() {
 
   // --- Boot: require a session, then fetch entitlements from brain-api ---
   useEffect(() => {
-    const current = getSession();
-    if (!current?.token) {
-      router.replace("/login");
-      return;
-    }
-    setSession(current);
-    getEntitlements(current)
-      .then((e) => {
-        setEnt(e);
-        setLoading(false);
-      })
-      .catch((e) => {
-        if (e instanceof ManageApiError && e.status === 401) {
-          // Expired/invalid session — clear it and bounce to login.
-          clearSession();
-          router.replace("/login");
-          return;
-        }
-        setLoadError("Não foi possível carregar sua assinatura. Tente novamente.");
-        setLoading(false);
-      });
+    // ASYNC ON PURPOSE, and the reason is easy to miss: since the refresh token
+    // moved to an HttpOnly cookie, a signed-in user who RELOADS arrives here with
+    // nothing in memory. A synchronous getSession() would read null and bounce
+    // them to a login screen they were already past. ensureSession() spends the
+    // cookie once (single-flight, shared with every other mount) and answers who
+    // they are.
+    let cancelled = false;
+    void (async () => {
+      const current = getSession() ?? (await ensureSession());
+      if (cancelled) return;
+      if (!current?.token) {
+        router.replace("/login");
+        return;
+      }
+      setSession(current);
+      getEntitlements(current)
+        .then((e) => {
+          setEnt(e);
+          setLoading(false);
+        })
+        .catch((e) => {
+          if (e instanceof ManageApiError && e.status === 401) {
+            // Expired/invalid session — clear it and bounce to login.
+            clearSession();
+            router.replace("/login");
+            return;
+          }
+          setLoadError("Não foi possível carregar sua assinatura. Tente novamente.");
+          setLoading(false);
+        });
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   // --- Stripe Billing Portal handoff ---

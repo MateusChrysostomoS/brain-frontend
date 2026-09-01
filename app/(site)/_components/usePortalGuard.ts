@@ -11,7 +11,13 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { getSession, ManageApiError, type Session, clearSession } from "@/lib/manage-api";
+import {
+  ensureSession,
+  getSession,
+  ManageApiError,
+  type Session,
+  clearSession,
+} from "@/lib/manage-api";
 
 export function usePortalGuard(allowed: string[]): {
   session: Session | null;
@@ -24,20 +30,33 @@ export function usePortalGuard(allowed: string[]): {
   const allowedKey = allowed.join(",");
 
   useEffect(() => {
-    const current = getSession();
-    if (!current?.token) {
-      router.replace("/login");
-      return;
-    }
-    if (!allowed.includes(current.role)) {
-      // Right user, wrong portal — route to the home their role can use.
-      router.replace(
-        current.role === "admin" ? "/admin/dashboard" : "/doctor/dashboard",
-      );
-      return;
-    }
-    setSession(current);
-    setReady(true);
+    // ASYNC ON PURPOSE, and the reason is easy to miss: since the refresh token
+    // moved to an HttpOnly cookie, a signed-in user who RELOADS arrives here with
+    // nothing in memory. A synchronous getSession() would read null and bounce
+    // them to a login screen they were already past. ensureSession() spends the
+    // cookie once (single-flight, shared with every other mount) and answers who
+    // they are.
+    let cancelled = false;
+    void (async () => {
+      const current = getSession() ?? (await ensureSession());
+      if (cancelled) return;
+      if (!current?.token) {
+        router.replace("/login");
+        return;
+      }
+      if (!allowed.includes(current.role)) {
+        // Right user, wrong portal — route to the home their role can use.
+        router.replace(
+          current.role === "admin" ? "/admin/dashboard" : "/doctor/dashboard",
+        );
+        return;
+      }
+      setSession(current);
+      setReady(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router, allowedKey]);
 

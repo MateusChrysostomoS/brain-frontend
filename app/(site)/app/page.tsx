@@ -21,6 +21,7 @@ import {
   clearSession,
   getEntitlements,
   getPrecheckSsoToken,
+  ensureSession,
   getSession,
   logout,
   ManageApiError,
@@ -77,29 +78,42 @@ export default function AppPage() {
 
   // --- Boot: require a session, then fetch entitlements from brain-api ---
   useEffect(() => {
-    const current = getSession();
-    if (!current?.token) {
-      // Not logged in — send the user to the unified login.
-      router.replace("/login");
-      return;
-    }
-    setSession(current);
-    getEntitlements(current)
-      .then((e) => {
-        setEnt(e);
-        // Strip "Consultório " prefix; fall back to "Administrador"
-        setClinicLabel(
-          e.clinicName ? e.clinicName.replace("Consultório ", "") : "Administrador",
-        );
-        // Default active tab: precheck if entitled, else secretaria
-        setActiveTab(e.precheck ? "precheck" : "secretaria");
-        setLoading(false);
-      })
-      .catch(() => {
-        // Expired/invalid session (401) — clear it and bounce to login.
-        clearSession();
+    // ASYNC ON PURPOSE, and the reason is easy to miss: since the refresh token
+    // moved to an HttpOnly cookie, a signed-in user who RELOADS arrives here with
+    // nothing in memory. A synchronous getSession() would read null and bounce
+    // them to a login screen they were already past. ensureSession() spends the
+    // cookie once (single-flight, shared with every other mount) and answers who
+    // they are.
+    let cancelled = false;
+    void (async () => {
+      const current = getSession() ?? (await ensureSession());
+      if (cancelled) return;
+      if (!current?.token) {
+        // Not logged in — send the user to the unified login.
         router.replace("/login");
-      });
+        return;
+      }
+      setSession(current);
+      getEntitlements(current)
+        .then((e) => {
+          setEnt(e);
+          // Strip "Consultório " prefix; fall back to "Administrador"
+          setClinicLabel(
+            e.clinicName ? e.clinicName.replace("Consultório ", "") : "Administrador",
+          );
+          // Default active tab: precheck if entitled, else secretaria
+          setActiveTab(e.precheck ? "precheck" : "secretaria");
+          setLoading(false);
+        })
+        .catch(() => {
+          // Expired/invalid session (401) — clear it and bounce to login.
+          clearSession();
+          router.replace("/login");
+        });
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   // --- PreCheck SSO handoff ---

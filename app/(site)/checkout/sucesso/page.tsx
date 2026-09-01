@@ -20,6 +20,7 @@ import {
   exchangeOnboardingToken,
   getOnboardingStatus,
   getPrecheckSsoToken,
+  ensureSession,
   getSession,
   ManageApiError,
   saveSession,
@@ -159,9 +160,11 @@ function CheckoutSucessoInner() {
           stop();
           if (status.products?.secretaria) {
             setView("ready-secretaria");
-            // Fast path: registration already saved a session in this browser — just
-            // route into the portal (the entitlement is now active).
-            if (getSession()) {
+            // Fast path: this browser already has a session — from the wizard,
+            // or resumed from the refresh cookie. That second case is why this
+            // awaits: coming back from Stripe is a full page load, so memory is
+            // empty on the way in.
+            if (getSession() ?? (await ensureSession())) {
               router.replace("/doctor/dashboard");
             } else if (status.onboarding_token) {
               // Fallback (different browser/tab): trade the LATEST one-time token for a
@@ -188,7 +191,7 @@ function CheckoutSucessoInner() {
             // gravamos onde o dashboard portado o procura (localStorage
             // `precheck_token`, mesmo origin).
             setView("ready-precheck");
-            let session: Session | null = getSession();
+            let session: Session | null = getSession() ?? (await ensureSession());
             if (session === null && status.onboarding_token) {
               try {
                 session = await exchangeOnboardingToken(status.onboarding_token);
@@ -231,15 +234,20 @@ function CheckoutSucessoInner() {
     // uma). Não há o que consultar — só entrar. Sem Checkout Session, `tick()`
     // chamaria onboarding-status com string vazia e tomaria 404 para sempre.
     if (cortesia) {
-      const session = getSession();
-      if (session === null) {
-        // Cadastro feito em outro navegador: aqui não há sessão para trocar, e o
-        // token de onboarding do resgate ficou na aba anterior.
-        setView("ready-already-claimed");
-      } else {
-        setView("ready-precheck");
-        enterPrecheck(session);
-      }
+      // Async because the session may exist only as the refresh cookie here: the
+      // coupon redemption is a full navigation, so nothing survives in memory.
+      void (async () => {
+        const session = getSession() ?? (await ensureSession());
+        if (unmounted || cancelled) return;
+        if (session === null) {
+          // Cadastro feito em outro navegador: aqui não há sessão para trocar, e
+          // o token de onboarding do resgate ficou na aba anterior.
+          setView("ready-already-claimed");
+        } else {
+          setView("ready-precheck");
+          enterPrecheck(session);
+        }
+      })();
       return () => {
         unmounted = true;
         cancelled = true;
