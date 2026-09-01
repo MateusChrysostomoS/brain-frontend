@@ -143,17 +143,24 @@ img,svg{display:block}
   letter-spacing:.005em;white-space:nowrap;transition:all .18s var(--ease);
 }
 .btn svg{width:18px;height:18px}
+/* Desabilitado. O DS só tinha `.btn--danger:disabled`, então TODO botão primário
+   desabilitado saía com a cor cheia da marca, opacity 1 e cursor de mãozinha —
+   visualmente idêntico a um ativo. Um clique nele não dispara evento nenhum, e o
+   visitante ficava sem qualquer sinal de que faltava algo (relatado no /cadastro,
+   2026-09-01). Os `:hover` acima levam `:not(:disabled)` — convenção que o resto
+   do repo já usa (`.page-nav-btn:hover:not(:disabled)`). */
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none;filter:none}
 .btn--primary{background:var(--brand);color:#fff;box-shadow:var(--shadow-sm)}
-.btn--primary:hover{background:var(--brand-strong);transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.btn--primary:hover:not(:disabled){background:var(--brand-strong);transform:translateY(-1px);box-shadow:var(--shadow-md)}
 .btn--dark{background:#0e564d;color:#fff}
-.btn--dark:hover{background:#0c4a43;transform:translateY(-1px)}
+.btn--dark:hover:not(:disabled){background:#0c4a43;transform:translateY(-1px)}
 .btn--outline{background:var(--surface);color:var(--ink);border:1px solid var(--line-strong)}
-.btn--outline:hover{background:var(--surface-2)}
+.btn--outline:hover:not(:disabled){background:var(--surface-2)}
 .btn--ghost{background:transparent;color:var(--ink-soft)}
-.btn--ghost:hover{background:var(--surface-2);color:var(--ink)}
+.btn--ghost:hover:not(:disabled){background:var(--surface-2);color:var(--ink)}
 /* Destructive action — solid red from the alert tokens (theme-aware, light+dark). */
 .btn--danger{background:var(--al-red-ink);color:#fff}
-.btn--danger:hover{filter:brightness(.94);transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.btn--danger:hover:not(:disabled){filter:brightness(.94);transform:translateY(-1px);box-shadow:var(--shadow-md)}
 .btn--danger:disabled{opacity:.6;cursor:not-allowed;transform:none;box-shadow:none;filter:none}
 /* Icon-only ghost button that turns red on hover — the per-row trash trigger. */
 .btn--icon-danger{background:transparent;color:var(--ink-soft);padding:7px;border-radius:9px}
