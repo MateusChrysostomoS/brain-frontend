@@ -264,12 +264,24 @@ function CheckoutSucessoInner() {
     };
   }, [sessionId, cortesia, router]);
 
-  return <CheckoutShell>{renderView(view, exchangeFailed)}</CheckoutShell>;
+  return <CheckoutShell>{renderView(view, exchangeFailed, cortesia)}</CheckoutShell>;
 }
 
 // renderView — pure mapping from state to markup, kept separate from the
 // polling effect above so that logic reads top-to-bottom on its own.
-function renderView(view: ViewState, exchangeFailed: boolean): ReactNode {
+//
+// `cortesia`: esta tela é TAMBÉM o retorno do resgate de cupom, que ativa a
+// clínica sem passar pelo Stripe. Três estados de sucesso são alcançáveis por
+// esse caminho — ready-precheck, ready-precheck-pending e ready-already-claimed
+// — e nenhum deles pode afirmar um pagamento que não houve. O título vira
+// `tituloOk`, verdadeiro nos dois caminhos.
+function renderView(
+  view: ViewState,
+  exchangeFailed: boolean,
+  cortesia: boolean,
+): ReactNode {
+  const tituloOk = cortesia ? "Tudo pronto!" : "Pagamento confirmado!";
+
   switch (view) {
     case "missing-session":
       return (
@@ -296,7 +308,16 @@ function renderView(view: ViewState, exchangeFailed: boolean): ReactNode {
     case "polling":
       return (
         <>
-          <Spinner label="Pagamento confirmado? Estamos preparando sua conta…" />
+          {/* O resgate de cupom também começa neste estado: `view` nasce
+              "polling" para os dois caminhos e só sai dele depois do
+              ensureSession() do efeito, que pode ir à rede. */}
+          <Spinner
+            label={
+              cortesia
+                ? "Estamos preparando sua conta…"
+                : "Pagamento confirmado? Estamos preparando sua conta…"
+            }
+          />
           <p className="muted mt-s" style={{ fontSize: 13 }}>
             Isso normalmente leva alguns segundos.
           </p>
@@ -354,11 +375,11 @@ function renderView(view: ViewState, exchangeFailed: boolean): ReactNode {
             ✅
           </span>
           <h1 className="h-sec" style={{ fontSize: 22 }}>
-            Pagamento confirmado!
+            {tituloOk}
           </h1>
           <p className="muted mt-s">
             Sua conta foi criada, mas não conseguimos abrir o painel
-            automaticamente. Entre com o e-mail usado na compra.
+            automaticamente. Entre com o e-mail usado no cadastro.
           </p>
           <div className="checkout-actions">
             <Link href="/login" className="btn btn--primary">
@@ -367,7 +388,7 @@ function renderView(view: ViewState, exchangeFailed: boolean): ReactNode {
           </div>
         </>
       ) : (
-        <Spinner label="Pagamento confirmado! Abrindo o seu painel…" />
+        <Spinner label={`${tituloOk} Abrindo o seu painel…`} />
       );
 
     case "ready-already-claimed":
@@ -380,7 +401,7 @@ function renderView(view: ViewState, exchangeFailed: boolean): ReactNode {
             Sua conta já está pronta
           </h1>
           <p className="muted mt-s">
-            Entre com o e-mail usado na compra para acessar o painel.
+            Entre com o e-mail usado no cadastro para acessar o painel.
           </p>
           <div className="checkout-actions">
             <Link href="/login" className="btn btn--primary">
@@ -390,8 +411,8 @@ function renderView(view: ViewState, exchangeFailed: boolean): ReactNode {
         </>
       );
 
-    // Estado de passagem: o pagamento entrou e estamos abrindo o PreCheck.
-    // Some sozinho no router.replace("/dashboard").
+    // Estado de passagem: a clínica foi ativada (por pagamento ou por cupom) e
+    // estamos abrindo o PreCheck. Some sozinho no router.replace("/dashboard").
     case "ready-precheck":
       return (
         <>
@@ -399,7 +420,7 @@ function renderView(view: ViewState, exchangeFailed: boolean): ReactNode {
             ✅
           </span>
           <h1 className="h-sec" style={{ fontSize: 22 }}>
-            Pagamento confirmado!
+            {tituloOk}
           </h1>
           <p className="muted mt-s">
             Estamos preparando o seu PreCheck e abrindo o painel…
@@ -409,7 +430,7 @@ function renderView(view: ViewState, exchangeFailed: boolean): ReactNode {
       );
 
     // O provisionamento não ficou pronto na janela desta página. Nada se perdeu:
-    // a conta existe, o pagamento está de pé e o bridge retenta no primeiro load
+    // a conta existe, a ativação está de pé e o bridge retenta no primeiro load
     // do portal — então a saída é um LINK para o painel, não uma promessa de
     // alguém entrar em contato.
     case "ready-precheck-pending":
@@ -419,7 +440,7 @@ function renderView(view: ViewState, exchangeFailed: boolean): ReactNode {
             ✅
           </span>
           <h1 className="h-sec" style={{ fontSize: 22 }}>
-            Pagamento confirmado!
+            {tituloOk}
           </h1>
           <p className="muted mt-s">
             Sua conta está criada e o seu PreCheck está sendo preparado — isso
