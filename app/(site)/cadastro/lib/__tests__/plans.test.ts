@@ -5,7 +5,7 @@
 
 import { describe, expect, it } from "vitest";
 import { planChoices, resolvePlan, isPrecheckPlan } from "../plans";
-import { PRICING } from "../../../_lib/pricing";
+import { PRICING, PRECHECK_QUOTA } from "../../../_lib/pricing";
 
 function resolve(qs: string) {
   const plan = resolvePlan(new URLSearchParams(qs));
@@ -67,6 +67,17 @@ describe("planChoices", () => {
     expect(basic.features).toEqual(PRICING.precheck.features);
     expect(advanced.amount).toBe(PRICING.precheckAdvanced.amount);
     expect(advanced.features).toEqual(PRICING.precheckAdvanced.features);
+  });
+
+  it("anuncia a cota que vem de PRECHECK_QUOTA, não um número redigitado", () => {
+    // A divergência que isto trava: por um mês a vitrine prometeu 50/150 enquanto
+    // a brain-api concedia 100/300, porque o número estava escrito à mão no JSX.
+    // Se alguém redigitar a cota em vez de mudar PRECHECK_QUOTA, este teste cai.
+    const [basic, advanced] = planChoices(resolve("plan=precheck_basic"));
+    expect(basic.features[0]).toBe(`${PRECHECK_QUOTA.basic} pré-consultas por mês`);
+    expect(advanced.features[0]).toBe(`${PRECHECK_QUOTA.advanced} pré-consultas por mês`);
+    // e o Advanced tem de ser realmente maior, senão não é uma faixa acima.
+    expect(PRECHECK_QUOTA.advanced).toBeGreaterThan(PRECHECK_QUOTA.basic);
   });
 
   it("toda alternativa continua sendo PreCheck", () => {

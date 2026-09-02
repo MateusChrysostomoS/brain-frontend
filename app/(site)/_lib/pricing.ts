@@ -4,6 +4,26 @@
 // module just keeps "R$ ..." literals and catalog id lists out of JSX so
 // page.tsx never hardcodes a price string.
 
+// ── Cota mensal de pré-consultas por faixa do PreCheck ──────────────────────
+//
+// UM lugar só, de propósito: a cota é decisão comercial que ainda vai mudar, e a
+// duplicação já custou uma divergência silenciosa de um mês. Editar os dois
+// números abaixo acerta a landing (/#planos) e o passo de escolha de plano do
+// /cadastro juntos — nenhum outro arquivo repete o valor.
+//
+// ⚠️ ELES TÊM DE BATER com o que a brain-api concede de verdade:
+// `PRECHECK_BASIC_CONSULTATIONS_PER_MONTH` e
+// `PRECHECK_ADVANCED_CONSULTATIONS_PER_MONTH`, env do serviço
+// `secretaria_brain-api` no EasyPanel. Quem enforce é o backend
+// (services/precheck_billing.py); isto aqui é só o que prometemos. Mexer só aqui
+// promete o que não se entrega; mexer só lá entrega o que não se cobrou — mude
+// os dois na mesma rodada.
+//
+// 2026-09-02: alinhados em 100/300, que é o que o ambiente deployado já
+// concedia. A tabela comercial de 02/08 dizia 50/150 e as env vars nunca foram
+// setadas para isso, então a vitrine prometeu METADE do que o backend liberava.
+export const PRECHECK_QUOTA = { basic: 100, advanced: 300 } as const;
+
 export type PricingPlanKey =
   | "precheck"
   | "precheckAdvanced"
@@ -33,7 +53,7 @@ export const PRICING: Record<PricingPlanKey, PricingPlan> = {
     amount: "R$ 59,99",
     unit: "/mês",
     features: [
-      "50 pré-consultas por mês",
+      `${PRECHECK_QUOTA.basic} pré-consultas por mês`,
       "Anamnese guiada por IA",
       "Resumo estruturado + alertas",
       "Painel clínico PreCheck",
@@ -48,11 +68,9 @@ export const PRICING: Record<PricingPlanKey, PricingPlan> = {
   // rather than the secondary text link it used to be — a plan the site never
   // priced could not be compared, only stumbled into.
   //
-  // The quotas quoted on both PreCheck cards (50 / 150 per month) are the
-  // COMMERCIAL numbers; what brain-api actually enforces is
-  // PRECHECK_BASIC_CONSULTATIONS_PER_MONTH / PRECHECK_ADVANCED_CONSULTATIONS_PER_MONTH
-  // (deployed env, code default still 100/300). They must be set to match — a
-  // card promising 50 while the backend grants 100 is a silent giveaway.
+  // As cotas dos dois cards do PreCheck vêm de PRECHECK_QUOTA no topo deste
+  // arquivo — ver lá por que elas moram num lugar só e o que mais precisa mudar
+  // junto.
   precheckAdvanced: {
     name: "PreCheck Advanced",
     tagline: "Mais volume de pré-consultas",
@@ -61,7 +79,7 @@ export const PRICING: Record<PricingPlanKey, PricingPlan> = {
     amount: "R$ 169,99",
     unit: "/mês",
     features: [
-      "150 pré-consultas por mês",
+      `${PRECHECK_QUOTA.advanced} pré-consultas por mês`,
       "Tudo do PreCheck Basic",
       "Pré-consultas avulsas quando precisar",
       "Upgrade imediato pelo painel",

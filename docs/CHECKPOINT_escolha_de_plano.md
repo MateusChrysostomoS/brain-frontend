@@ -49,27 +49,27 @@ Detalhe que o teste trava: um add-on vindo no `?catalog=` é **herdado** por tod
 em vez de descartado na troca de faixa — seria uma cobrança a menos que ninguém veria.
 Nenhuma família com escolha oferece add-on hoje; o teste existe para o dia em que oferecer.
 
-## 4. ⚠️ Divergência de quota — NÃO resolvida aqui
+## 4. Divergência de quota — RESOLVIDA (a copy cedeu)
 
-Os bullets dizem **50** (Basic) e **150** (Advanced) pré-consultas por mês. O que a produção
-**realmente concede** hoje, medido no container em 2026-09-02:
+Os bullets diziam **50** (Basic) e **150** (Advanced) por mês. O que a produção concede,
+medido no container em 2026-09-02:
 
 ```
 PRECHECK_BASIC_CONSULTATIONS_PER_MONTH=100
 PRECHECK_ADVANCED_CONSULTATIONS_PER_MONTH=300
 ```
 
-**O dobro do anunciado, nas duas faixas.** O comentário em `_lib/pricing.ts` já previa
-exatamente isso ("a card promising 50 while the backend grants 100 is a silent giveaway") —
-o que faltava era alguém medir o env deployado.
+**O dobro do anunciado, nas duas faixas** — por um mês inteiro. A tabela comercial de
+02/08 (`CHECKPOINT_precheck_billing_portal.md`) definiu 50/150 e mandava setar as env
+vars; isso nunca foi feito, e o default do código (100/300) seguiu valendo.
 
-Esta rodada **não mexeu em nenhum dos dois lados**: qual número é o certo é decisão comercial
-do Lucas, não do código. O passo de plano lê os bullets de `_lib/pricing.ts`, então **um
-único edit ali acerta a vitrine e o wizard juntos** — e, se a resposta for o contrário, o
-ajuste é no env do serviço `secretaria_brain-api` no EasyPanel.
+**Decisão do Lucas em 02/09: manter 100/300 e corrigir a copy** — o contrário reduziria
+pela metade o que clientes atuais já recebem.
 
-Enquanto não se decide, vitrine e wizard mentem **a mesma coisa** — o que é ruim, mas não é
-uma inconsistência nova entre telas.
+O número saiu do JSX e virou **`PRECHECK_QUOTA`**, no topo de `_lib/pricing.ts`: um lugar
+só, lido pela landing e pelo passo de plano, com um teste que cai se alguém redigitar o
+valor em vez de mudar a constante. O comentário lá diz o que tem de mudar junto (as env
+vars do `secretaria_brain-api` no EasyPanel) e por quê.
 
 ## 5. Validação
 
