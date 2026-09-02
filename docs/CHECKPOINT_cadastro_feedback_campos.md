@@ -3,7 +3,16 @@
 > Correção de bug, 2026-09-01. Origem: o Lucas testando o funil de aquisição — clicou
 > "Continuar" com o WhatsApp em branco, **nada aconteceu e nada avisou**, e ele concluiu
 > que o campo era opcional. Só passou pro pagamento depois de inventar um número.
-> **Validado local; deploy pendente.**
+> **NO AR em 2026-09-02** (`6b339b5`). Conferido em produção: clicar "Continuar" com o form
+> vazio devolve `Preencha "Seu nome" para continuar.` e foca o campo.
+>
+> Foi ao ar junto do `22c74c4` (sessão em cookie first-party, fase 3 de 3), que estava parado
+> no `main`. **Ordem obrigatória, e ela quase foi invertida:** o `brain-api` (fase 1) precisa
+> ir ANTES — o frontend novo manda `POST /auth/refresh` **sem corpo** e parou de ler
+> `refresh_token` da resposta, então contra a API antiga (que exigia o token no body) todo
+> usuário seria deslogado na primeira renovação. Deploy feito na ordem certa em 2026-09-02.
+> O `secretarIA-frontend` (fase 2) é IRMÃO desta fase, não predecessor: segue na origem antiga,
+> sem alteração, porque o CORS não foi tocado e a perna do corpo continua viva.
 
 ## 1. O que estava acontecendo (três coisas somadas)
 
