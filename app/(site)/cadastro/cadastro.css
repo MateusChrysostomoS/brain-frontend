@@ -478,3 +478,11 @@
   border-radius: 99px;
   background: var(--brand);
 }
+
+/* Aviso sob o campo de cupom: o cupom sobrescreve o plano escolhido no PlanStep. */
+.cad-cupom-hint {
+  margin: 0 0 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
