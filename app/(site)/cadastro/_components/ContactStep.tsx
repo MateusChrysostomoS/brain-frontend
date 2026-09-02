@@ -35,6 +35,12 @@ type ContactStepProps = {
   serverError: string | null;
   // True when serverError means "you already have a Brain account" — show a login link.
   showLoginLink: boolean;
+  // Volta para o passo de escolha de plano. Chega `undefined` quando não há para
+  // onde voltar (família de um plano só) E, de propósito, depois que o registro
+  // acontece: dali em diante o plano está gravado no intent e o backend recusa
+  // trocá-lo (`plan_change_not_allowed`), então um "Voltar" que reabrisse a
+  // escolha ofereceria uma decisão que já não existe.
+  onBack?: () => void;
 };
 
 export function ContactStep({
@@ -46,6 +52,7 @@ export function ContactStep({
   submitting,
   serverError,
   showLoginLink,
+  onBack,
 }: ContactStepProps) {
   // Local (pre-network) validation error, e.g. weak password / mismatch.
   const [localError, setLocalError] = useState<string | null>(null);
@@ -195,6 +202,7 @@ export function ContactStep({
       )}
 
       <StepActions
+        onBack={onBack}
         nextType="submit"
         nextLabel={submitting ? "Criando conta…" : "Continuar"}
         nextDisabled={submitting}

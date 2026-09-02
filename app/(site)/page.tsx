@@ -328,12 +328,7 @@ export default function BrainHomePage() {
                 tagline={PRICING.precheck.tagline}
                 amount={PRICING.precheck.amount}
                 unit={PRICING.precheck.unit}
-                features={[
-                  "50 pré-consultas por mês",
-                  "Anamnese guiada por IA",
-                  "Resumo estruturado + alertas",
-                  "Painel clínico PreCheck",
-                ]}
+                features={PRICING.precheck.features}
                 ctaLabel="Falar com a Brain"
                 ctaHref="#contato"
                 cta={
@@ -358,12 +353,7 @@ export default function BrainHomePage() {
                 tagline={PRICING.precheckAdvanced.tagline}
                 amount={PRICING.precheckAdvanced.amount}
                 unit={PRICING.precheckAdvanced.unit}
-                features={[
-                  "150 pré-consultas por mês",
-                  "Tudo do PreCheck Basic",
-                  "Pré-consultas avulsas quando precisar",
-                  "Upgrade imediato pelo painel",
-                ]}
+                features={PRICING.precheckAdvanced.features}
                 ctaLabel="Falar com a Brain"
                 ctaHref="#contato"
                 cta={
@@ -386,12 +376,7 @@ export default function BrainHomePage() {
                 tagline={PRICING.combo.tagline}
                 amount={PRICING.combo.amount}
                 unit={PRICING.combo.unit}
-                features={[
-                  "Tudo do PreCheck",
-                  "Tudo da secretarIA",
-                  "Os dois produtos integrados",
-                  "Implantação assistida",
-                ]}
+                features={PRICING.combo.features}
                 ctaLabel="Falar com Consultor"
                 ctaHref="#contato"
                 featured
@@ -406,12 +391,7 @@ export default function BrainHomePage() {
                 tagline={PRICING.secretaria.tagline}
                 amount={PRICING.secretaria.amount}
                 unit={PRICING.secretaria.unit}
-                features={[
-                  "Respostas com o seu contexto",
-                  "Agendar, cancelar e remarcar",
-                  "Sincronização com Google Calendar",
-                  "Painel da secretarIA",
-                ]}
+                features={PRICING.secretaria.features}
                 ctaLabel="Falar com a Brain"
                 ctaHref="#contato"
                 cta={

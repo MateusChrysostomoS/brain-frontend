@@ -15,6 +15,11 @@ export type PricingPlan = {
   tagline: string;
   amount: string;
   unit: string;
+  // Os bullets do card. Vivem AQUI e não no JSX de page.tsx porque a mesma lista
+  // é lida pelo passo de escolha de plano do /cadastro (cadastro/lib/plans.ts).
+  // Duplicar a promessa comercial em dois arquivos é exatamente como a vitrine e
+  // o checkout passam a dizer coisas diferentes sobre o que o médico compra.
+  features: string[];
   // Catalog ids sent as `catalog_ids` on the public self-service signup intent
   // (POST /public/signup-intents). `null` means self-service checkout isn't
   // wired for this plan yet (combo has no Stripe Price configured).
@@ -27,6 +32,12 @@ export const PRICING: Record<PricingPlanKey, PricingPlan> = {
     tagline: "Pré-consulta no WhatsApp",
     amount: "R$ 59,99",
     unit: "/mês",
+    features: [
+      "50 pré-consultas por mês",
+      "Anamnese guiada por IA",
+      "Resumo estruturado + alertas",
+      "Painel clínico PreCheck",
+    ],
     // Renamed from the legacy bare "precheck" id — see cadastro/lib/plans.ts.
     catalogIds: ["precheck_basic"],
   },
@@ -49,6 +60,12 @@ export const PRICING: Record<PricingPlanKey, PricingPlan> = {
     // Stripe Price behind STRIPE_PRICE_MAP["precheck_advanced"], not this string.
     amount: "R$ 169,99",
     unit: "/mês",
+    features: [
+      "150 pré-consultas por mês",
+      "Tudo do PreCheck Basic",
+      "Pré-consultas avulsas quando precisar",
+      "Upgrade imediato pelo painel",
+    ],
     catalogIds: ["precheck_advanced"],
   },
   secretaria: {
@@ -59,6 +76,12 @@ export const PRICING: Record<PricingPlanKey, PricingPlan> = {
     // sent outside the WhatsApp 24h window, so there is no single "R$ X/mês" to show.
     amount: "Pague pelo uso",
     unit: "profissionais, pacientes e lembretes",
+    features: [
+      "Respostas com o seu contexto",
+      "Agendar, cancelar e remarcar",
+      "Sincronização com Google Calendar",
+      "Painel da secretarIA",
+    ],
     // Must match the plan the deployed STRIPE_PRICE_MAP actually prices and the
     // authenticated CTA's plan prop in page.tsx.
     catalogIds: ["secretaria_basico"],
@@ -71,6 +94,12 @@ export const PRICING: Record<PricingPlanKey, PricingPlan> = {
     tagline: "secretarIA + PreCheck",
     amount: "Sob consulta",
     unit: "PreCheck fixo + secretarIA por uso",
+    features: [
+      "Tudo do PreCheck",
+      "Tudo da secretarIA",
+      "Os dois produtos integrados",
+      "Implantação assistida",
+    ],
     catalogIds: null,
   },
 };

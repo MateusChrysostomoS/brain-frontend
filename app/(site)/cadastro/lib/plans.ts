@@ -4,6 +4,8 @@
 // the commercial source of truth stays brain-api's catalog (services/catalog.py).
 
 import type { CatalogPlanId } from "@/lib/manage-api";
+import { PRICING, type PricingPlan } from "../../_lib/pricing";
+import { isPurchaseGated } from "../../_lib/launch";
 
 // Plans this wizard can actually check out. Deliberately excludes the combo
 // (`complete_clinic_combo`, catalogIds: null in _lib/pricing.ts) — Phase 2
@@ -52,6 +54,76 @@ export function resolvePlan(searchParams: URLSearchParams): ResolvedPlan | null 
     : [planId];
 
   return { planId, label: meta.label, tagline: meta.tagline, catalogIds };
+}
+
+// ── Escolha de plano dentro da família (passo `plan` do wizard) ──────────────
+
+// Preço/bullets por id de plano, derivados de PRICING em vez de redigitados: a
+// vitrine e o wizard têm de prometer a MESMA coisa. `catalogIds[0]` é o id do
+// plano em toda entrada que tem checkout ligado (o combo tem `null` e cai fora).
+const PRICING_BY_PLAN_ID: Record<string, PricingPlan> = Object.fromEntries(
+  Object.values(PRICING)
+    .filter((p) => (p.catalogIds?.length ?? 0) > 0)
+    .map((p) => [p.catalogIds![0], p]),
+);
+
+// Trocas legítimas: planos que são alternativas comerciais entre si, do MESMO
+// produto. Hoje só o PreCheck tem duas faixas; secretarIA tem uma única e por
+// isso não vira escolha (uma lista de um item não é uma decisão, é um obstáculo).
+//
+// Por que a escolha vive AQUI, antes do primeiro card, e não depois:
+// `PATCH /public/signup-intents/{id}` recusa mudança de plano com
+// `plan_change_not_allowed` (brain-api services/signup.py::update_intent_catalog).
+// O plano viaja no POST que CRIA a conta — este é o último instante em que ele
+// ainda pode mudar sem apagar e refazer o cadastro.
+const PLAN_FAMILIES: readonly (readonly string[])[] = [
+  ["precheck_basic", "precheck_advanced"],
+];
+
+// Um plano oferecível no passo de escolha: o ResolvedPlan que o wizard usaria,
+// mais o que a pessoa precisa ver para escolher.
+export type PlanChoice = ResolvedPlan & {
+  amount: string;
+  unit: string;
+  features: string[];
+};
+
+// As alternativas que o passo de escolha deve mostrar para `plan`.
+// Devolve [] quando não há decisão a tomar (família desconhecida, ou uma só
+// opção comprável) — o wizard então pula o passo inteiro.
+//
+// `incoming.catalogIds` pode carregar add-ons vindos de um `?catalog=`; eles são
+// HERDADOS pela alternativa em vez de descartados. Nenhuma família com escolha
+// oferece add-ons hoje, mas perder um `?catalog=` em silêncio ao trocar de faixa
+// seria uma cobrança a menos que ninguém veria.
+export function planChoices(incoming: ResolvedPlan): PlanChoice[] {
+  const familia = PLAN_FAMILIES.find((f) => f.includes(incoming.planId));
+  if (!familia) return [];
+
+  const addons = incoming.catalogIds.filter(
+    (id) => id !== incoming.planId && !(id in PURCHASABLE_PLANS),
+  );
+
+  const opcoes = familia.flatMap((planId) => {
+    const meta = PURCHASABLE_PLANS[planId];
+    const preco = PRICING_BY_PLAN_ID[planId];
+    // Um plano que a vitrine não precifica não pode ser comparado — e um plano
+    // ainda barrado pelo portão de lançamento não pode ser vendido.
+    if (!meta || !preco || isPurchaseGated([planId])) return [];
+    return [
+      {
+        planId,
+        label: meta.label,
+        tagline: meta.tagline,
+        catalogIds: [planId, ...addons],
+        amount: preco.amount,
+        unit: preco.unit,
+        features: preco.features,
+      },
+    ];
+  });
+
+  return opcoes.length > 1 ? opcoes : [];
 }
 
 // True for any PreCheck plan variant (precheck_basic, precheck_advanced, and —

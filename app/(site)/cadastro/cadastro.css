@@ -362,3 +362,119 @@
     flex-direction: column;
   }
 }
+
+/* Escolha de plano (PlanStep) — cartões de rádio com preço e bullets. Mesmos
+   tokens dos .cad-addon-card, mas seleção única e com o preço no cabeçalho: aqui
+   a pessoa está comparando faixas, não ligando/desligando um extra. */
+.cad-plan-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 6px 0 22px;
+}
+
+.cad-plan-card {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 15px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color 0.14s var(--ease);
+}
+
+.cad-plan-card.on {
+  border-color: var(--brand);
+}
+
+.cad-plan-card input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cad-plan-radio {
+  width: 20px;
+  height: 20px;
+  border-radius: 99px;
+  border: 1.5px solid var(--line-strong);
+  flex-shrink: 0;
+  margin-top: 2px;
+  transition: all 0.14s var(--ease);
+}
+.cad-plan-card.on .cad-plan-radio {
+  border-color: var(--brand);
+  border-width: 6px;
+}
+
+.cad-plan-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.cad-plan-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.cad-plan-name {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.cad-plan-price {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.cad-plan-unit {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-left: 3px;
+}
+
+.cad-plan-tagline {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+.cad-plan-feats {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.cad-plan-feats li {
+  position: relative;
+  padding-left: 17px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.cad-plan-feats li::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 7px;
+  width: 5px;
+  height: 5px;
+  border-radius: 99px;
+  background: var(--brand);
+}
