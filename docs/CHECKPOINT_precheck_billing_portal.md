@@ -138,7 +138,7 @@ Duas frentes independentes entraram juntas nesta rodada:
     pra 50/150**: medido no container em 02/09, o ambiente deployado sempre concedeu
     100/300 (o default do código), enquanto os cards prometiam 50/150. Por um mês a
     vitrine prometeu **metade** do que o backend liberava. O Lucas decidiu manter o que
-    está no ar e corrigir a copy — não o contrário, para não reduzir o que clientes
+    está no ar e corrigir a copy — **feito e deployado em 02/09** — não o contrário, para não reduzir o que clientes
     atuais já recebem.
   - **A cota exibida NÃO é auto-derivada** — quem enforce é
     `PRECHECK_BASIC_CONSULTATIONS_PER_MONTH` / `PRECHECK_ADVANCED_CONSULTATIONS_PER_MONTH`

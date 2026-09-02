@@ -1,7 +1,10 @@
 # CHECKPOINT — escolha de plano no /cadastro
 
 > 2026-09-02, `c7fc940`. Origem: o Lucas testando o funil — "atualmente tá indo pro plano
-> base automaticamente, sem escolha". **Commitado e validado; NÃO deployado ainda.**
+> base automaticamente, sem escolha". **NO AR em 2026-09-02** (container
+> `xsnu0fqafopnziguc1xeqs65o`). Conferido em produção: o link real da vitrine
+> (`/cadastro/?plan=precheck_basic&precheck_template_slug=cardiologia`) abre no passo de
+> plano com as duas faixas e as cotas corrigidas (100/300).
 
 ## 1. O que estava acontecendo
 
@@ -87,8 +90,6 @@ só o fallback do Suspense, e o passo depende de `useSearchParams`. Conferir no 
 
 ## 6. Pendências
 
-- **Deploy.** Commitado, não deployado — ver §4 antes de subir, porque o deploy publica os
-  números 50/150 num segundo lugar.
 - A vitrine do PreCheck (`/comecar`) segue mandando `plan=precheck_basic` em todo link. Isso
   agora é só **pré-seleção**, e está certo assim — mas se um dia ela passar a mostrar preço,
   os dois lados têm de contar a mesma história.
