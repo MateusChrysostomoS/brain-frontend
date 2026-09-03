@@ -28,9 +28,12 @@ type PlanStepProps = {
 export function PlanStep({ choices, selectedId, onSelect, onNext }: PlanStepProps) {
   return (
     <div>
+      {/* Copy sem contagem de propósito: "Os dois" virou mentira no dia em que a
+          terceira faixa entrou (2026-09-03), e a lista aqui é montada por
+          `planChoices` — quem escreve o número no texto assina um bug futuro. */}
       <StepHeading
         title="Escolha o seu plano."
-        desc="Os dois trazem o PreCheck completo — a diferença é quantas pré-consultas entram por mês."
+        desc="Todas as faixas trazem o PreCheck completo — a diferença é quantas pré-consultas entram por mês."
       />
 
       <div className="cad-plan-list">
