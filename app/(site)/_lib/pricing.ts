@@ -1,17 +1,24 @@
-// pricing.ts — display-only PT-BR pricing shown on the marketing site
-// (Stripe-test-mode validation pass). These strings are NOT the commercial
-// source of truth — that's brain-api's catalog (services/catalog.py) — this
-// module just keeps "R$ ..." literals and catalog id lists out of JSX so
-// page.tsx never hardcodes a price string.
+// pricing.ts — display-only PT-BR pricing shown on the marketing site. These
+// strings are NOT the commercial source of truth — that's brain-api's catalog
+// (services/catalog.py) plus the live Stripe Price behind each
+// STRIPE_PRICE_MAP key — this module just keeps "R$ ..." literals and catalog
+// id lists out of JSX so page.tsx never hardcodes a price string.
+//
+// ⚠️ Cada `amount` abaixo TEM DE BATER com o unit_amount do Price live que o
+// STRIPE_PRICE_MAP aponta para aquele plano. Mostrar um valor e cobrar outro é
+// a falha que o cliente descobre no extrato, não na tela. Tabela de 2026-09-03:
+// precheck_start R$ 119,99 · precheck_basic R$ 209,99 · precheck_advanced
+// R$ 599,99 (mensais, BRL).
 
 // ── Cota mensal de pré-consultas por faixa do PreCheck ──────────────────────
 //
 // UM lugar só, de propósito: a cota é decisão comercial que ainda vai mudar, e a
-// duplicação já custou uma divergência silenciosa de um mês. Editar os dois
+// duplicação já custou uma divergência silenciosa de um mês. Editar os três
 // números abaixo acerta a landing (/#planos) e o passo de escolha de plano do
 // /cadastro juntos — nenhum outro arquivo repete o valor.
 //
 // ⚠️ ELES TÊM DE BATER com o que a brain-api concede de verdade:
+// `PRECHECK_START_CONSULTATIONS_PER_MONTH`,
 // `PRECHECK_BASIC_CONSULTATIONS_PER_MONTH` e
 // `PRECHECK_ADVANCED_CONSULTATIONS_PER_MONTH`, env do serviço
 // `secretaria_brain-api` no EasyPanel. Quem enforce é o backend
@@ -22,9 +29,13 @@
 // 2026-09-02: alinhados em 100/300, que é o que o ambiente deployado já
 // concedia. A tabela comercial de 02/08 dizia 50/150 e as env vars nunca foram
 // setadas para isso, então a vitrine prometeu METADE do que o backend liberava.
-export const PRECHECK_QUOTA = { basic: 100, advanced: 300 } as const;
+// 2026-09-03: entra a faixa Start (50), o degrau de entrada da tabela de três
+// planos — o default de `PRECHECK_START_CONSULTATIONS_PER_MONTH` na brain-api
+// já é 50, então esta faixa nasce alinhada sem env var nova.
+export const PRECHECK_QUOTA = { start: 50, basic: 100, advanced: 300 } as const;
 
 export type PricingPlanKey =
+  | "precheckStart"
   | "precheck"
   | "precheckAdvanced"
   | "secretaria"
@@ -47,16 +58,32 @@ export type PricingPlan = {
 };
 
 export const PRICING: Record<PricingPlanKey, PricingPlan> = {
-  precheck: {
-    name: "PreCheck Basic",
+  // Entry tier (2026-09-03). Carries the "o que é o PreCheck" bullets because it
+  // is the first card a visitor reads; the two tiers above it say "tudo do
+  // <faixa de baixo>" instead of repeating the same four lines three times.
+  precheckStart: {
+    name: "PreCheck Start",
     tagline: "Pré-consulta no WhatsApp",
-    amount: "R$ 59,99",
+    amount: "R$ 119,99",
     unit: "/mês",
     features: [
-      `${PRECHECK_QUOTA.basic} pré-consultas por mês`,
+      `${PRECHECK_QUOTA.start} pré-consultas por mês`,
       "Anamnese guiada por IA",
       "Resumo estruturado + alertas",
       "Painel clínico PreCheck",
+    ],
+    catalogIds: ["precheck_start"],
+  },
+  precheck: {
+    name: "PreCheck Basic",
+    tagline: "O dobro do volume do Start",
+    amount: "R$ 209,99",
+    unit: "/mês",
+    features: [
+      `${PRECHECK_QUOTA.basic} pré-consultas por mês`,
+      "Tudo do PreCheck Start",
+      "Pré-consultas avulsas quando precisar",
+      "Upgrade imediato pelo painel",
     ],
     // Renamed from the legacy bare "precheck" id — see cadastro/lib/plans.ts.
     catalogIds: ["precheck_basic"],
@@ -76,7 +103,7 @@ export const PRICING: Record<PricingPlanKey, PricingPlan> = {
     tagline: "Mais volume de pré-consultas",
     // Display-only, like every amount in this file: the charged value is the
     // Stripe Price behind STRIPE_PRICE_MAP["precheck_advanced"], not this string.
-    amount: "R$ 169,99",
+    amount: "R$ 599,99",
     unit: "/mês",
     features: [
       `${PRECHECK_QUOTA.advanced} pré-consultas por mês`,

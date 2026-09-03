@@ -88,7 +88,16 @@ escolha.
 ⚠️ Como no resto do wizard, **nada disto aparece em `curl`**: o export estático pré-renderiza
 só o fallback do Suspense, e o passo depende de `useSearchParams`. Conferir no navegador.
 
-## 6. Pendências
+## 6. Atualização de 2026-09-03 — são três faixas
+
+O passo de escolha passou a oferecer **três** cartões (Start 50 / Basic 100 / Advanced
+300), e os preços da vitrine viraram os de venda (R$ 119,99 / R$ 209,99 / R$ 599,99). A
+mecânica descrita acima não mudou — `PLAN_FAMILIES` ganhou um id e `planChoices` seguiu
+funcionando sem alteração, que era o ponto de ter a família numa constante. O registro
+completo (Stripe, price map, ordem de deploy) está em
+`brain-api/docs/CHECKPOINT_tres_faixas_precheck.md`.
+
+## 7. Pendências
 
 - A vitrine do PreCheck (`/comecar`) segue mandando `plan=precheck_basic` em todo link. Isso
   agora é só **pré-seleção**, e está certo assim — mas se um dia ela passar a mostrar preço,

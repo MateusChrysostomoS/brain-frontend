@@ -12,12 +12,17 @@ import { isPurchaseGated } from "../../_lib/launch";
 // (PreCheck/combo Stripe Prices) is out of scope, so combo stays unpurchasable
 // even if a stray `?plan=complete_clinic_combo` link is ever created.
 //
-// PreCheck is now two purchasable tiers (precheck_basic/precheck_advanced) —
-// see resolvePlan below for the `?plan=precheck` backward-compat mapping.
+// PreCheck is now three purchasable tiers (precheck_start/precheck_basic/
+// precheck_advanced, 2026-09-03) — see resolvePlan below for the
+// `?plan=precheck` backward-compat mapping.
 const PURCHASABLE_PLANS: Record<string, { label: string; tagline: string }> = {
+  precheck_start: {
+    label: "PreCheck Start",
+    tagline: "Cota mensal de pré-consultas no WhatsApp",
+  },
   precheck_basic: {
     label: "PreCheck Basic",
-    tagline: "Cota mensal de pré-consultas no WhatsApp",
+    tagline: "O dobro do volume mensal do Start",
   },
   precheck_advanced: {
     label: "PreCheck Advanced",
@@ -68,8 +73,10 @@ const PRICING_BY_PLAN_ID: Record<string, PricingPlan> = Object.fromEntries(
 );
 
 // Trocas legítimas: planos que são alternativas comerciais entre si, do MESMO
-// produto. Hoje só o PreCheck tem duas faixas; secretarIA tem uma única e por
-// isso não vira escolha (uma lista de um item não é uma decisão, é um obstáculo).
+// produto. Hoje só o PreCheck tem faixas (três, desde 2026-09-03); secretarIA
+// tem uma única e por isso não vira escolha (uma lista de um item não é uma
+// decisão, é um obstáculo). A ordem aqui é a que o passo de escolha renderiza:
+// da menor cota para a maior, igual à vitrine.
 //
 // Por que a escolha vive AQUI, antes do primeiro card, e não depois:
 // `PATCH /public/signup-intents/{id}` recusa mudança de plano com
@@ -77,7 +84,7 @@ const PRICING_BY_PLAN_ID: Record<string, PricingPlan> = Object.fromEntries(
 // O plano viaja no POST que CRIA a conta — este é o último instante em que ele
 // ainda pode mudar sem apagar e refazer o cadastro.
 const PLAN_FAMILIES: readonly (readonly string[])[] = [
-  ["precheck_basic", "precheck_advanced"],
+  ["precheck_start", "precheck_basic", "precheck_advanced"],
 ];
 
 // Um plano oferecível no passo de escolha: o ResolvedPlan que o wizard usaria,

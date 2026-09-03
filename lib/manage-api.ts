@@ -918,11 +918,13 @@ export async function setPassword(
 // tier ladder was collapsed (2026-07-22) into one fully-metered plan, secretaria_basico
 // (no flat/anchor price — billed on active professionals, billable patients, and
 // reminders sent outside the WhatsApp 24h window).
-// PreCheck itself was split into two purchasable tiers (precheck_basic/precheck_advanced);
-// the legacy bare "precheck" id is kept here too since brain-api still resolves it
-// server-side (existing subscriptions, stale links) even though nothing new should send it.
+// PreCheck itself was split into purchasable tiers — precheck_basic/precheck_advanced
+// (2026-08-01), joined by the entry tier precheck_start (2026-09-03). The legacy bare
+// "precheck" id is kept here too since brain-api still resolves it server-side (existing
+// subscriptions, stale links) even though nothing new should send it.
 export type CatalogPlanId =
   | "precheck"
+  | "precheck_start"
   | "precheck_basic"
   | "precheck_advanced"
   | "secretaria_basico"
@@ -1905,14 +1907,23 @@ export async function createPrecheckTopupSession(
   return data.url;
 }
 
-// POST /billing/precheck/upgrade (Bearer) { plan } — upgrades a precheck_basic
-// subscription to precheck_advanced in place and returns the fresh usage
-// payload (same shape as GET .../usage), so the caller can swap it straight
-// into state instead of refetching separately. Throws ManageApiError: 409
+// Os ids das FAIXAS do PreCheck — o conjunto que POST /billing/precheck/upgrade
+// aceita como destino (brain-api `catalog.PRECHECK_TIER_PLAN_IDS`). Subconjunto
+// nomeado de CatalogPlanId, e não ele inteiro: o combo é precheck-enabled mas
+// não é faixa, e mandá-lo aqui derrubaria a secretarIA do cliente.
+export type PrecheckTierPlanId =
+  | "precheck_start"
+  | "precheck_basic"
+  | "precheck_advanced";
+
+// POST /billing/precheck/upgrade (Bearer) { plan } — swaps the tenant's PreCheck
+// subscription to another tier in place and returns the fresh usage payload
+// (same shape as GET .../usage), so the caller can swap it straight into state
+// instead of refetching separately. Throws ManageApiError: 409
 // `already_on_plan` / `no_active_subscription`, 422 invalid plan.
 export async function upgradePrecheckPlan(
   session: Session,
-  plan: "precheck_advanced",
+  plan: PrecheckTierPlanId,
 ): Promise<PrecheckBillingUsage> {
   return manageFetch<PrecheckBillingUsage>(
     "/billing/precheck/upgrade",

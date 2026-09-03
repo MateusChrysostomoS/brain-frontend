@@ -320,9 +320,36 @@ export default function BrainHomePage() {
             </Reveal>
           </div>
 
-          <div className="price-grid">
-            {/* PreCheck Basic — self-service checkout wired for anonymous visitors */}
+          {/* As TRÊS faixas do PreCheck numa linha só: a escolha aqui é de
+              VOLUME (50/100/300), e volume só se compara lado a lado. O combo e
+              a secretarIA — que não são faixa de PreCheck — descem para a linha
+              de baixo em vez de disputar espaço nesta comparação. */}
+          <div className="price-grid price-grid--3">
+            {/* PreCheck Start — faixa de entrada (2026-09-03), mesmo checkout
+                self-service das outras duas. */}
             <Reveal>
+              <PriceCard
+                name={PRICING.precheckStart.name}
+                tagline={PRICING.precheckStart.tagline}
+                amount={PRICING.precheckStart.amount}
+                unit={PRICING.precheckStart.unit}
+                features={PRICING.precheckStart.features}
+                ctaLabel="Falar com a Brain"
+                ctaHref="#contato"
+                cta={
+                  <PlanCheckoutCta
+                    plan="precheck_start"
+                    catalogIds={PRICING.precheckStart.catalogIds ?? []}
+                    label="Contratar Start"
+                    secondaryHref="#contato"
+                    secondaryLabel="Falar com a Brain"
+                  />
+                }
+              />
+            </Reveal>
+
+            {/* PreCheck Basic — self-service checkout wired for anonymous visitors */}
+            <Reveal delay={1}>
               <PriceCard
                 name={PRICING.precheck.name}
                 tagline={PRICING.precheck.tagline}
@@ -347,7 +374,7 @@ export default function BrainHomePage() {
                 quota. Was a secondary text link under the Basic card until
                 2026-08-02; a purchasable plan the grid never priced read as
                 "not for sale", so it is a full card now. */}
-            <Reveal delay={1}>
+            <Reveal delay={2}>
               <PriceCard
                 name={PRICING.precheckAdvanced.name}
                 tagline={PRICING.precheckAdvanced.tagline}
@@ -368,9 +395,12 @@ export default function BrainHomePage() {
               />
             </Reveal>
 
+          </div>
+
+          <div className="price-grid price-grid--2">
             {/* Brain Completo (featured) — plain sum of the two plans; no Stripe
                 Price configured yet, so the CTA stays consultant-only. */}
-            <Reveal delay={2}>
+            <Reveal>
               <PriceCard
                 name={PRICING.combo.name}
                 tagline={PRICING.combo.tagline}
@@ -385,7 +415,7 @@ export default function BrainHomePage() {
             </Reveal>
 
             {/* secretarIA plan — self-service checkout wired for anonymous visitors */}
-            <Reveal delay={3}>
+            <Reveal delay={1}>
               <PriceCard
                 name={PRICING.secretaria.name}
                 tagline={PRICING.secretaria.tagline}
