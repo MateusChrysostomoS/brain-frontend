@@ -1,0 +1,11 @@
+﻿{
+    "metadata_schema":  "brain.graphify-metadata/v1",
+    "repository":  "brain-frontend",
+    "repository_path":  "C:\\TECH\\BRAIN\\brain-frontend",
+    "branch":  "main",
+    "commit":  "76ee1ac8cd3f48142c610b1d6b6fa25fda475015",
+    "generated_at":  "2026-09-16T17:53:36.4456606Z",
+    "graphify_version":  "0.9.5",
+    "graph_schema":  "networkx-node-link (unversioned upstream)",
+    "graph_sha256":  "b3bcbd0943e6f86e5de40b1f676659b16969d96c3fed4f4c1201956e8df8c834"
+}
