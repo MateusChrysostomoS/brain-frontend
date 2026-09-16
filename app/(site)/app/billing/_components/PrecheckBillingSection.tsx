@@ -15,9 +15,9 @@
 //     Checkout URL. Avulso pré-consultas are priced PER UNIT, so HOW MANY is
 //     picked right here and the Checkout Session is created with that quantity
 //     fixed — Stripe's hosted page never re-asks for it.
-//   - "Fazer upgrade para Advanced" (precheck_basic only) -> an inline confirm
-//     step -> POST /billing/precheck/upgrade -> swaps the fresh usage payload
-//     into state and shows a success notice.
+//   - "Fazer upgrade para <faixa>" (uma por faixa ACIMA da atual) -> an inline
+//     confirm step -> POST /billing/precheck/upgrade -> swaps the fresh usage
+//     payload into state and shows a success notice.
 // Never invents a base subscription price client-side — the monthly fee is
 // only ever described as "cobrada via assinatura, veja em Gerenciar
 // assinatura", pointing at the Stripe-sourced portal below this section.
@@ -29,6 +29,7 @@ import {
   upgradePrecheckPlan,
   ManageApiError,
   type PrecheckBillingUsage,
+  type PrecheckTierPlanId,
   type Session,
 } from "@/lib/manage-api";
 import { formatBRLFromCents } from "@/lib/currency";
@@ -48,6 +49,18 @@ type PrecheckBillingSectionProps = {
 // ceiling is deliberately NOT mirrored — it is a typo guard, not a number worth
 // showing, so an over-the-top quantity is simply reported back from the 422.
 const TOPUP_MIN_QUANTITY = 5;
+
+// A escada de faixas do PreCheck, da menor cota para a maior — espelha
+// `catalog.PRECHECK_TIER_PLAN_IDS` na brain-api, que é quem valida o destino do
+// POST /billing/precheck/upgrade. Duplicada como constante local de propósito,
+// mesma razão do TOPUP_MIN_QUANTITY acima: o servidor é a autoridade, isto aqui
+// só decide o que OFERECER. Uma faixa que exista lá e falte aqui simplesmente
+// não vira botão; o inverso volta 422 e cai no tratamento de erro abaixo.
+const PRECHECK_TIERS: readonly { id: PrecheckTierPlanId; label: string }[] = [
+  { id: "precheck_start", label: "Start" },
+  { id: "precheck_basic", label: "Basic" },
+  { id: "precheck_advanced", label: "Advanced" },
+];
 
 // Formats an ISO date string as a Brazilian date (DD/MM/AAAA); the raw string
 // if it fails to parse — mirrors reativar/page.tsx's own formatDate helper.
@@ -78,8 +91,11 @@ export function PrecheckBillingSection({ session }: PrecheckBillingSectionProps)
   const parsedQuantity = Number.parseInt(quantity, 10);
   const quantityValid = Number.isFinite(parsedQuantity) && parsedQuantity >= TOPUP_MIN_QUANTITY;
 
-  // --- "Fazer upgrade para Advanced" (two-step: confirm, then submit) ---
-  const [upgradeConfirming, setUpgradeConfirming] = useState(false);
+  // --- "Fazer upgrade para <faixa>" (two-step: confirm, then submit) ---
+  // Guarda o ID DA FAIXA em confirmação (null = nenhuma). Um booleano bastava
+  // enquanto só existia um destino possível; com três faixas, é o alvo que
+  // precisa sobreviver até o clique em "Confirmar".
+  const [upgradeTarget, setUpgradeTarget] = useState<PrecheckTierPlanId | null>(null);
   const [upgradePending, setUpgradePending] = useState(false);
   const [upgradeError, setUpgradeError] = useState<string | null>(null);
   const [upgradeNotice, setUpgradeNotice] = useState(false);
@@ -137,21 +153,21 @@ export function PrecheckBillingSection({ session }: PrecheckBillingSectionProps)
     }
   }
 
-  async function handleUpgrade() {
+  async function handleUpgrade(targetId: PrecheckTierPlanId, targetLabel: string) {
     setUpgradeError(null);
     setUpgradeNotice(false);
     setUpgradePending(true);
     try {
-      const fresh = await upgradePrecheckPlan(session, "precheck_advanced");
+      const fresh = await upgradePrecheckPlan(session, targetId);
       setUsage(fresh);
-      setUpgradeConfirming(false);
+      setUpgradeTarget(null);
       setUpgradeNotice(true);
     } catch (e) {
       if (handleSessionExpiry(e)) return;
       const status = e instanceof ManageApiError ? e.status : 0;
       const detail = e instanceof ManageApiError ? e.message : "";
       if (status === 409 && detail === "already_on_plan") {
-        setUpgradeError("Sua clínica já está no plano Advanced.");
+        setUpgradeError(`Sua clínica já está no plano ${targetLabel}.`);
       } else if (status === 409 && detail === "no_active_subscription") {
         setUpgradeError("Sua clínica não tem uma assinatura ativa para fazer upgrade.");
       } else if (status === 422) {
@@ -171,6 +187,15 @@ export function PrecheckBillingSection({ session }: PrecheckBillingSectionProps)
 
   const pct = usage.quota > 0 ? Math.min(100, Math.round((usage.used / usage.quota) * 100)) : 0;
   const spendLabel = formatBRLFromCents(usage.spend.topup_cents);
+
+  // Só as faixas ACIMA da atual viram botão: quem já está no topo — ou num plano
+  // que nem é faixa do PreCheck, como o combo — não vê oferta nenhuma. O backend
+  // aceita a troca nos dois sentidos, mas downgrade é conversa de retenção, não
+  // um botão de autoatendimento.
+  const currentTierIndex = PRECHECK_TIERS.findIndex((t) => t.id === usage.plan);
+  const upgradeTargets =
+    currentTierIndex < 0 ? [] : PRECHECK_TIERS.slice(currentTierIndex + 1);
+  const confirmingTier = PRECHECK_TIERS.find((t) => t.id === upgradeTarget) ?? null;
 
   return (
     <div className="sub-block">
@@ -269,17 +294,19 @@ export function PrecheckBillingSection({ session }: PrecheckBillingSectionProps)
           {topupPending ? "Abrindo…" : "Comprar mais pré-consultas"}
         </button>
 
-        {usage.plan === "precheck_basic" && !upgradeConfirming && (
-          <button
-            type="button"
-            className="btn btn--outline btn--sm"
-            onClick={() => setUpgradeConfirming(true)}
-            disabled={upgradePending}
-          >
-            <BrandIcon name="arrowR" />
-            Fazer upgrade para Advanced
-          </button>
-        )}
+        {upgradeTarget === null &&
+          upgradeTargets.map((tier) => (
+            <button
+              key={tier.id}
+              type="button"
+              className="btn btn--outline btn--sm"
+              onClick={() => setUpgradeTarget(tier.id)}
+              disabled={upgradePending}
+            >
+              <BrandIcon name="arrowR" />
+              Fazer upgrade para {tier.label}
+            </button>
+          ))}
       </div>
 
       <p id="pc-topup-quantity-hint" className="pc-qty-hint">
@@ -293,18 +320,18 @@ export function PrecheckBillingSection({ session }: PrecheckBillingSectionProps)
         </p>
       )}
 
-      {upgradeConfirming && (
+      {confirmingTier && (
         <div className="pc-confirm">
           <p style={{ margin: 0 }}>
-            Confirma o upgrade para o plano PreCheck Advanced? A cota mensal de
-            pré-consultas aumenta imediatamente e a diferença de valor é
-            ajustada de forma proporcional na sua assinatura.
+            Confirma o upgrade para o plano PreCheck {confirmingTier.label}? A
+            cota mensal de pré-consultas aumenta imediatamente e a diferença de
+            valor é ajustada de forma proporcional na sua assinatura.
           </p>
           <div className="pc-confirm-actions">
             <button
               type="button"
               className="btn btn--primary btn--sm"
-              onClick={handleUpgrade}
+              onClick={() => handleUpgrade(confirmingTier.id, confirmingTier.label)}
               disabled={upgradePending}
             >
               {upgradePending ? "Confirmando…" : "Confirmar upgrade"}
@@ -312,7 +339,7 @@ export function PrecheckBillingSection({ session }: PrecheckBillingSectionProps)
             <button
               type="button"
               className="btn btn--outline btn--sm"
-              onClick={() => setUpgradeConfirming(false)}
+              onClick={() => setUpgradeTarget(null)}
               disabled={upgradePending}
             >
               Cancelar

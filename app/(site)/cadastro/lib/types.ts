@@ -43,10 +43,14 @@ export const SIGNUP_ADDON_IDS: readonly SignupAddonId[] = [
   "pix_deposit",
 ];
 
-// Every step the wizard can visit. `dedicated_number` and `page_creation` are
-// conditional guided screens, and `addons`/`test_window` are shown only for a
-// secretarIA purchase — see CadastroWizard's transition table.
+// Every step the wizard can visit. `plan` abre o wizard só quando a família do
+// plano tem mais de uma faixa comprável (planChoices em lib/plans.ts) — hoje
+// PreCheck Basic/Advanced; secretarIA tem uma só e pula direto para `contact`.
+// `dedicated_number` and `page_creation` are conditional guided screens, and
+// `addons`/`test_window` are shown only for a secretarIA purchase — see
+// CadastroWizard's transition table.
 export type StepId =
+  | "plan"
   | "contact"
   | "usage"
   | "dedicated_number"

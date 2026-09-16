@@ -415,6 +415,12 @@ img,svg{display:block}
    minimum lets the widest label stretch its own column and leaves the four
    cards visibly different widths. */
 .price-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;align-items:stretch}
+/* variantes de linha: as 3 faixas do PreCheck em cima, combo + secretarIA embaixo.
+   Declaradas AQUI (antes das media queries lá embaixo) de propósito: mesma
+   especificidade, então em <=1080px o `.price-grid{1fr 1fr}` e em <=860px o
+   `1fr` continuam vencendo e as duas linhas colapsam junto com o resto. */
+.price-grid--3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.price-grid--2{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:18px}
 .price-card{
   display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);
   border-radius:var(--r-xl);padding:26px;box-shadow:var(--shadow-sm);position:relative;

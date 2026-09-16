@@ -215,6 +215,16 @@ export function SummaryStep({ answers, plan, intentId, onBack }: SummaryStepProp
             <label className="cad-cupom-label" htmlFor="cad-cupom-input">
               Cupom de acesso
             </label>
+            {/* O cupom manda no plano, não a escolha do visitante: `courtesy.redeem`
+                sobrescreve `catalog_ids` com o plano do cupom — senão bastaria
+                escolher a faixa cara antes de resgatar um cupom da barata. Desde
+                que o wizard passou a ter um passo de escolha (PlanStep), isso
+                virou algo que a pessoa pode ter decidido explicitamente, e um
+                rebaixamento silencioso seria descoberto só no painel. */}
+            <p className="cad-cupom-hint">
+              O plano liberado é o do cupom — pode ser diferente do escolhido no
+              início do cadastro.
+            </p>
             <div className="cad-cupom-row">
               <input
                 id="cad-cupom-input"

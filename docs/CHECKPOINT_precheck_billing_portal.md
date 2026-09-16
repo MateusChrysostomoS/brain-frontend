@@ -128,16 +128,26 @@ Duas frentes independentes entraram juntas nesta rodada:
 
     | Plano | Preço exibido | Cota mensal |
     |---|---|---|
-    | PreCheck Basic | R$ 59,99/mês | 50 pré-consultas |
-    | PreCheck Advanced | R$ 169,99/mês | 150 pré-consultas |
+    | PreCheck Basic | R$ 59,99/mês | ~~50~~ **100** pré-consultas |
+    | PreCheck Advanced | R$ 169,99/mês | ~~150~~ **300** pré-consultas |
 
-    Trocar de ideia = editar as strings em `pricing.ts` + as features em `page.tsx` + o
-    Price no Stripe + as env vars de cota (abaixo).
+    Trocar de ideia = editar `amount` em `pricing.ts` + `PRECHECK_QUOTA` no mesmo
+    arquivo + o Price no Stripe + as env vars de cota (abaixo). As *features* saíram
+    de `page.tsx` em 2026-09-02 e não precisam mais ser tocadas.
+  - **⚠️ CORREÇÃO 2026-09-02 — a cota virou 100/300.** As env vars **nunca foram setadas
+    pra 50/150**: medido no container em 02/09, o ambiente deployado sempre concedeu
+    100/300 (o default do código), enquanto os cards prometiam 50/150. Por um mês a
+    vitrine prometeu **metade** do que o backend liberava. O Lucas decidiu manter o que
+    está no ar e corrigir a copy — **feito e deployado em 02/09** — não o contrário, para não reduzir o que clientes
+    atuais já recebem.
   - **A cota exibida NÃO é auto-derivada** — quem enforce é
     `PRECHECK_BASIC_CONSULTATIONS_PER_MONTH` / `PRECHECK_ADVANCED_CONSULTATIONS_PER_MONTH`
-    no brain-api, cujo **default em código continua 100/300**. As duas env vars precisam
-    ser setadas pra 50/150 no ambiente deployado, senão o card promete 50 e o backend
-    libera 100.
+    no brain-api (default em código 100/300, e é isso que o env deployado tem). Do lado do
+    front os números agora vivem em **`PRECHECK_QUOTA`**, no topo de `_lib/pricing.ts` —
+    um lugar só, lido pela landing e pelo passo de escolha de plano do /cadastro, com um
+    teste em `cadastro/lib/__tests__/plans.test.ts` que cai se alguém redigitar o número
+    em vez de mudar a constante. Mudar a cota = mudar `PRECHECK_QUOTA` **e** as env vars,
+    na mesma rodada.
   - `page.tsx` renderiza 4 `PriceCard` (Basic / Advanced / Brain Completo em destaque /
     secretarIA), Advanced com o MESMO `PlanCheckoutCta`/fluxo do Basic. A cota de cada
     tier entrou como primeira feature dos dois cards, que é o que de fato os diferencia.
