@@ -1156,6 +1156,9 @@ export type AdminTenant = {
   precheck_enabled: boolean;
   secretaria_enabled: boolean;
   users_count: number;
+  // true only for clinics created by POST /admin/tenants (no Stripe, billing 403s).
+  // Optional so the table still renders against a brain-api without migration 0025.
+  is_test?: boolean;
 };
 
 export type EntitlementAdmin = {
@@ -1181,6 +1184,28 @@ export type AdminTenantDetail = {
   updated_at: string;
   users_count: number;
   entitlements: EntitlementAdmin;
+  is_test?: boolean;
+};
+
+// POST /admin/tenants — admin-created TEST clinic, no Stripe (brain-api
+// docs/CHECKPOINT_admin_test_tenant.md). Flat product flags, not a list; the body is
+// extra="forbid" server-side, so send only these six fields. TEMPORARY: removed
+// before the real launch together with the backend route.
+export type AdminTenantCreate = {
+  clinic_name: string;
+  email: string;
+  name: string;
+  password: string;
+  precheck: boolean;
+  secretaria: boolean;
+};
+
+export type AdminTenantCreated = {
+  tenant_id: string;
+  clinic_name: string;
+  is_test: boolean;
+  entitlements: EntitlementAdmin;
+  owner: AdminUser;
 };
 
 // Partial entitlement update — only the fields present are applied server-side.
@@ -1271,6 +1296,19 @@ export type AdminTenantDeleteResult = {
   deleted: Record<string, number>;
   secretaria: { status: string };
 };
+
+// POST /admin/tenants — TEST clinic, active with the chosen products, no Stripe.
+// Throws ManageApiError 409 (email taken, nothing created) or 422 (invalid body).
+export function adminCreateTenant(
+  session: Session,
+  payload: AdminTenantCreate,
+): Promise<AdminTenantCreated> {
+  return manageFetch<AdminTenantCreated>(
+    "/admin/tenants",
+    { method: "POST", body: JSON.stringify(payload) },
+    session.token,
+  );
+}
 
 // DELETE /admin/tenants/{id} — IRREVERSIBLE. Deletes the clinic and everything brain-api
 // owns for it (users, entitlements, usage, PreCheck links, signup records, refresh

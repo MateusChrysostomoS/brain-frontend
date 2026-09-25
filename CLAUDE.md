@@ -11,7 +11,28 @@ Prompts de feature já roteirizados ficam em `TECH/BRAIN/z_prompts/` — conven�
 compartilhada entre os repos da Brain, não uma pasta deste repo. Cole o conteúdo inteiro
 numa sessão nova quando for a hora de executar:
 
-- (nenhum pendente para este repo hoje)
+- `PROMPT_BRAIN_ADMIN_TEST_TENANT_2_BRAIN_FRONTEND.md` (gerado 2026-09-24 via
+  `/prompt-generator`) — parte 2/2: UI "Criar clínica de teste" em `/admin/tenants` (nome +
+  dono/gestor + checkboxes de produto secretaria/precheck), consumindo o endpoint novo
+  `POST /admin/tenants` que a parte 1 (`..._1_BRAIN_API.md`, no `brain-api`) constrói — sem
+  Stripe. **EXECUTADO em 2026-09-25**: commitado, não deployado; provado no Chrome
+  só contra um stub do contrato. Deploy só depois do brain-api da parte 1. Ver
+  `docs/CHECKPOINT_admin_test_tenant.md`. **Temporário: sai antes do lançamento real.**
+- `PLANO_CONSOLIDACAO_PORTAL_BRAIN_MESSAGE.md` (gerado 2026-09-23, via `/prompt-generator`, a
+  partir de um bug cross-tenant investigado numa sessão que virou brainstorm de arquitetura) —
+  este repo vira só gerenciador de tenants/pagamento/login; Brain-Message vira o portal
+  operacional único. Peças deste repo: `PROMPT_BRAIN_MESSAGE_LOGIN_HANDOFF_2_BRAIN_FRONTEND.md`
+  (Onda B, troca os 2 links de `SecretariaPanel.tsx` por um handoff assinado pro Brain-Message —
+  depende de `..._1_BRAIN_API.md`, no `brain-api`, deployado antes) e
+  `PROMPT_BRAIN_FRONTEND_REDIRECT_POS_PAGAMENTO.md` (Onda C, `/checkout/sucesso` passa a
+  redirecionar pro módulo `contexto` do Brain-Message em vez do destino morto atual — depende da
+  Onda A e do handoff). **NÃO EXECUTADOS ainda.**
+- `PROMPT_TOGGLE_RESPONSIVIDADE_SECRETARIA_PRECHECK.md` (gerado 2026-09-19/20 via
+  `/prompt-generator`) — o toggle secretarIA/Precheck (`.prod-tabs`/`.prod-tab` em
+  `app/(site)/app/page.tsx:157-199` e `app/(site)/app/dashboard-shell.css:10-15`) não tem
+  nenhuma regra para telas estreitas; o único `@media (max-width:720px)` do arquivo (linha 96)
+  esconde `.uname` mas não toca o toggle. Decisão fechada com o dono em 2026-09-20: vira
+  ícone-only abaixo de ~480px, sem quebra de linha nem dropdown. **NÃO EXECUTADO.**
 
 `PROMPT_AUDIT_FRONTEND_FONTES_LGPD_BRAIN_FRONTEND.md` foi **executado em 2026-08-31** — ver
 `docs/CHECKPOINT_fontes_self_hosted.md`. As 7 famílias do Google saíram do `<link>` no layout
