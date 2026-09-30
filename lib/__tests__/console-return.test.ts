@@ -1,0 +1,136 @@
+import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import {
+  consoleReturnFor,
+  consoleReturnPath,
+  normalizeBrainMessageUrl,
+  returnToFromOrigem,
+  withConsoleOrigin,
+} from "../console-return";
+
+const BASE = "https://msg.example.com";
+
+describe("consoleReturnPath", () => {
+  it("goes to /anamneses/ only when the purchase carried PreCheck", () => {
+    expect(consoleReturnPath("precheck")).toBe("/anamneses/");
+    expect(consoleReturnPath(null)).toBe("/");
+    expect(consoleReturnPath("secretaria")).toBe("/");
+  });
+
+  it("never echoes the query value into the path", () => {
+    expect(consoleReturnPath("../../evil")).toBe("/");
+    expect(consoleReturnPath("//evil.com")).toBe("/");
+  });
+});
+
+describe("normalizeBrainMessageUrl", () => {
+  it.each([
+    [BASE, BASE],
+    [`${BASE}/`, BASE],
+    [`${BASE}///`, BASE],
+    ["http://localhost:3000", "http://localhost:3000"],
+  ])("normalizes %s", (raw, expected) => {
+    expect(normalizeBrainMessageUrl(raw)).toBe(expected);
+  });
+
+  it.each([
+    undefined,
+    null,
+    "",
+    "   ",
+    "msg.example.com",
+    "javascript:alert(1)",
+    "ftp://msg.example.com",
+    "https://user:pw@msg.example.com",
+    "https://msg.example.com/?x=1",
+    "https://msg.example.com/#frag",
+  ])("rejects %s", (raw) => {
+    expect(normalizeBrainMessageUrl(raw)).toBeNull();
+  });
+});
+
+describe("consoleReturnFor", () => {
+  it("redirects to the console home or /anamneses/", () => {
+    expect(consoleReturnFor({ origem: "console", produto: "precheck", baseUrl: BASE })).toEqual({
+      kind: "redirect",
+      href: `${BASE}/anamneses/`,
+    });
+    expect(consoleReturnFor({ origem: "console", produto: null, baseUrl: `${BASE}/` })).toEqual({
+      kind: "redirect",
+      href: `${BASE}/`,
+    });
+  });
+
+  it("stays on the page (with a link) when the env var is unset or invalid", () => {
+    for (const baseUrl of ["", undefined, "javascript:alert(1)"]) {
+      expect(consoleReturnFor({ origem: "console", produto: "precheck", baseUrl })).toEqual({
+        kind: "stay",
+        why: "no-base-url",
+      });
+    }
+  });
+
+  it("does nothing without origem=console (the ordinary cold-signup flow)", () => {
+    for (const origem of [null, "", "Console", "other", "//evil.com", "https://evil.com"]) {
+      expect(consoleReturnFor({ origem, produto: "precheck", baseUrl: BASE })).toEqual({
+        kind: "none",
+      });
+    }
+  });
+
+  it("builds the target only from the env base and a fixed path (no open redirect)", () => {
+    const back = consoleReturnFor({
+      origem: "console",
+      produto: "https://evil.com",
+      baseUrl: BASE,
+    });
+    expect(back).toEqual({ kind: "redirect", href: `${BASE}/` });
+  });
+});
+
+describe("returnToFromOrigem", () => {
+  it("only forwards the allowlisted keyword", () => {
+    expect(returnToFromOrigem("console")).toBe("console");
+    for (const v of [null, undefined, "", "Console", "https://evil.com", "console&x=1"]) {
+      expect(returnToFromOrigem(v)).toBeUndefined();
+    }
+  });
+});
+
+describe("withConsoleOrigin", () => {
+  it("carries origem=console into a safe next path, before the hash", () => {
+    expect(withConsoleOrigin("/#planos", "console")).toBe("/?origem=console#planos");
+    expect(withConsoleOrigin("/precos?x=1#planos", "console")).toBe(
+      "/precos?x=1&origem=console#planos",
+    );
+  });
+
+  it("leaves the route alone otherwise", () => {
+    expect(withConsoleOrigin("/#planos", null)).toBe("/#planos");
+    expect(withConsoleOrigin("/#planos", "other")).toBe("/#planos");
+    expect(withConsoleOrigin("/doctor/dashboard", "console")).toBe(
+      "/doctor/dashboard?origem=console",
+    );
+    expect(withConsoleOrigin("/?origem=console#planos", "console")).toBe("/?origem=console#planos");
+  });
+
+  it("never turns an unsafe route into something followable", () => {
+    expect(withConsoleOrigin("//evil.com", "console")).toBe("//evil.com");
+    expect(withConsoleOrigin("https://evil.com", "console")).toBe("https://evil.com");
+  });
+});
+
+describe("NEXT_PUBLIC_BRAIN_MESSAGE_URL", () => {
+  const read = (rel: string) => readFileSync(path.join(process.cwd(), rel), "utf8");
+
+  it("is an ARG/ENV pair in the Dockerfile with an empty default (the owner sets it at deploy)", () => {
+    const dockerfile = read("Dockerfile");
+    expect(dockerfile).toMatch(/^ARG NEXT_PUBLIC_BRAIN_MESSAGE_URL=\r?$/m);
+    expect(dockerfile).toMatch(/^ENV NEXT_PUBLIC_BRAIN_MESSAGE_URL=\$\{NEXT_PUBLIC_BRAIN_MESSAGE_URL\}\r?$/m);
+  });
+
+  it("is read through the literal process.env name Next inlines", () => {
+    expect(read("lib/console-return.ts")).toContain("process.env.NEXT_PUBLIC_BRAIN_MESSAGE_URL");
+  });
+});

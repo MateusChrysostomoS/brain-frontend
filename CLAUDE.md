@@ -5,6 +5,10 @@
 `docs/` é a fonte de verdade deste repo. Regra geral de quando/como atualizar (CHECKPOINT,
 âncoras estáveis) em `AI_WORKFLOW.md` — aqui só o que diverge, se houver.
 
+`/login?next=` (só caminho relativo da mesma origem, `lib/safe-next.ts`) e `PlanCheckoutCta` ciente de
+conta existente vinda do console (`?origem=console`, `lib/checkout-cta.ts`) — TASK B, 2026-09-29; detalhes
+em `Brain-Message-Frontend/docs/CHECKPOINT_brain_message_link_compra.md`.
+
 ## Prompts prontos para rodar
 
 Prompts de feature já roteirizados ficam em `TECH/BRAIN/z_prompts/` — convenção

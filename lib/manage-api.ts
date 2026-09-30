@@ -966,18 +966,24 @@ export async function createCheckoutSession(
   session: Session,
   plan: CatalogPlanId | string,
   addons?: (CatalogAddonId | string)[],
+  // Allowlisted keyword ("console" = come back to the Brain-Message portal after
+  // paying). brain-api builds the success URL; the client never sends a URL.
+  returnTo?: "console",
 ): Promise<string> {
   const data = await manageFetch<{ url: string }>(
     "/billing/checkout",
     {
       method: "POST",
-      body: JSON.stringify({ plan, ...(addons?.length ? { addons } : {}) }),
+      body: JSON.stringify({
+        plan,
+        ...(addons?.length ? { addons } : {}),
+        ...(returnTo ? { return_to: returnTo } : {}),
+      }),
     },
     session.token,
   );
   return data.url;
 }
-
 // MANAGE-API CALL SITE #7 — Stripe Billing Portal. POST /billing/portal (tenant
 // JWT). Returns the portal URL for a full-page redirect. Throws ManageApiError:
 // 409 `no_billing_account` (tenant never checked out — route them to checkout

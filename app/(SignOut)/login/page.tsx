@@ -1,7 +1,7 @@
 "use client";
 
 // Login (/login) — the unified Brain portal login. Authenticates against brain-api
-// (POST /auth/token), stores the JWT session, and routes to the /app dashboard.
+// (POST /auth/token), stores the JWT session, and routes to a safe ?next= path or the role dashboard.
 // Visual chrome is the ported PreCheck-design <AuthShell> — the CHROME only:
 // the mark it renders is Brain's, because this login serves admins, managers
 // and secretarIA-only clinics just as much as PreCheck ones. This file owns
@@ -12,6 +12,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 
 import { login } from "@/lib/manage-api";
+import { withConsoleOrigin } from "@/lib/console-return";
+import { postLoginRoute, safeNextPath } from "@/lib/safe-next";
 
 import { AuthShell } from "../_shared/AuthShell";
 import { PasswordField } from "../_shared/PasswordField";
@@ -56,11 +58,17 @@ function LoginInner() {
     try {
       // login() authenticates against brain-api and persists the session.
       const session = await login(email.trim(), password);
-      // Route by JWT role (RBAC task 3A): platform admins to the admin portal,
-      // doctor/manager (or legacy tenant_owner/tenant_staff, during the
-      // role-taxonomy transition) to the doctor portal.
+      // `?next=` (e.g. the Brain-Message console's "Ver planos" link, which
+      // sends `next=/#planos`) wins only when safeNextPath accepts it — a
+      // same-origin relative path. Otherwise route by JWT role (RBAC task 3A).
+      // Keep `origem=console` on a followed `next` (e.g. `/#planos`), so the plan click
+      // after login still returns to the Brain-Message portal. The role-home fallback
+      // (no safe next) is left untouched.
+      const next = safeNextPath(search.get("next"));
       router.push(
-        session.role === "admin" ? "/admin/dashboard" : "/doctor/dashboard",
+        next
+          ? withConsoleOrigin(next, search.get("origem"))
+          : postLoginRoute(session.role, null),
       );
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";

@@ -14,6 +14,12 @@
 //   (Feature 0), pre-tagged with `plan`/`catalogIds` via query params. The
 //   wizard owns the rest of the cold-signup flow (contact fields + the
 //   onboarding intake questionnaire) before it POSTs /public/signup-intents.
+//   EXCEPT a visitor who came from the Brain-Message console (`?origem=console`):
+//   they already have an account, so they go to /login?next=/#planos instead
+//   (lib/checkout-cta.ts). Read from window.location in the click handler — no
+//   useSearchParams, so no extra <Suspense> around every PriceCard.
+// - brain-api answers 409 `has_active_subscription` while TASK B's guard is on
+//   (a second subscription would replace the first); the copy says so.
 //
 // Also renders CheckoutTrialNotice right under the button — the pre-checkout
 // billing/trial disclosure, since this card is where both flows above start.
@@ -40,6 +46,8 @@ import {
   type CatalogAddonId,
   type CatalogPlanId,
 } from "@/lib/manage-api";
+import { returnToFromOrigem } from "@/lib/console-return";
+import { anonymousCheckoutRoute, checkoutErrorMessage } from "@/lib/checkout-cta";
 import { isPurchaseGated } from "../_lib/launch";
 import { CheckoutTrialNotice } from "./CheckoutTrialNotice";
 import { LaunchWaitlistModal } from "./LaunchWaitlistModal";
@@ -114,11 +122,11 @@ export function PlanCheckoutCta({
     // /cadastro, where registration then fails with email_already_registered.
     const session = getSession() ?? (await ensureSession());
     if (!session) {
-      // No account yet — hand off to the /cadastro wizard (contact fields +
-      // onboarding intake), which itself creates the signup intent + checkout
-      // session once it has collected everything.
-      const params = new URLSearchParams({ plan, catalog: catalogIds.join(",") });
-      router.push(`/cadastro?${params.toString()}`);
+      // New lead → the /cadastro wizard (it creates the signup intent + checkout
+      // session itself). A visitor from the console (`?origem=console`) already
+      // has an account → /login, then back to #planos.
+      const origem = new URLSearchParams(window.location.search).get("origem");
+      router.push(anonymousCheckoutRoute({ origem, plan, catalogIds }));
       return;
     }
     if (session.role === "admin") {
@@ -133,18 +141,20 @@ export function PlanCheckoutCta({
 
     setPending(true);
     try {
-      const url = await createCheckoutSession(session, plan, addons);
+      // `origem=console` survives /login (withConsoleOrigin) and is forwarded as the
+      // allowlisted `return_to`, so paying lands back in the Brain-Message portal.
+      const url = await createCheckoutSession(
+        session,
+        plan,
+        addons,
+        returnToFromOrigem(new URLSearchParams(window.location.search).get("origem")),
+      );
       window.location.assign(url);
       // Leave `pending` true — the browser is navigating away to Stripe.
     } catch (e) {
       const status = e instanceof ManageApiError ? e.status : 0;
-      setError(
-        status === 503
-          ? "Cobrança ainda não configurada. Fale com a Brain."
-          : status === 422
-            ? "Plano indisponível no momento."
-            : "Não foi possível iniciar o checkout. Tente novamente.",
-      );
+      const detail = e instanceof ManageApiError ? e.message : "";
+      setError(checkoutErrorMessage(status, detail));
       setPending(false);
     }
   }

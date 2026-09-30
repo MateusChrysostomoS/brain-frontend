@@ -55,6 +55,13 @@ ENV NEXT_PUBLIC_SECRETARIA_HUB_BASE_URL=${NEXT_PUBLIC_SECRETARIA_HUB_BASE_URL}
 #   does not exist. Do not "fix" an empty value by inventing a relative path.
 ARG NEXT_PUBLIC_SECRETARIA_APP_BASE_URL=https://secretaria-secretaria-frontend.cpux9k.easypanel.host
 ENV NEXT_PUBLIC_SECRETARIA_APP_BASE_URL=${NEXT_PUBLIC_SECRETARIA_APP_BASE_URL}
+# Origin of the Brain-Message portal (absolute http(s)). Used ONLY as a redirect target
+# by /checkout/sucesso after a purchase started from the console (?origem=console).
+# Empty default: the production value is set by the owner at deploy; empty = the page
+# stays put and shows a link (lib/console-return.ts).
+ARG NEXT_PUBLIC_BRAIN_MESSAGE_URL=
+ENV NEXT_PUBLIC_BRAIN_MESSAGE_URL=${NEXT_PUBLIC_BRAIN_MESSAGE_URL}
+
 # Fail the build loudly if the placeholder above was never replaced. Without this
 # guard an unreplaced "<host-...>" would bake an unreachable URL into the bundle:
 # hubConfigured() would flip to true, every hub fetch would fail, and the UI would

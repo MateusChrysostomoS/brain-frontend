@@ -10,6 +10,7 @@
 // round-trip in the same tab), so once ready this just routes into the portal; the
 // one-time onboarding-token exchange is only a FALLBACK for finishing checkout in a
 // different browser/tab that never got that session. Wrapped in Suspense because
+// Console purchases skip polling and return to the portal (lib/console-return.ts).
 // useSearchParams requires it (same pattern as app/(SignOut)/login/page.tsx).
 
 import { Suspense, useEffect, useState, type ReactNode } from "react";
@@ -26,6 +27,7 @@ import {
   saveSession,
   type Session,
 } from "@/lib/manage-api";
+import { BRAIN_MESSAGE_URL, consoleReturnFor, type ConsoleReturn } from "@/lib/console-return";
 import "../checkout.css";
 
 // Onde o médico realmente trabalha. O painel /dashboard deste projeto é uma cópia
@@ -59,8 +61,65 @@ export default function CheckoutSucessoPage() {
         </CheckoutShell>
       }
     >
-      <CheckoutSucessoInner />
+      <CheckoutSucessoRouter />
     </Suspense>
+  );
+}
+
+// A purchase that came from the Brain-Message console (`origem=console`) is an
+// EXISTING account paying for a product: there is no cold-signup intent, so the
+// onboarding-status poll below would get a 404. It skips that flow and goes back
+// to the portal instead. Every other arrival (cold signup, courtesy) runs the
+// original flow untouched.
+function CheckoutSucessoRouter() {
+  const searchParams = useSearchParams();
+  const back = consoleReturnFor({
+    origem: searchParams.get("origem"),
+    produto: searchParams.get("produto"),
+    baseUrl: BRAIN_MESSAGE_URL,
+  });
+  if (back.kind === "none") return <CheckoutSucessoInner />;
+  return <ConsoleReturn back={back} />;
+}
+
+function ConsoleReturn({ back }: { back: Exclude<ConsoleReturn, { kind: "none" }> }) {
+  const href = back.kind === "redirect" ? back.href : null;
+  useEffect(() => {
+    // replace(): the payment page must not be a back-button stop.
+    if (href) window.location.replace(href);
+  }, [href]);
+
+  return (
+    <CheckoutShell>
+      {href ? (
+        <>
+          <Spinner label="Pagamento recebido! Voltando ao portal de atendimento…" />
+          <div className="checkout-actions">
+            <a href={href} className="btn btn--primary">
+              Continuar para o portal
+            </a>
+          </div>
+        </>
+      ) : (
+        <>
+          <span className="checkout-icon" aria-hidden="true">
+            ✅
+          </span>
+          <h1 className="h-sec" style={{ fontSize: 22 }}>
+            Pagamento recebido!
+          </h1>
+          <p className="muted mt-s">
+            Sua assinatura está sendo ativada; pode levar alguns instantes. Volte ao portal de
+            atendimento para continuar.
+          </p>
+          <div className="checkout-actions">
+            <Link href="/doctor/dashboard" className="btn btn--outline">
+              Ir para o painel
+            </Link>
+          </div>
+        </>
+      )}
+    </CheckoutShell>
   );
 }
 

@@ -1,11 +1,11 @@
 ﻿{
     "metadata_schema":  "brain.graphify-metadata/v1",
     "repository":  "brain-frontend",
-    "repository_path":  "C:\\TECH\\BRAIN\\brain-frontend",
-    "branch":  "main",
-    "commit":  "76ee1ac8cd3f48142c610b1d6b6fa25fda475015",
-    "generated_at":  "2026-09-16T17:53:36.4456606Z",
+    "repository_path":  "C:\\TECH\\BRAIN-worktrees\\TASK-012\\brain-frontend",
+    "branch":  "task/TASK-012-brain-frontend",
+    "commit":  "82de0357515c85d656f29758d9a175eae1d044a6",
+    "generated_at":  "2026-09-30T00:47:35.9911700Z",
     "graphify_version":  "0.9.5",
     "graph_schema":  "networkx-node-link (unversioned upstream)",
-    "graph_sha256":  "b3bcbd0943e6f86e5de40b1f676659b16969d96c3fed4f4c1201956e8df8c834"
+    "graph_sha256":  "6cd0875b3978ce3ca8f35daab5e467230ada8f1c3ac54424dabede4509d77a83"
 }
