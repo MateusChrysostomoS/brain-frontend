@@ -1,6 +1,6 @@
 # Add product to the subscription - UI (TASK-015)
 
-State: implemented locally; no commit, push or deployment. Last validation: 2026-09-30.
+State: TASK-015 integrated into `main` at the owner's request; no deployment. Last validation: 2026-09-30.
 
 PlanCheckoutCta preserves the launch gate and session recovery. A clinic with exactly one product and an active subscription sees the add-product label on the other product card. createEntitlementReader shares the initial read by tenant/token (single-flight, five-second TTL, bounded cache); the click reads fresh entitlement before purchasing. past_due and trialing block the addition. Other statuses use checkout. A courtesy clinic receives no_active_subscription from the backend and falls back to checkout.
 
@@ -8,7 +8,7 @@ AddProductDialog displays the exact backend charge before confirmation, without 
 
 addProductToSubscription sends return_to=console on preview and execution. The success button passes return_query to consoleReturnRoute, which rebuilds /checkout/sucesso from allowlisted values only. Ordinary purchases return to /app. getEntitlements maps precheck_plan; billing uses describePlans to show both plans.
 
-Validation: TypeScript exit 0; 293 tests across 16 files. The final static build passed after the JSX label correction, including /, /app/billing and /checkout/sucesso. Evidence: C:/TECH/BRAIN/tasks/TASK-015/frontend-{typecheck,test,build}.txt. Root confirmed price/error/happy-return behavior with synthetic browser stubs. Root also confirmed the final label in desktop/mobile snapshots.
+Validation: TypeScript exit 0; 293 tests across 16 files on the task branch, **296 after merging the newer console-return default from `main`**. The final static build passed after the merge, including /, /app/billing and /checkout/sucesso. Evidence: C:/TECH/BRAIN/tasks/TASK-015/frontend-{typecheck,test,build}.txt and the integration run. Root confirmed price/error/happy-return behavior with synthetic browser stubs and the final label in desktop/mobile snapshots.
 
 The browser caught a JSX integration omission after helper tests passed: the cardDecision state was ignored by the button. A regression test now renders the actual PlanCheckoutCta through react-dom/server with hydrated decision state and checks the visible label (frontend-red-render-label.txt -> frontend-green-render-label.txt).
 
@@ -32,4 +32,4 @@ Final regression evidence: frontend-red-busy-focus.txt -> frontend-green-busy-fo
 
 The next agent confirmed that implementation and the single independent-review fix pass had already finished. Fresh gates passed: TypeScript, 293 tests and static export build (resume-final-frontend-{tsc,test,build}.log in TASK-015). Vercel's agent-browser CLI tested that exported build locally with synthetic API responses installed before navigation: displayed R$12.50 preview, unknown renewal total, card refusal requiring a new preview, in-progress retry preserving the exact UUID/quote/charge, successful console return, already-present preview returning without confirmation, background inertness, busy Tab/Shift+Tab/Escape containment and exact CTA restoration. No browser page errors. Evidence: agent-browser-qa.log and agent-browser-{desktop,mobile-decline,mobile-busy}.png.
 
-Chromium's native modal can move focus to browser chrome (activeElement BODY) at a Tab boundary; underlying page controls remain inert and absent from the accessibility tree. Busy state keeps focus in the dialog. The QA harness waits for smooth scrolling and rendering before pointer actions and explicitly reloads between same-URL scenarios. The Windows application policy blocked the downloaded Chrome, so QA used the installed Chrome. This is local fixture evidence; no hosted Vercel preview, real Stripe request, commit or deployment was performed.
+Chromium's native modal can move focus to browser chrome (activeElement BODY) at a Tab boundary; underlying page controls remain inert and absent from the accessibility tree. Busy state keeps focus in the dialog. The QA harness waits for smooth scrolling and rendering before pointer actions and explicitly reloads between same-URL scenarios. The Windows application policy blocked the downloaded Chrome, so QA used the installed Chrome. This is local fixture evidence; no hosted Vercel preview, real Stripe request or deployment was performed. The task was subsequently committed and merged into `main`.
