@@ -27,9 +27,9 @@ export function anonymousCheckoutRoute(input: {
 
 // `detail` is ManageApiError.message — FastAPI's `detail` string (a stable code).
 export function checkoutErrorMessage(status: number, detail: string): string {
-  // TEMPORARY until TASK C (in-place upgrade) removes brain-api's guard.
+  // A live subscription already exists; decideCta normally routes to add-product first.
   if (status === 409 && detail === "has_active_subscription") {
-    return "Sua clínica já tem uma assinatura. Fale com a Brain para adicionar o PreCheck.";
+    return "Sua clínica já tem uma assinatura ativa. Recarregue a página para adicionar outro produto a ela.";
   }
   if (status === 403 && detail === "test_tenant_billing_disabled") {
     return "Esta é uma clínica de teste: a contratação pelo site está desativada.";

@@ -5,7 +5,9 @@
 // session checks, the authenticated Stripe Checkout call, and error/pending UI
 // live here.
 //
-// Two flows share this one button:
+// Purchase flows share this one button:
+// - Exactly one product and the other product card -> AddProductDialog: preview, then
+//   add to the existing subscription. A courtesy clinic falls back to checkout.
 // - Session exists (logged-in tenant) → unchanged from before: POST
 //   /billing/checkout via createCheckoutSession, then a full-page redirect to
 //   the returned Stripe Checkout URL. Admins (no tenant to bill) get an inline
@@ -35,22 +37,33 @@
 // it looks at the session at all, and the trial notice is suppressed (see
 // below). Nothing about the card's own markup — prices, copy, layout — changes
 // either way.
-import { useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   createCheckoutSession,
   ensureSession,
   getSession,
+  getEntitlements,
   ManageApiError,
   type CatalogAddonId,
   type CatalogPlanId,
+  type Session,
 } from "@/lib/manage-api";
-import { returnToFromOrigem } from "@/lib/console-return";
+import { consoleReturnRoute, returnToFromOrigem } from "@/lib/console-return";
+import { decideCta, type CtaDecision, type ProductFamily } from "@/lib/add-product";
+import { createEntitlementReader } from "@/lib/add-product-entitlement";
+import { AddProductDialog } from "./AddProductDialog";
 import { anonymousCheckoutRoute, checkoutErrorMessage } from "@/lib/checkout-cta";
 import { isPurchaseGated } from "../_lib/launch";
 import { CheckoutTrialNotice } from "./CheckoutTrialNotice";
 import { LaunchWaitlistModal } from "./LaunchWaitlistModal";
+
+const readCardEntitlement = createEntitlementReader(async (key: string) => {
+  const session = getSession();
+  if (!session || `${session.tenantId}:${session.token}` !== key) return null;
+  return getEntitlements(session);
+});
 
 export type PlanCheckoutCtaProps = {
   plan: CatalogPlanId;
@@ -89,11 +102,14 @@ export function PlanCheckoutCta({
   catalogIds,
 }: PlanCheckoutCtaProps) {
   const router = useRouter();
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
+  const [cardDecision, setCardDecision] = useState<CtaDecision>({ kind: "checkout" });
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [adminNotice, setAdminNotice] = useState(false);
   const [waitlistOpen, setWaitlistOpen] = useState(false);
+  const [addProduct, setAddProduct] = useState<{ product: ProductFamily; session: Session; returnTo?: "console" } | null>(null);
 
   // The authenticated path bills `plan` itself, which may not appear in the
   // anonymous-flow `catalogIds` list — include it so CheckoutTrialNotice sees
@@ -104,6 +120,22 @@ export function PlanCheckoutCta({
   // product being bought, so a PreCheck card checks out normally while a
   // secretarIA one still collects a lead (app/(site)/_lib/launch.ts).
   const gated = isPurchaseGated(purchaseCatalogIds);
+
+  useEffect(() => {
+    if (gated) return;
+    let canceled = false;
+    void (async () => {
+      const session = getSession() ?? await ensureSession();
+      if (!session?.tenantId || session.role === "admin") return;
+      try {
+        const ent = await readCardEntitlement(`${session.tenantId}:${session.token}`);
+        if (!canceled) setCardDecision(decideCta(ent, plan));
+      } catch {
+        // The public card remains available; the click reads again before purchasing.
+      }
+    })();
+    return () => { canceled = true; };
+  }, [gated, plan]);
 
   async function handleClick() {
     setError(null);
@@ -140,6 +172,33 @@ export function PlanCheckoutCta({
     }
 
     setPending(true);
+    let decision: CtaDecision = { kind: "checkout" };
+    try {
+      decision = decideCta(await getEntitlements(session), plan);
+    } catch {
+      // The backend still refuses a second subscription if this read is unavailable.
+      decision = { kind: "checkout" };
+    }
+    setCardDecision(decision);
+    if (decision.kind === "blocked") {
+      setError(decision.message);
+      setPending(false);
+      return;
+    }
+    if (decision.kind === "add-product") {
+      setAddProduct({
+        product: decision.product,
+        session,
+        returnTo: returnToFromOrigem(new URLSearchParams(window.location.search).get("origem")),
+      });
+      setPending(false);
+      return;
+    }
+    await startCheckout(session);
+  }
+
+  async function startCheckout(session: Session) {
+    setPending(true);
     try {
       // `origem=console` survives /login (withConsoleOrigin) and is forwarded as the
       // allowlisted `return_to`, so paying lands back in the Brain-Message portal.
@@ -162,12 +221,13 @@ export function PlanCheckoutCta({
   return (
     <div>
       <button
+        ref={triggerRef}
         type="button"
         className={"btn btn--block" + (featured ? " btn--primary" : " btn--outline")}
         onClick={handleClick}
         disabled={pending}
       >
-        {pending ? "Abrindo checkout…" : label}
+        {pending ? "Verificando assinatura…" : cardDecision.kind === "add-product" ? "Adicionar à minha assinatura" : label}
       </button>
 
       {/* Pre-checkout billing disclosure — must be visible before Stripe's
@@ -206,6 +266,24 @@ export function PlanCheckoutCta({
           and portals to <body> when open) so the launch flip is a one-line
           change in _lib/launch.ts and nothing here. `planHint` records which
           card was clicked — same id list the purchase would have carried. */}
+      {addProduct && (
+        <AddProductDialog
+          open
+          product={addProduct.product}
+          plan={plan}
+          addons={addons}
+          session={addProduct.session}
+          returnTo={addProduct.returnTo}
+          returnFocusTo={triggerRef.current}
+          onClose={() => setAddProduct(null)}
+          onFallbackToCheckout={() => {
+            const session = addProduct.session;
+            setAddProduct(null);
+            void startCheckout(session);
+          }}
+          onDone={(returnQuery) => router.push(consoleReturnRoute(returnQuery) ?? "/app")}
+        />
+      )}
       <LaunchWaitlistModal
         open={waitlistOpen}
         onClose={() => setWaitlistOpen(false)}

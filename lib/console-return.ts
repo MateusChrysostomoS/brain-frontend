@@ -74,3 +74,20 @@ export function withConsoleOrigin(route: string, origem: string | null | undefin
   if (/[?&]origem=/.test(head)) return route;
   return `${head}${head.includes("?") ? "&" : "?"}origem=${CONSOLE_ORIGIN}${tail}`;
 }
+
+export const CHECKOUT_SUCCESS_PATH = "/checkout/sucesso";
+
+// The add-product dialog finishes without a Stripe redirect, so it hands the buyer to the same
+// /checkout/sucesso return page the checkout uses. `returnQuery` comes from brain-api
+// (`return_query`, built server-side) but is still REBUILT here from allowlisted keys/values
+// only: nothing else in it can reach the URL. Null = keep the ordinary behaviour.
+export function consoleReturnRoute(returnQuery: string | null | undefined): string | null {
+  if (typeof returnQuery !== "string" || returnQuery.length === 0 || returnQuery.length > 64) {
+    return null;
+  }
+  const params = new URLSearchParams(returnQuery);
+  if (params.get("origem") !== CONSOLE_ORIGIN) return null;
+  const next = new URLSearchParams({ origem: CONSOLE_ORIGIN });
+  if (params.get("produto") === PRECHECK_PRODUCT) next.set("produto", PRECHECK_PRODUCT);
+  return `${CHECKOUT_SUCCESS_PATH}?${next.toString()}`;
+}

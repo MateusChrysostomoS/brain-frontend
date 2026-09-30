@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import {
   consoleReturnFor,
+  consoleReturnRoute,
   consoleReturnPath,
   normalizeBrainMessageUrl,
   returnToFromOrigem,
@@ -132,5 +133,27 @@ describe("NEXT_PUBLIC_BRAIN_MESSAGE_URL", () => {
 
   it("is read through the literal process.env name Next inlines", () => {
     expect(read("lib/console-return.ts")).toContain("process.env.NEXT_PUBLIC_BRAIN_MESSAGE_URL");
+  });
+});
+
+describe("consoleReturnRoute", () => {
+  it("rebuilds the success route from the server's return_query", () => {
+    expect(consoleReturnRoute("origem=console&produto=precheck")).toBe(
+      "/checkout/sucesso?origem=console&produto=precheck",
+    );
+    expect(consoleReturnRoute("origem=console")).toBe("/checkout/sucesso?origem=console");
+  });
+
+  it("is null unless origem=console (the ordinary /app behaviour stays)", () => {
+    for (const q of [null, undefined, "", "origem=other", "produto=precheck", "origem=https://evil.com"]) {
+      expect(consoleReturnRoute(q)).toBeNull();
+    }
+  });
+
+  it("keeps only allowlisted keys and values (no open redirect)", () => {
+    expect(consoleReturnRoute("origem=console&produto=../../evil&next=//evil.com")).toBe(
+      "/checkout/sucesso?origem=console",
+    );
+    expect(consoleReturnRoute("origem=console".padEnd(200, "x"))).toBeNull();
   });
 });

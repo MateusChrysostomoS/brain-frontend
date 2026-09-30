@@ -9,6 +9,8 @@
 conta existente vinda do console (`?origem=console`, `lib/checkout-cta.ts`) — TASK B, 2026-09-29; detalhes
 em `Brain-Message-Frontend/docs/CHECKPOINT_brain_message_link_compra.md`.
 
+TASK C: add-product CTA/dialog, console return and dual-plan labels; local state and validation in `docs/CHECKPOINT_add_product_ui.md`.
+
 ## Prompts prontos para rodar
 
 Prompts de feature já roteirizados ficam em `TECH/BRAIN/z_prompts/` — convenção
