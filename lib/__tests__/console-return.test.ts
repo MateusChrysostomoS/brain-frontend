@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import {
@@ -124,9 +124,43 @@ describe("withConsoleOrigin", () => {
 describe("NEXT_PUBLIC_BRAIN_MESSAGE_URL", () => {
   const read = (rel: string) => readFileSync(path.join(process.cwd(), rel), "utf8");
 
-  it("is an ARG/ENV pair in the Dockerfile with an empty default (the owner sets it at deploy)", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  });
+
+  async function returnWithBuildValue(value: string | undefined) {
+    vi.stubEnv("NEXT_PUBLIC_BRAIN_MESSAGE_URL", value);
+    vi.resetModules();
+    const module = await import("../console-return");
+    return module.consoleReturnFor({ origem: "console", produto: "precheck", baseUrl: module.BRAIN_MESSAGE_URL });
+  }
+
+  it("returns a PreCheck purchase to the verified production console when no override is set", async () => {
+    expect(await returnWithBuildValue(undefined)).toEqual({
+      kind: "redirect",
+      href: "https://precheckv2-brain-message-frontend.cpux9k.easypanel.host/anamneses/",
+    });
+  });
+
+  it("preserves an explicitly empty override as the return kill switch", async () => {
+    expect(await returnWithBuildValue("")).toEqual({ kind: "stay", why: "no-base-url" });
+  });
+
+  it("uses a custom console origin when supplied at build time", async () => {
+    expect(await returnWithBuildValue("https://qa.example.com")).toEqual({
+      kind: "redirect", href: "https://qa.example.com/anamneses/",
+    });
+  });
+
+  it("returns a purchase to production with the Docker build default", async () => {
     const dockerfile = read("Dockerfile");
-    expect(dockerfile).toMatch(/^ARG NEXT_PUBLIC_BRAIN_MESSAGE_URL=\r?$/m);
+    const value = dockerfile.match(/^ARG NEXT_PUBLIC_BRAIN_MESSAGE_URL=(.*)\r?$/m)?.[1].trim();
+    expect(value).toBeDefined();
+    expect(await returnWithBuildValue(value)).toEqual({
+      kind: "redirect",
+      href: "https://precheckv2-brain-message-frontend.cpux9k.easypanel.host/anamneses/",
+    });
     expect(dockerfile).toMatch(/^ENV NEXT_PUBLIC_BRAIN_MESSAGE_URL=\$\{NEXT_PUBLIC_BRAIN_MESSAGE_URL\}\r?$/m);
   });
 

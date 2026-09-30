@@ -9,6 +9,9 @@
 conta existente vinda do console (`?origem=console`, `lib/checkout-cta.ts`) — TASK B, 2026-09-29; detalhes
 em `Brain-Message-Frontend/docs/CHECKPOINT_brain_message_link_compra.md`.
 
+Correção pós-QA do retorno ao console: default de produção verificado no Docker/build,
+override vazio preservado; validação e publicação em `docs/CHECKPOINT_console_return_default.md`.
+
 ## Prompts prontos para rodar
 
 Prompts de feature já roteirizados ficam em `TECH/BRAIN/z_prompts/` — convenção

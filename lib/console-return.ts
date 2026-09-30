@@ -11,9 +11,11 @@
 import { CONSOLE_ORIGIN } from "./checkout-cta";
 import { safeNextPath } from "./safe-next";
 
-// Build-time (Dockerfile ARG/ENV pair). Empty/absent → stay on the page with a
-// link; the production value is the owner's to set at deploy.
-export const BRAIN_MESSAGE_URL: string = process.env.NEXT_PUBLIC_BRAIN_MESSAGE_URL ?? "";
+// Build-time (Dockerfile ARG/ENV pair). Default verified by production QA.
+// An explicitly empty override still disables the automatic return.
+export const BRAIN_MESSAGE_URL: string =
+  process.env.NEXT_PUBLIC_BRAIN_MESSAGE_URL ??
+  "https://precheckv2-brain-message-frontend.cpux9k.easypanel.host";
 
 export const PRECHECK_PRODUCT = "precheck";
 export const CONSOLE_HOME_PATH = "/";

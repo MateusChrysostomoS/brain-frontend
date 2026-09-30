@@ -57,9 +57,9 @@ ARG NEXT_PUBLIC_SECRETARIA_APP_BASE_URL=https://secretaria-secretaria-frontend.c
 ENV NEXT_PUBLIC_SECRETARIA_APP_BASE_URL=${NEXT_PUBLIC_SECRETARIA_APP_BASE_URL}
 # Origin of the Brain-Message portal (absolute http(s)). Used ONLY as a redirect target
 # by /checkout/sucesso after a purchase started from the console (?origem=console).
-# Empty default: the production value is set by the owner at deploy; empty = the page
-# stays put and shows a link (lib/console-return.ts).
-ARG NEXT_PUBLIC_BRAIN_MESSAGE_URL=
+# Default verified in production QA. Override at build time for another deployment;
+# an explicitly empty value keeps the fallback page (lib/console-return.ts).
+ARG NEXT_PUBLIC_BRAIN_MESSAGE_URL=https://precheckv2-brain-message-frontend.cpux9k.easypanel.host
 ENV NEXT_PUBLIC_BRAIN_MESSAGE_URL=${NEXT_PUBLIC_BRAIN_MESSAGE_URL}
 
 # Fail the build loudly if the placeholder above was never replaced. Without this
