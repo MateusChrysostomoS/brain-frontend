@@ -1,0 +1,5 @@
+.add-product-dialog::backdrop {
+  background: rgba(5, 8, 12, 0.55);
+  backdrop-filter: blur(5px);
+}
+.add-product-dialog { margin: auto; }

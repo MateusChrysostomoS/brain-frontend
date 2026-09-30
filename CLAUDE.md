@@ -11,6 +11,7 @@ em `Brain-Message-Frontend/docs/CHECKPOINT_brain_message_link_compra.md`.
 
 Correção pós-QA do retorno ao console: default de produção verificado no Docker/build,
 override vazio preservado; validação e publicação em `docs/CHECKPOINT_console_return_default.md`.
+TASK C: add-product CTA/dialog, console return and dual-plan labels; local state and validation in `docs/CHECKPOINT_add_product_ui.md`.
 
 ## Prompts prontos para rodar
 

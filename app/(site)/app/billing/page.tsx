@@ -23,6 +23,7 @@ import {
   type Entitlements,
   type Session,
 } from "@/lib/manage-api";
+import { describePlans } from "@/lib/add-product";
 import { PrecheckBillingSection } from "./_components/PrecheckBillingSection";
 import "../dashboard-shell.css";
 import "./billing.css";
@@ -35,6 +36,7 @@ import "./billing.css";
 
 const PLAN_LABELS: Record<string, string> = {
   precheck: "PreCheck", // legacy id — brain-api still resolves it server-side
+  precheck_start: "PreCheck Start",
   precheck_basic: "PreCheck Basic",
   precheck_advanced: "PreCheck Advanced",
   secretaria_basico: "secretarIA Básico",
@@ -163,7 +165,7 @@ export default function BillingPage() {
 
   // --- Derived display values ---
   const statusVisual = ent ? humanizeStatus(ent.status) : null;
-  const planLabel = ent ? (PLAN_LABELS[ent.plan] ?? ent.plan) : "";
+  const planLabel = ent ? describePlans(ent.plan, ent.precheckPlan, PLAN_LABELS) : "";
   const activeAddons = ent
     ? Object.entries(ent.addons).filter(([, active]) => active)
     : [];

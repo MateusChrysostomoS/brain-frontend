@@ -9,6 +9,7 @@
 //   GET  /auth/me        -> identity (user + tenant)          (getMe)
 //   GET  /entitlements   -> resolved product access + plan    (getEntitlements)
 //   POST /billing/checkout -> Stripe Checkout URL             (createCheckoutSession)
+//   POST /billing/add-product -> add the other product (addProductToSubscription)
 //   POST /billing/portal   -> Stripe Billing Portal URL       (createPortalSession)
 //   POST /doctor/secretaria/hub-token -> secretarIA hub token (getSecretariaHubToken)
 //   POST /demo-requests  -> lead-capture confirmation         (submitDemoRequest)
@@ -91,6 +92,8 @@ export type Entitlements = {
   precheck: boolean;
   secretaria: boolean;
   plan: string; // catalog plan id (legacy rows may carry an alias like "brain-completo")
+  // PreCheck tier when the clinic owns both products; otherwise null.
+  precheckPlan: string | null;
   clinicName: string;
   status: string; // "active" | "trialing" | "past_due" | "canceled" | "inactive"
   secretariaTier: string | null; // "basico" | null (single tier since the 2026-07-22 catalog collapse)
@@ -574,6 +577,7 @@ export type EntitlementResponse = {
   clinic_name: string;
   products: { precheck: boolean; secretaria: boolean };
   plan: string;
+  precheck_plan?: string | null;
   secretaria_tier?: string | null;
   status: string;
   addons: Record<string, unknown>;
@@ -608,6 +612,7 @@ export async function getEntitlements(session: Session): Promise<Entitlements> {
     precheck: data.products.precheck,
     secretaria: data.products.secretaria,
     plan: data.plan,
+    precheckPlan: data.precheck_plan ?? null,
     clinicName: data.clinic_name,
     status: data.status,
     secretariaTier: data.secretaria_tier ?? null,
@@ -995,6 +1000,59 @@ export async function createPortalSession(session: Session): Promise<string> {
     session.token,
   );
   return data.url;
+}
+
+
+// What adding a product costs, from POST /billing/add-product (TASK C). Preview: the exact
+// Stripe numbers (`amount_due_now_cents` = charged now, proration; `next_invoice_*` = the next
+// renewal). Executed: `amount_due_now_cents` = what the update's invoice collected.
+export type AddProductCharge = {
+  currency: string;
+  amount_due_now_cents: number | null;
+  next_invoice_cents: number | null;
+  next_invoice_date: string | null;
+};
+
+export type AddProductResult = {
+  status: "preview" | "added" | "already_present";
+  product: string;
+  charge: AddProductCharge | null;
+  entitlement: EntitlementResponse | null;
+  return_query?: string | null;
+  quote_token?: string | null;
+};
+
+// MANAGE-API CALL SITE #12 — add the OTHER product to the existing subscription.
+// POST /billing/add-product (Bearer, manager/owner only). `confirm: false` is a read-only
+// preview; `confirm: true` executes and REQUIRES `idempotencyKey` (a UUID generated per attempt;
+// reuse it only when the outcome is unknown — network/5xx). Throws ManageApiError with the
+// backend's stable `detail` as `.message`: 403 billing_role_required | product_not_launched |
+// test_tenant_billing_disabled; 409 no_active_subscription | subscription_past_due |
+// subscription_trialing | product_already_active | payment_action_required |
+// payment_method_required | add_product_in_progress; 402 payment_failed; 422; 502; 503.
+// `return_to` is an allowlisted keyword; brain-api builds `return_query`.
+export async function addProductToSubscription(
+  session: Session,
+  body: {
+    product: "precheck" | "secretaria";
+    plan?: string;
+    addons?: string[];
+    confirm: boolean;
+    return_to?: "console";
+    expected_charge?: AddProductCharge;
+    quote_token?: string;
+  },
+  idempotencyKey?: string,
+): Promise<AddProductResult> {
+  return manageFetch<AddProductResult>(
+    "/billing/add-product",
+    {
+      method: "POST",
+      body: JSON.stringify(body),
+      ...(idempotencyKey ? { headers: { "Idempotency-Key": idempotencyKey } } : {}),
+    },
+    session.token,
+  );
 }
 
 // Result of the PreCheck SSO handoff: a PreCheck-compatible token + its lifetime (s).

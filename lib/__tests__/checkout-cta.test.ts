@@ -38,7 +38,7 @@ describe("anonymousCheckoutRoute", () => {
 describe("checkoutErrorMessage", () => {
   it("explains an existing subscription (409 has_active_subscription)", () => {
     expect(checkoutErrorMessage(409, "has_active_subscription")).toBe(
-      "Sua clínica já tem uma assinatura. Fale com a Brain para adicionar o PreCheck.",
+      "Sua clínica já tem uma assinatura ativa. Recarregue a página para adicionar outro produto a ela.",
     );
   });
 
