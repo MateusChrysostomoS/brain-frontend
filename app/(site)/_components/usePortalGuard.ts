@@ -47,7 +47,7 @@ export function usePortalGuard(allowed: string[]): {
       if (!allowed.includes(current.role)) {
         // Right user, wrong portal — route to the home their role can use.
         router.replace(
-          current.role === "admin" ? "/admin/dashboard" : "/doctor/dashboard",
+          current.role === "admin" ? "/admin/dashboard" : "/doctor/perfil",
         );
         return;
       }

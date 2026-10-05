@@ -1,0 +1,7 @@
+/* Keep subscription and account actions readable on narrow clinic screens. */
+@media (max-width: 480px) {
+  .clinic-account .portal-wordmark,
+  .clinic-account .portal-avatar { display: none; }
+  .clinic-account .portal-header { height: auto; min-height: 64px; flex-wrap: wrap; padding-block: 10px; }
+  .clinic-account .portal-header-right { flex-wrap: wrap; }
+}

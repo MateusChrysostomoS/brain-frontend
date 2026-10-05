@@ -59,14 +59,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   // Enter the doctor portal as the demo clinic's doctor. On success the session is now a
-  // tenant token, so /doctor/dashboard's own guard passes; on 401 the admin token expired.
+  // tenant token, so /doctor/perfil's own guard passes; on 401 the admin token expired.
   async function enterDoctorModeHandler() {
     if (!session) return;
     setSwitchError(null);
     setSwitching(true);
     try {
       await enterDoctorMode(session);
-      router.push("/doctor/dashboard");
+      router.push("/doctor/perfil");
     } catch (error) {
       if (error instanceof ManageApiError && error.status === 401) {
         clearSession();

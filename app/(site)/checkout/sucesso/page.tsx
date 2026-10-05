@@ -20,22 +20,13 @@ import { BrandGlyph } from "../../_components/BrandGlyph";
 import {
   exchangeOnboardingToken,
   getOnboardingStatus,
-  getPrecheckSsoToken,
   ensureSession,
   getSession,
   ManageApiError,
   saveSession,
-  type Session,
 } from "@/lib/manage-api";
-import { BRAIN_MESSAGE_URL, consoleReturnFor, type ConsoleReturn } from "@/lib/console-return";
+import { BRAIN_MESSAGE_URL, consoleReturnFor, normalizeBrainMessageUrl, type ConsoleReturn } from "@/lib/console-return";
 import "../checkout.css";
-
-// Onde o médico realmente trabalha. O painel /dashboard deste projeto é uma cópia
-// portada do PreCheck e está em vias de ser aposentada — todo acesso ao produto
-// passa a ser no site oficial.
-const PRECHECK_APP_URL = (
-  process.env.NEXT_PUBLIC_PRECHECK_URL || "https://precheck.com.br"
-).replace(/\/$/, "");
 
 const POLL_INTERVAL_MS = 2000;
 const MAX_POLL_MS = 120_000; // ~2 minutes, then show the "taking longer" state
@@ -49,8 +40,7 @@ type ViewState =
   | "timeout"
   | "ready-secretaria"
   | "ready-already-claimed"
-  | "ready-precheck"
-  | "ready-precheck-pending";
+  | "ready-portal";
 
 export default function CheckoutSucessoPage() {
   return (
@@ -113,8 +103,8 @@ function ConsoleReturn({ back }: { back: Exclude<ConsoleReturn, { kind: "none" }
             atendimento para continuar.
           </p>
           <div className="checkout-actions">
-            <Link href="/doctor/dashboard" className="btn btn--outline">
-              Ir para o painel
+            <Link href="/app/billing" className="btn btn--outline">
+              Gerenciar assinatura
             </Link>
           </div>
         </>
@@ -127,11 +117,7 @@ function CheckoutSucessoInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
-  // Cortesia: veio de um cupom resgatado, não de um pagamento. Não existe
-  // Checkout Session para consultar — a clínica JÁ está ativa quando esta tela
-  // abre —, então o polling é pulado e vamos direto ao handoff, que é o mesmo
-  // do caminho pago (inclusive o retry do 409 enquanto o bridge do PreCheck
-  // ainda não gravou precheck_account_links).
+  // Courtesy activation is already complete and has no Stripe session to poll.
   const cortesia = searchParams.get("courtesy") === "1";
 
   const [view, setView] = useState<ViewState>(
@@ -147,12 +133,8 @@ function CheckoutSucessoInner() {
     // the `if (!sessionId) return` narrowing into nested function scopes.
     const sid: string = sessionId ?? "";
 
-    // DUAS flags, de propósito. `cancelled` significa "pare de fazer POLL" e é
-    // ligada assim que o status resolve; `unmounted` significa "o componente foi
-    // embora, não toque em mais nada". Enquanto era uma flag só, o trabalho que
-    // roda DEPOIS do polling terminar (o handoff de SSO abaixo) via a flag já
-    // ligada por stop() e abortava antes da primeira tentativa — a tela ficava
-    // presa em "abrindo o painel" para sempre.
+    // Stop polling separately from the component lifetime: session restoration
+    // continues after a ready status, but never after the page unmounts.
     let cancelled = false;
     let unmounted = false;
     let busy = false; // guards against overlapping ticks if a fetch is slow
@@ -163,43 +145,11 @@ function CheckoutSucessoInner() {
       clearInterval(intervalId);
     }
 
-    // Troca a sessão do brain por uma sessão do PreCheck e entra no dashboard.
-    //
-    // Há uma CORRIDA real aqui: `onboarding-status` vira "ready" assim que o
-    // entitlement é ativado, e só DEPOIS o webhook dispara o bridge que cria a
-    // clínica e grava `precheck_account_links`. Enquanto essa linha não existe,
-    // POST /sso/precheck/token responde 409 `precheck_account_not_linked` — que
-    // não é erro, é "ainda não". Por isso o 409 é retentado com espera crescente
-    // em vez de virar tela de falha; qualquer outro erro é terminal.
-    async function enterPrecheck(session: Session) {
-      const esperas = [0, 1000, 2000, 4000, 8000];
-      for (const espera of esperas) {
-        if (espera > 0) await new Promise((r) => setTimeout(r, espera));
-        if (unmounted) return;
-        try {
-          const { token } = await getPrecheckSsoToken(session);
-          // O produto é o PreCheck; o Brain é o caixa. Mandamos o médico para o
-          // site oficial em vez do painel embutido aqui.
-          //
-          // O token viaja no FRAGMENTO (#), nunca na query: o que vem depois do #
-          // não é enviado ao servidor, então não entra em log de acesso nem vaza
-          // no Referer. `localStorage` não cruza domínios — é assim que a sessão
-          // atravessa de brainai.com.br para precheck.com.br. A rota /sso de lá
-          // guarda o token e limpa a URL na chegada.
-          window.location.replace(
-            `${PRECHECK_APP_URL}/sso#token=${encodeURIComponent(token)}`,
-          );
-          return;
-        } catch (err) {
-          const naoLigadoAinda =
-            err instanceof ManageApiError && err.status === 409;
-          if (!naoLigadoAinda) break;
-        }
-      }
-      // O provisionamento não ficou pronto a tempo (ou falhou). A conta e o
-      // pagamento estão de pé — o bridge retenta sozinho no primeiro load do
-      // portal —, então mandamos o cliente para lá em vez de prometer contato.
-      if (!unmounted) setView("ready-precheck-pending");
+    // The unified portal owns clinical access and its own session restoration.
+    function enterPortal() {
+      const base = normalizeBrainMessageUrl(BRAIN_MESSAGE_URL);
+      if (base) window.location.replace(base + "/");
+      else router.replace("/app/billing");
     }
 
     async function tick() {
@@ -217,55 +167,25 @@ function CheckoutSucessoInner() {
 
         if (status.status === "ready") {
           stop();
-          if (status.products?.secretaria) {
-            setView("ready-secretaria");
-            // Fast path: this browser already has a session — from the wizard,
-            // or resumed from the refresh cookie. That second case is why this
-            // awaits: coming back from Stripe is a full page load, so memory is
-            // empty on the way in.
-            if (getSession() ?? (await ensureSession())) {
-              router.replace("/doctor/dashboard");
-            } else if (status.onboarding_token) {
-              // Fallback (different browser/tab): trade the LATEST one-time token for a
-              // session. Never reuse a token from an earlier poll.
-              try {
-                const session = await exchangeOnboardingToken(
-                  status.onboarding_token,
-                );
-                saveSession(session);
-                router.replace("/doctor/dashboard");
-              } catch {
-                setExchangeFailed(true);
-              }
-            } else {
-              // Token already spent in an earlier poll/tab and no local session — the
-              // tenant exists, but there's nothing left here to trade for a session.
-              setView("ready-already-claimed");
-            }
-          } else {
-            // PreCheck: mesmo desenho do ramo acima — sessão local primeiro, o
-            // onboarding-token como fallback de outro browser —, mas o destino
-            // exige um passo a mais: PreCheck não aceita o JWT do brain, então
-            // mintamos um token PreCheck-shaped (POST /sso/precheck/token) e o
-            // gravamos onde o dashboard portado o procura (localStorage
-            // `precheck_token`, mesmo origin).
-            setView("ready-precheck");
-            let session: Session | null = getSession() ?? (await ensureSession());
-            if (session === null && status.onboarding_token) {
-              try {
-                session = await exchangeOnboardingToken(status.onboarding_token);
-                saveSession(session);
-              } catch {
-                setExchangeFailed(true);
-                return;
-              }
-            }
-            if (session === null) {
-              setView("ready-already-claimed");
+          setView("ready-portal");
+          let session = getSession() ?? (await ensureSession());
+          if (unmounted) return;
+          if (session === null && status.onboarding_token) {
+            try {
+              session = await exchangeOnboardingToken(status.onboarding_token);
+              if (unmounted) return;
+              saveSession(session);
+            } catch {
+              setView("ready-secretaria");
+              setExchangeFailed(true);
               return;
             }
-            await enterPrecheck(session);
           }
+          if (session === null) {
+            setView("ready-already-claimed");
+            return;
+          }
+          enterPortal();
           return;
         }
 
@@ -303,8 +223,8 @@ function CheckoutSucessoInner() {
           // o token de onboarding do resgate ficou na aba anterior.
           setView("ready-already-claimed");
         } else {
-          setView("ready-precheck");
-          enterPrecheck(session);
+          setView("ready-portal");
+          enterPortal();
         }
       })();
       return () => {
@@ -331,7 +251,7 @@ function CheckoutSucessoInner() {
 //
 // `cortesia`: esta tela é TAMBÉM o retorno do resgate de cupom, que ativa a
 // clínica sem passar pelo Stripe. Três estados de sucesso são alcançáveis por
-// esse caminho — ready-precheck, ready-precheck-pending e ready-already-claimed
+// esse caminho: ready-precheck e ready-already-claimed
 // — e nenhum deles pode afirmar um pagamento que não houve. O título vira
 // `tituloOk`, verdadeiro nos dois caminhos.
 function renderView(
@@ -470,9 +390,8 @@ function renderView(
         </>
       );
 
-    // Estado de passagem: a clínica foi ativada (por pagamento ou por cupom) e
-    // estamos abrindo o PreCheck. Some sozinho no router.replace("/dashboard").
-    case "ready-precheck":
+    // Transitional state after payment or courtesy activation: enter the unified portal.
+    case "ready-portal":
       return (
         <>
           <span className="checkout-icon" aria-hidden="true">
@@ -482,37 +401,13 @@ function renderView(
             {tituloOk}
           </h1>
           <p className="muted mt-s">
-            Estamos preparando o seu PreCheck e abrindo o painel…
+            Estamos abrindo o Portal Brain-Message…
           </p>
-          <Spinner label="Abrindo o painel…" />
+          <Spinner label="Abrindo o portal…" />
         </>
       );
 
-    // O provisionamento não ficou pronto na janela desta página. Nada se perdeu:
-    // a conta existe, a ativação está de pé e o bridge retenta no primeiro load
-    // do portal — então a saída é um LINK para o painel, não uma promessa de
-    // alguém entrar em contato.
-    case "ready-precheck-pending":
-      return (
-        <>
-          <span className="checkout-icon" aria-hidden="true">
-            ✅
-          </span>
-          <h1 className="h-sec" style={{ fontSize: 22 }}>
-            {tituloOk}
-          </h1>
-          <p className="muted mt-s">
-            Sua conta está criada e o seu PreCheck está sendo preparado — isso
-            leva alguns instantes. Acesse o painel para continuar; se ainda
-            estiver em preparo, é só recarregar em um minuto.
-          </p>
-          <div className="checkout-actions">
-            <Link href="/app" className="btn btn--primary">
-              Ir para o painel
-            </Link>
-          </div>
-        </>
-      );
+
   }
 }
 

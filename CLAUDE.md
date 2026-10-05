@@ -13,6 +13,10 @@ Correção pós-QA do retorno ao console: default de produção verificado no Do
 override vazio preservado; validação e publicação em `docs/CHECKPOINT_console_return_default.md`.
 TASK C: add-product CTA/dialog, console return and dual-plan labels; local state and validation in `docs/CHECKPOINT_add_product_ui.md`.
 
+Clinic operational portal retired (2026-10-05): only Meu Perfil remains under `/doctor`;
+`/app` forwards to billing and checkout enters Brain-Message. Scope and validation:
+`docs/CHECKPOINT_clinic_portal_retirement.md`.
+
 ## Prompts prontos para rodar
 
 Prompts de feature já roteirizados ficam em `TECH/BRAIN/z_prompts/` — convenção

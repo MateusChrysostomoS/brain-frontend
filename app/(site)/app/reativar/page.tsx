@@ -96,9 +96,9 @@ export default function ReativarPage() {
           </Link>
           <div className="dash-user">
             <ThemeToggle />
-            <Link className="btn btn--outline btn--sm" href="/app">
+            <Link className="btn btn--outline btn--sm" href="/app/billing">
               <BrandIcon name="arrowR" className="flip-h" />
-              Voltar ao painel
+              Voltar à assinatura
             </Link>
             <Link className="btn btn--outline btn--sm" href="/login" onClick={() => void logout()}>
               Sair
@@ -152,8 +152,8 @@ export default function ReativarPage() {
                   </p>
                 </div>
                 <div className="rtv-actions">
-                  <Link href="/app" className="btn btn--outline">
-                    Voltar ao painel
+                  <Link href="/app/billing" className="btn btn--outline">
+                    Voltar à assinatura
                   </Link>
                 </div>
               </>
@@ -170,8 +170,8 @@ export default function ReativarPage() {
                   </p>
                 </div>
                 <div className="rtv-actions">
-                  <Link href="/app" className="btn btn--primary">
-                    Voltar ao painel
+                  <Link href="/app/billing" className="btn btn--primary">
+                    Voltar à assinatura
                   </Link>
                 </div>
               </>

@@ -61,6 +61,10 @@ export function safeNextPath(raw: string | null | undefined): string | null {
 // doctor/manager and the legacy tenant_owner/tenant_staff — to the doctor portal).
 export function postLoginRoute(role: string, next: string | null | undefined): string {
   const safe = safeNextPath(next);
-  if (safe) return safe;
-  return role === "admin" ? "/admin/dashboard" : "/doctor/dashboard";
+  if (safe) {
+    const path = decodeURIComponent(new URL(safe, PROBE_ORIGIN).pathname).replace(/\/+$/, "");
+    const retired = ["/doctor/dashboard", "/doctor/pacientes", "/doctor/anamneses", "/dashboard", "/summary", "/inbound", "/metrics", "/users", "/app/onboarding"];
+    if (!retired.some((route) => path === route || path.startsWith(route + "/"))) return safe;
+  }
+  return role === "admin" ? "/admin/dashboard" : "/doctor/perfil";
 }

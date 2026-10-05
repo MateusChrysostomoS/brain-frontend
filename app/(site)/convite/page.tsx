@@ -73,7 +73,7 @@ function ConviteInner() {
       // saved for THIS origin, and sessionStorage does not cross origins — a
       // redirect to the secretarIA app would greet a brand-new user with a
       // second login screen. The dashboard's secretarIA cards are the way on.
-      router.replace("/doctor/dashboard");
+      router.replace("/doctor/perfil");
     } catch (e) {
       const status = e instanceof ManageApiError ? e.status : 0;
       setSaveError(

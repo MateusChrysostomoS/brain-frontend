@@ -53,7 +53,7 @@ export type Session = {
   tenantId: string;
   email: string;
   // Decoded from the JWT `role` claim at login — drives post-login portal routing
-  // (admin -> /admin/dashboard, doctor|manager -> /doctor/dashboard). Legacy
+  // (admin -> /admin/dashboard, doctor|manager -> /doctor/perfil). Legacy
   // tokens minted before the role-taxonomy migration may still carry
   // tenant_owner/tenant_staff — gates accept both during the transition window.
   role: string;
@@ -1155,7 +1155,7 @@ async function fetchImpersonationDoctor(
 
 // Enter "Modo médico": mint the doctor session, STASH the admin session first (so a failure
 // before this point leaves the admin intact), swap the doctor session into `brain.session`,
-// and record the banner marker. The caller routes to /doctor/dashboard on success. Throws
+// and record the banner marker. The caller routes to /doctor/perfil on success. Throws
 // ManageApiError (401 admin session expired, 403 not admin, 404 demo clinic unavailable) for
 // the caller to surface inline.
 export async function enterDoctorMode(adminSession: Session): Promise<void> {

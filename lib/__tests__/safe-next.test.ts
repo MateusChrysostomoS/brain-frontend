@@ -47,10 +47,15 @@ describe("postLoginRoute", () => {
     expect(postLoginRoute("manager", "/#planos")).toBe("/#planos");
   });
 
+  it.each(["/doctor/dashboard/", "/doctor/anamneses?id=1", "/doctor/pacientes", "/summary?id=1", "/dashboard", "/app/onboarding"])("ignores retired clinic destinations: %s", (next) => {
+    expect(postLoginRoute("doctor", next)).toBe("/doctor/perfil");
+    expect(postLoginRoute("admin", next)).toBe("/admin/dashboard");
+  });
+
   it("falls back to the role home when next is absent or hostile", () => {
     expect(postLoginRoute("admin", null)).toBe("/admin/dashboard");
-    expect(postLoginRoute("doctor", null)).toBe("/doctor/dashboard");
-    expect(postLoginRoute("manager", "//evil.com")).toBe("/doctor/dashboard");
+    expect(postLoginRoute("doctor", null)).toBe("/doctor/perfil");
+    expect(postLoginRoute("manager", "//evil.com")).toBe("/doctor/perfil");
     expect(postLoginRoute("admin", "https://evil.com")).toBe("/admin/dashboard");
   });
 });

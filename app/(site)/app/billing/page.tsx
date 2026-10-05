@@ -185,9 +185,9 @@ export default function BillingPage() {
 
           <div className="dash-user">
             <ThemeToggle />
-            <Link className="btn btn--outline btn--sm" href="/app">
+            <Link className="btn btn--outline btn--sm" href="/doctor/perfil">
               <BrandIcon name="arrowR" className="flip-h" />
-              Voltar ao painel
+              Meu Perfil
             </Link>
             <Link
               className="btn btn--outline btn--sm"
