@@ -9,61 +9,21 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BrandGlyph } from "../../_components/BrandGlyph";
 import { BrandIcon } from "../../_components/BrandIcon";
-import { ThemeToggle } from "../../_components/ThemeToggle";
 import {
   clearSession,
   createPortalSession,
   getEntitlements,
   ensureSession,
   getSession,
-  logout,
   ManageApiError,
   type Entitlements,
   type Session,
 } from "@/lib/manage-api";
-import { describePlans } from "@/lib/add-product";
+import { billingLimitDisplay, billingPlanLabel, billingAddonLabel } from "@/lib/billing-copy";
 import { PrecheckBillingSection } from "./_components/PrecheckBillingSection";
 import "../dashboard-shell.css";
 import "./billing.css";
-
-// ---------------------------------------------------------------------------
-// Display-only PT-BR labels. These map catalog ids → copy for this screen; they
-// are NOT commercial data (prices/features stay backend-owned in
-// services/catalog.py) — just what string to print for a known id.
-// ---------------------------------------------------------------------------
-
-const PLAN_LABELS: Record<string, string> = {
-  precheck: "PreCheck", // legacy id — brain-api still resolves it server-side
-  precheck_start: "PreCheck Start",
-  precheck_basic: "PreCheck Basic",
-  precheck_advanced: "PreCheck Advanced",
-  secretaria_basico: "secretarIA Básico",
-  complete_clinic_combo: "Brain Completo",
-  "brain-completo": "Brain Completo", // legacy alias (see Entitlements comment in manage-api.ts)
-  free: "Gratuito",
-};
-
-const ADDON_LABELS: Record<string, string> = {
-  reactivation_pack: "Pacote de reativação",
-  verified_identity: "Identidade verificada",
-  multi_professional: "Múltiplos profissionais",
-  multi_unit: "Múltiplas unidades",
-  ehr: "Prontuário eletrônico",
-  pix_deposit: "Sinal via Pix",
-  analytics_bi: "Analytics & BI",
-  analytics_bi_advanced: "Dashboard Avançado",
-  human_backup_24_7: "Backup humano 24/7",
-};
-
-const LIMIT_LABELS: Record<string, string> = {
-  professionals: "Profissionais",
-  units: "Unidades",
-  messages: "Mensagens/mês",
-  reminders: "Lembretes/mês",
-  hsm_proactive: "Modelos proativos (HSM)/mês",
-};
 
 type StatusVisual = { label: string; className: string };
 
@@ -80,7 +40,7 @@ function humanizeStatus(status: string): StatusVisual {
     case "inactive":
       return { label: "Inativa", className: "badge--neutral" };
     default:
-      return { label: status || "Desconhecido", className: "badge--neutral" };
+      return { label: "Situação não disponível", className: "badge--neutral" };
   }
 }
 
@@ -157,7 +117,7 @@ export default function BillingPage() {
       } else if (status === 503) {
         setPortalError("Cobrança ainda não configurada.");
       } else {
-        setPortalError("Não foi possível abrir o portal agora. Tente novamente.");
+        setPortalError("Não foi possível abrir a página de pagamento agora. Tente novamente.");
       }
       setPortalPending(false);
     }
@@ -165,41 +125,14 @@ export default function BillingPage() {
 
   // --- Derived display values ---
   const statusVisual = ent ? humanizeStatus(ent.status) : null;
-  const planLabel = ent ? describePlans(ent.plan, ent.precheckPlan, PLAN_LABELS) : "";
+  const planLabel = ent ? billingPlanLabel(ent.plan, ent.precheckPlan) : "";
   const activeAddons = ent
     ? Object.entries(ent.addons).filter(([, active]) => active)
     : [];
-  const limitEntries = ent ? Object.entries(ent.limits) : [];
+  const limitEntries = ent ? Object.entries(ent.limits).map(([key, value]) => ({ key, ...billingLimitDisplay(key, value) })) : [];
 
   return (
     <>
-      {/* ==================== HEADER ==================== */}
-      <header className="dash-header">
-        <div className="container dash-nav">
-          <Link className="brand-mark" href="/" aria-label="Brain">
-            <BrandGlyph size={28} />
-            <span className="wordmark" style={{ fontSize: 22 }}>
-              Brain
-            </span>
-          </Link>
-
-          <div className="dash-user">
-            <ThemeToggle />
-            <Link className="btn btn--outline btn--sm" href="/doctor/perfil">
-              <BrandIcon name="arrowR" className="flip-h" />
-              Meu Perfil
-            </Link>
-            <Link
-              className="btn btn--outline btn--sm"
-              href="/login"
-              onClick={() => void logout()}
-            >
-              Sair
-            </Link>
-          </div>
-        </div>
-      </header>
-
       {/* ==================== LOADING ==================== */}
       {loading && (
         <div className="dash-loading" aria-live="polite" aria-label="Carregando">
@@ -212,18 +145,18 @@ export default function BillingPage() {
 
       {/* ==================== BOOT ERROR ==================== */}
       {!loading && loadError && (
-        <main className="dash-main">
+        <div className="billing-content">
           <section className="panel">
             <p role="alert" className="muted">
               {loadError}
             </p>
           </section>
-        </main>
+        </div>
       )}
 
       {/* ==================== MAIN ==================== */}
       {!loading && ent && statusVisual && (
-        <main className="dash-main">
+        <div className="billing-content">
           <section className="panel">
             <div className="panel-head">
               <div>
@@ -245,7 +178,7 @@ export default function BillingPage() {
                 <span className="sub-summary-value">{planLabel}</span>
               </div>
               <div className="sub-summary-row">
-                <span className="sub-summary-label">Status</span>
+                <span className="sub-summary-label">Situação da assinatura</span>
                 <span className={`badge ${statusVisual.className}`}>
                   <span className="d" />
                   {statusVisual.label}
@@ -255,19 +188,19 @@ export default function BillingPage() {
 
             {/* --- Active add-ons --- */}
             <div className="sub-block">
-              <h2 className="sub-block-title">Módulos ativos</h2>
+              <h2 className="sub-block-title">Recursos adicionais contratados</h2>
               {activeAddons.length > 0 ? (
                 <ul className="tick-list">
                   {activeAddons.map(([id]) => (
                     <li key={id} className="ok">
                       <BrandIcon name="check" />
-                      {ADDON_LABELS[id] ?? id}
+                      {billingAddonLabel(id)}
                     </li>
                   ))}
                 </ul>
               ) : (
                 <p className="muted" style={{ fontSize: 13.5 }}>
-                  Nenhum módulo adicional contratado.
+                  Seu plano não tem recursos adicionais contratados.
                 </p>
               )}
             </div>
@@ -275,14 +208,15 @@ export default function BillingPage() {
             {/* --- Plan limits --- */}
             {limitEntries.length > 0 && (
               <div className="sub-block">
-                <h2 className="sub-block-title">Limites do plano</h2>
+                <h2 className="sub-block-title">O que seu plano oferece</h2>
                 <div className="limit-grid">
-                  {limitEntries.map(([key, value]) => (
+                  {limitEntries.map(({ key, label, value, hint }) => (
                     <div key={key} className="limit-item">
                       <div className="limit-value">
-                        {value < 0 ? "Ilimitado" : value}
+                        {value}
                       </div>
-                      <div className="limit-label">{LIMIT_LABELS[key] ?? key}</div>
+                      <div className="limit-label">{label}</div>
+                      {hint && <p className="limit-hint">{hint}</p>}
                     </div>
                   ))}
                 </div>
@@ -296,6 +230,7 @@ export default function BillingPage() {
 
             {/* --- Manage subscription (Stripe Billing Portal handoff) --- */}
             <div className="sub-block">
+              <div className="billing-actions">
               <button
                 type="button"
                 className="btn btn--primary"
@@ -303,13 +238,18 @@ export default function BillingPage() {
                 disabled={portalPending}
               >
                 <BrandIcon name="edit" />
-                {portalPending ? "Abrindo portal…" : "Gerenciar assinatura"}
+                {portalPending ? "Abrindo a página de pagamento…" : "Gerenciar assinatura"}
               </button>
+                <Link href="/app/reativar" className="billing-trial-link">
+                  Consultar o período de teste de ativação <span aria-hidden="true">→</span>
+                </Link>
+              </div>
+
 
               {noBillingAccount && (
                 <div role="alert" className="portal-alert">
                   <p style={{ margin: 0 }}>
-                    Sua clínica ainda não tem uma assinatura via checkout.
+                    Sua clínica ainda não contratou uma assinatura paga.
                   </p>
                   <Link href="/#planos" className="btn btn--outline btn--sm mt-s">
                     Ver planos
@@ -322,20 +262,10 @@ export default function BillingPage() {
                 </p>
               )}
 
-              {/* Discreet cross-link to the activation test-window screen (Task 2) —
-                  relevant mainly while a subscription is still trialing/awaiting Meta
-                  approval, but harmless to show otherwise (that screen has its own
-                  "doesn't apply" state). */}
-              <Link
-                href="/app/reativar"
-                className="muted"
-                style={{ display: "inline-block", fontSize: 12.5, marginTop: 12 }}
-              >
-                Ver período de teste de ativação →
-              </Link>
+
             </div>
           </section>
-        </main>
+        </div>
       )}
     </>
   );

@@ -55,7 +55,7 @@
 /* Compact stat tiles for plan limits. */
 .limit-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(160px, 100%), 1fr));
   gap: 12px;
 }
 .limit-item {
@@ -67,16 +67,46 @@
 }
 .limit-value {
   font-family: var(--font-serif);
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 500;
   color: var(--ink);
 }
 .limit-label {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--ink-faint);
   margin-top: 4px;
 }
+
+.limit-hint {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+/* Share the account shell's available width instead of adding a second main gutter. */
+.billing-content { width: 100%; min-width: 0; }
+.billing-content .panel { min-width: 0; }
+.billing-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+}
+.billing-trial-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-block: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: right;
+  color: var(--brand-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.billing-trial-link:focus-visible { outline: 2px solid var(--brand); outline-offset: 4px; }
 
 /* Inline alert under the "Gerenciar assinatura" button — mirrors the ssoError
    pattern used on /app (role="alert", small red copy). */
@@ -233,6 +263,8 @@
 }
 
 @media (max-width: 720px) {
+  .billing-actions { flex-direction: column; align-items: flex-start; gap: 16px; }
+  .billing-trial-link { text-align: left; }
   .sub-summary-row {
     flex-direction: column;
     align-items: flex-start;

@@ -17,6 +17,9 @@ Clinic operational portal retired (2026-10-05): only Meu Perfil remains under `/
 `/app` forwards to billing and checkout enters Brain-Message. Scope and validation:
 `docs/CHECKPOINT_clinic_portal_retirement.md`.
 
+Billing Portuguese copy and shared clinic sidebar (Meu Perfil, Cobrança):
+`docs/CHECKPOINT_billing_copy_navigation.md` (2026-10-05).
+
 ## Prompts prontos para rodar
 
 Prompts de feature já roteirizados ficam em `TECH/BRAIN/z_prompts/` — convenção

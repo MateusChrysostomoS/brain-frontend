@@ -33,6 +33,7 @@ import {
   type Session,
 } from "@/lib/manage-api";
 import { formatBRLFromCents } from "@/lib/currency";
+import { billingPlanLabel } from "@/lib/billing-copy";
 import { clearSession, isSessionExpired } from "../../../_components/usePortalGuard";
 import { BrandIcon } from "../../../_components/BrandIcon";
 import { pluralize } from "../../_components/format";
@@ -57,9 +58,9 @@ const TOPUP_MIN_QUANTITY = 5;
 // só decide o que OFERECER. Uma faixa que exista lá e falte aqui simplesmente
 // não vira botão; o inverso volta 422 e cai no tratamento de erro abaixo.
 const PRECHECK_TIERS: readonly { id: PrecheckTierPlanId; label: string }[] = [
-  { id: "precheck_start", label: "Start" },
-  { id: "precheck_basic", label: "Basic" },
-  { id: "precheck_advanced", label: "Advanced" },
+  { id: "precheck_start", label: "Inicial" },
+  { id: "precheck_basic", label: "Básico" },
+  { id: "precheck_advanced", label: "Avançado" },
 ];
 
 // Formats an ISO date string as a Brazilian date (DD/MM/AAAA); the raw string
@@ -169,11 +170,11 @@ export function PrecheckBillingSection({ session }: PrecheckBillingSectionProps)
       if (status === 409 && detail === "already_on_plan") {
         setUpgradeError(`Sua clínica já está no plano ${targetLabel}.`);
       } else if (status === 409 && detail === "no_active_subscription") {
-        setUpgradeError("Sua clínica não tem uma assinatura ativa para fazer upgrade.");
+        setUpgradeError("Sua clínica precisa de uma assinatura ativa para mudar de plano.");
       } else if (status === 422) {
-        setUpgradeError("Não foi possível processar o upgrade. Tente novamente.");
+        setUpgradeError("Não foi possível mudar de plano. Tente novamente.");
       } else {
-        setUpgradeError("Não foi possível concluir o upgrade agora. Tente novamente.");
+        setUpgradeError("Não foi possível mudar de plano agora. Tente novamente.");
       }
     } finally {
       setUpgradePending(false);
@@ -203,10 +204,10 @@ export function PrecheckBillingSection({ session }: PrecheckBillingSectionProps)
 
       <div className="pc-usage-row">
         <span className="pc-usage-label">Plano</span>
-        <span className="pc-usage-value">{usage.plan_name}</span>
+        <span className="pc-usage-value">{billingPlanLabel(usage.plan)}</span>
       </div>
       <div className="pc-usage-row">
-        <span className="pc-usage-label">Cota mensal</span>
+        <span className="pc-usage-label">Pré-consultas incluídas por mês</span>
         <span className="pc-usage-value">{usage.quota}</span>
       </div>
 
@@ -235,18 +236,18 @@ export function PrecheckBillingSection({ session }: PrecheckBillingSectionProps)
       {usage.topup_credits > 0 && (
         <div className="pc-credits">
           {usage.topup_credits}{" "}
-          {usage.topup_credits === 1 ? "crédito avulso ativo" : "créditos avulsos ativos"}
+          {usage.topup_credits === 1 ? "pré-consulta extra disponível" : "pré-consultas extras disponíveis"}
           {usage.topup_expires_at && <> · expiram em {formatDatePtBR(usage.topup_expires_at)}</>}
         </div>
       )}
 
       <div className="pc-usage-row" style={{ marginTop: 10 }}>
-        <span className="pc-usage-label">Total restante</span>
+        <span className="pc-usage-label">Pré-consultas disponíveis</span>
         <span className="pc-usage-value">{usage.remaining}</span>
       </div>
 
       <div className="pc-spend">
-        Compras avulsas: {spendLabel} ({usage.spend.topup_count}{" "}
+        Valor gasto com pré-consultas extras: {spendLabel} ({usage.spend.topup_count}{" "}
         {pluralize(usage.spend.topup_count, "compra")})
         <br />
         A mensalidade é cobrada via assinatura — veja em Gerenciar assinatura, abaixo.
@@ -304,7 +305,7 @@ export function PrecheckBillingSection({ session }: PrecheckBillingSectionProps)
               disabled={upgradePending}
             >
               <BrandIcon name="arrowR" />
-              Fazer upgrade para {tier.label}
+              Mudar para o plano {tier.label}
             </button>
           ))}
       </div>
@@ -323,9 +324,9 @@ export function PrecheckBillingSection({ session }: PrecheckBillingSectionProps)
       {confirmingTier && (
         <div className="pc-confirm">
           <p style={{ margin: 0 }}>
-            Confirma o upgrade para o plano PreCheck {confirmingTier.label}? A
-            cota mensal de pré-consultas aumenta imediatamente e a diferença de
-            valor é ajustada de forma proporcional na sua assinatura.
+            Deseja mudar para o plano PreCheck {confirmingTier.label}? Você poderá usar
+            mais pré-consultas assim que confirmar. A diferença de preço será calculada
+            de acordo com os dias restantes do período atual.
           </p>
           <div className="pc-confirm-actions">
             <button
@@ -334,7 +335,7 @@ export function PrecheckBillingSection({ session }: PrecheckBillingSectionProps)
               onClick={() => handleUpgrade(confirmingTier.id, confirmingTier.label)}
               disabled={upgradePending}
             >
-              {upgradePending ? "Confirmando…" : "Confirmar upgrade"}
+              {upgradePending ? "Confirmando…" : "Confirmar mudança de plano"}
             </button>
             <button
               type="button"
@@ -354,7 +355,7 @@ export function PrecheckBillingSection({ session }: PrecheckBillingSectionProps)
       )}
       {upgradeNotice && (
         <p role="status" className="pc-notice">
-          Upgrade concluído — seu plano agora é {usage.plan_name}.
+          Plano alterado. Seu plano agora é {billingPlanLabel(usage.plan)}.
         </p>
       )}
     </div>
