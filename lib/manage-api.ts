@@ -28,7 +28,7 @@
 //   POST /billing/precheck/topup    -> Stripe Checkout URL for N avulso units   (createPrecheckTopupSession)
 //   POST /billing/precheck/upgrade  -> upgrade precheck_basic -> precheck_advanced (upgradePrecheckPlan)
 //   POST /auth/password-reset/request -> { detail } always, anti-enumeration (requestPasswordReset)
-//   POST /auth/password-reset/verify  -> { detail }; 400 invalid/expired token (verifyResetToken)
+//   POST /auth/password-reset/verify-code -> { reset_token }; 400 wrong/expired code (verifyResetCode)
 //   POST /auth/password-reset/confirm -> { detail }; 400 invalid token, 422 weak password (confirmPasswordReset)
 
 // ---------------------------------------------------------------------------
@@ -526,8 +526,9 @@ export async function logout(): Promise<void> {
 export type PasswordResetMessage = { detail: string };
 
 // MANAGE-API CALL SITE #9 — password-reset step 1 ("Esqueci a senha"). POST
-// /auth/password-reset/request { email }. ALWAYS resolves 200 with the same
-// generic detail whether or not the address is registered (anti-enumeration).
+// /auth/password-reset/request { email }. E-mails a 6-digit code (TASK-056).
+// ALWAYS resolves 200 with the same generic detail whether or not the address
+// is registered (anti-enumeration).
 // Throws ManageApiError 429 when the per-IP auth rate limit is hit.
 export async function requestPasswordReset(
   email: string,
@@ -539,21 +540,23 @@ export async function requestPasswordReset(
 }
 
 // MANAGE-API CALL SITE #10 — password-reset step 2. POST
-// /auth/password-reset/verify { token }. Read-only pre-flight (does NOT
-// consume the token) so the UI can reject a broken/expired link before the
-// user types a new password. Throws ManageApiError 400
-// `Token inválido ou expirado` for an unknown/expired/already-used token.
-export async function verifyResetToken(
-  token: string,
-): Promise<PasswordResetMessage> {
-  return manageFetch<PasswordResetMessage>("/auth/password-reset/verify", {
+// /auth/password-reset/verify-code { email, code }. Burns a correct code and
+// returns the single-use token step 3 needs (15 min). Throws ManageApiError 400
+// `Código inválido ou expirado` for an unknown e-mail or a wrong/expired/
+// exhausted code (same answer on purpose — anti-enumeration).
+export async function verifyResetCode(
+  email: string,
+  code: string,
+): Promise<{ reset_token: string }> {
+  return manageFetch<{ reset_token: string }>("/auth/password-reset/verify-code", {
     method: "POST",
-    body: JSON.stringify({ token }),
+    body: JSON.stringify({ email, code }),
   });
 }
 
 // MANAGE-API CALL SITE #11 — password-reset step 3. POST
-// /auth/password-reset/confirm { token, new_password }. Consumes the token;
+// /auth/password-reset/confirm { token, new_password }. Consumes the token from
+// verifyResetCode — held in lib/password-reset-memory.ts, never in the URL;
 // the backend does NOT auto-login afterwards (caller routes to /login).
 // Throws ManageApiError 400 for an invalid/expired token, 422 if the password
 // isn't 8-72 chars or is missing a letter or a digit.

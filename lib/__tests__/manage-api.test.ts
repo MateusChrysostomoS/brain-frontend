@@ -387,14 +387,14 @@ describe("requestPasswordReset", () => {
     fetchMock.mockResolvedValueOnce(
       mockResponse(200, {
         detail:
-          "Se houver uma conta com esse e-mail, enviamos um link para redefinir a senha.",
+          "Se houver uma conta com esse e-mail, enviamos um código para ele.",
       }),
     );
 
     const result = await api.requestPasswordReset("doc@clinic.com");
 
     expect(result.detail).toBe(
-      "Se houver uma conta com esse e-mail, enviamos um link para redefinir a senha.",
+      "Se houver uma conta com esse e-mail, enviamos um código para ele.",
     );
     const call = fetchMock.mock.calls[0];
     expect(call[0]).toBe("/auth/password-reset/request");
@@ -420,29 +420,24 @@ describe("requestPasswordReset", () => {
   });
 });
 
-describe("verifyResetToken", () => {
-  it("POSTs { token } unauthenticated and resolves { detail }", async () => {
-    fetchMock.mockResolvedValueOnce(mockResponse(200, { detail: "Token válido" }));
-
-    const result = await api.verifyResetToken("reset-tok-1");
-
-    expect(result).toEqual({ detail: "Token válido" });
+describe("verifyResetCode", () => {
+  it("POSTs { email, code } unauthenticated and resolves { reset_token }", async () => {
+    fetchMock.mockResolvedValueOnce(mockResponse(200, { reset_token: "tok-1" }));
+    const result = await api.verifyResetCode("doc@clinic.com", "123456");
+    expect(result).toEqual({ reset_token: "tok-1" });
     const call = fetchMock.mock.calls[0];
-    expect(call[0]).toBe("/auth/password-reset/verify");
+    expect(call[0]).toBe("/auth/password-reset/verify-code");
     expect(call[1].method).toBe("POST");
     expect(call[1].headers.Authorization).toBeUndefined();
-    expect(JSON.parse(call[1].body)).toEqual({ token: "reset-tok-1" });
+    expect(JSON.parse(call[1].body)).toEqual({ email: "doc@clinic.com", code: "123456" });
   });
 
-  it("400 unknown/expired/used token -> ManageApiError 400 with the exact backend message", async () => {
-    fetchMock.mockResolvedValueOnce(
-      mockResponse(400, { detail: "Token inválido ou expirado" }),
-    );
-
+  it("400 wrong/expired code -> ManageApiError 400", async () => {
+    fetchMock.mockResolvedValueOnce(mockResponse(400, { detail: "Código inválido ou expirado" }));
     await expectManageError(
-      api.verifyResetToken("bad-token"),
+      api.verifyResetCode("doc@clinic.com", "000000"),
       400,
-      "Token inválido ou expirado",
+      "Código inválido ou expirado",
     );
   });
 });
