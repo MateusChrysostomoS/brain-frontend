@@ -1,35 +1,31 @@
 "use client";
 
 // /esqueci_senha/atualizar_senha — Step 3 of the password-reset flow.
-// Receives the validated token via ?token=... and POSTs the new
-// password to /auth/password-reset/confirm. On success, redirects
-// to /login?reset=success so the login screen shows a confirmation
-// banner. No auto-login by design.
+// The single-use token comes from step 2 in memory (lib/password-reset-memory.ts,
+// TASK-056) — never from `?token=` in the URL — and is POSTed with the new
+// password to /auth/password-reset/confirm. On success it redirects to
+// /login?reset=success (a banner, no secret) with the e-mail prefilled through
+// the same memory hand-off. No auto-login by design.
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import { ManageApiError, confirmPasswordReset } from "@/lib/manage-api";
+import {
+  clearResetFlow,
+  getResetEmail,
+  getResetToken,
+  newPasswordError,
+  rememberLoginEmail,
+} from "@/lib/password-reset-memory";
 
 import { AuthShell } from "../../_shared/AuthShell";
 import { PasswordField } from "../../_shared/PasswordField";
 import { StepIndicator } from "../../_shared/StepIndicator";
 
-// Mirror the backend rule (`MIN_PASSWORD_LENGTH` in services/password_reset.py).
-const MIN_PASSWORD_LENGTH = 8;
-
 export default function UpdatePasswordPage() {
-  return (
-    <Suspense fallback={<UpdatePasswordFallback />}>
-      <UpdatePasswordInner />
-    </Suspense>
-  );
-}
-
-function UpdatePasswordInner() {
   const router = useRouter();
-  const search = useSearchParams();
 
   // --- State ---
   const [password, setPassword] = useState("");
@@ -37,43 +33,43 @@ function UpdatePasswordInner() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // --- Derived ---
-  const token = search.get("token") ?? "";
-
   // --- Effects ---
-  // If we landed here without a token, bounce back to step 2 so the user
-  // can paste one. This avoids a confusing "invalid token" error on submit.
+  // Without a token in memory (reload, typed URL) there is nothing to confirm.
   useEffect(() => {
-    if (!token) {
-      router.replace("/esqueci_senha/token");
-    }
-  }, [token, router]);
+    if (!getResetToken()) router.replace("/esqueci_senha");
+  }, [router]);
 
   // --- Handlers ---
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
-    if (password.length < MIN_PASSWORD_LENGTH) {
-      setError(`A senha precisa ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`);
+    const invalid = newPasswordError(password, confirmPwd);
+    if (invalid) {
+      setError(invalid);
       return;
     }
-    if (password !== confirmPwd) {
-      setError("As senhas não coincidem.");
+    const token = getResetToken();
+    if (!token) {
+      router.replace("/esqueci_senha");
       return;
     }
     setLoading(true);
     try {
       await confirmPasswordReset(token, password);
+      rememberLoginEmail(getResetEmail());
+      clearResetFlow();
       router.push("/login?reset=success");
     } catch (err) {
       const status = err instanceof ManageApiError ? err.status : 0;
-      const msg = err instanceof Error ? err.message : "";
+      if (status === 400) clearResetFlow();
       setError(
         status === 429
           ? "Muitas tentativas. Aguarde um minuto e tente novamente."
-          : msg.toLowerCase().includes("token")
-            ? "Token inválido ou expirado. Solicite um novo link."
-            : "Não foi possível redefinir a senha. Tente novamente.",
+          : status === 400
+            ? "O tempo para trocar a senha acabou. Peça um novo código."
+            : status === 422
+              ? "Use pelo menos 8 caracteres, com uma letra e um número."
+              : "Não foi possível redefinir a senha. Tente novamente.",
       );
       setLoading(false);
     }
@@ -90,7 +86,7 @@ function UpdatePasswordInner() {
       error={error}
       belowCard={
         <p className="login-help">
-          Mudou de ideia? <Link href="/login">Voltar ao login</Link>
+          Precisa de outro código? <Link href="/esqueci_senha">Começar de novo</Link>
         </p>
       }
     >
@@ -104,7 +100,7 @@ function UpdatePasswordInner() {
           onChange={setPassword}
           autoComplete="new-password"
           required
-          hint={`Mínimo de ${MIN_PASSWORD_LENGTH} caracteres.`}
+          hint="Mínimo de 8 caracteres, com uma letra e um número."
         />
 
         <PasswordField
@@ -124,21 +120,6 @@ function UpdatePasswordInner() {
           {loading ? "Salvando…" : "Redefinir senha"}
         </button>
       </form>
-    </AuthShell>
-  );
-}
-
-function UpdatePasswordFallback() {
-  return (
-    <AuthShell
-      title={
-        <>
-          Crie uma <em>nova senha</em>.
-        </>
-      }
-      subtitle="Carregando…"
-    >
-      <div style={{ height: 120 }} aria-hidden="true" />
     </AuthShell>
   );
 }

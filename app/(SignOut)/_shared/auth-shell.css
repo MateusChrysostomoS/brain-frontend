@@ -457,6 +457,25 @@ main.login-page .login-help a:hover {
   color: var(--teal);
   border-color: var(--teal);
 }
+/* Text-only action inside .login-help ("Reenviar código", TASK-056) — looks like the links above. */
+main.login-page .login-help .link-button {
+  padding: 0;
+  font: inherit;
+  color: var(--ink);
+  font-weight: 500;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--border-2);
+  cursor: pointer;
+}
+main.login-page .login-help .link-button:hover:not(:disabled) {
+  color: var(--teal);
+  border-color: var(--teal);
+}
+main.login-page .login-help .link-button:disabled {
+  color: var(--muted);
+  cursor: default;
+}
 
 main.login-page .login-foot {
   display: flex;

@@ -9,9 +9,10 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 import { login } from "@/lib/manage-api";
+import { rememberLoginEmail, takeLoginEmail } from "@/lib/password-reset-memory";
 import { withConsoleOrigin } from "@/lib/console-return";
 import { postLoginRoute, safeNextPath } from "@/lib/safe-next";
 
@@ -38,6 +39,13 @@ function LoginInner() {
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Prefill when coming back from /esqueci_senha (read-once memory hand-off,
+  // lib/password-reset-memory.ts — never the URL or storage).
+  useEffect(() => {
+    const handed = takeLoginEmail();
+    if (handed) setEmail(handed);
+  }, []);
 
   // --- Derived ---
   // Show a success banner when /esqueci_senha redirects here after a reset.
@@ -133,7 +141,9 @@ function LoginInner() {
             />
             Lembrar de mim
           </label>
-          <Link href="/esqueci_senha">Esqueci a senha</Link>
+          <Link href="/esqueci_senha" onClick={() => rememberLoginEmail(email)}>
+            Esqueci a senha
+          </Link>
         </div>
 
         <button
