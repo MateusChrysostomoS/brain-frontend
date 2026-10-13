@@ -12,7 +12,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
 import { login } from "@/lib/manage-api";
-import { rememberLoginEmail, takeLoginEmail } from "@/lib/password-reset-memory";
+import { forgetResetToken, rememberLoginEmail, takeLoginEmail } from "@/lib/password-reset-memory";
 import { withConsoleOrigin } from "@/lib/console-return";
 import { postLoginRoute, safeNextPath } from "@/lib/safe-next";
 
@@ -42,7 +42,9 @@ function LoginInner() {
 
   // Prefill when coming back from /esqueci_senha (read-once memory hand-off,
   // lib/password-reset-memory.ts — never the URL or storage).
+  // Also drops a reset token left by an abandoned reset (TASK-056 review F2).
   useEffect(() => {
+    forgetResetToken();
     const handed = takeLoginEmail();
     if (handed) setEmail(handed);
   }, []);

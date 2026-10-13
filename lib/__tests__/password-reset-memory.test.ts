@@ -41,3 +41,14 @@ describe("password reset memory", () => {
     expect(storage.setItem).not.toHaveBeenCalled();
   });
 });
+
+describe("forgetResetToken", () => {
+  it("drops only the token, keeping the e-mail being reset", async () => {
+    const mem = await import("../password-reset-memory");
+    mem.setResetEmail("doc@clinic.com");
+    mem.setResetToken("tok-1");
+    mem.forgetResetToken();
+    expect(mem.getResetToken()).toBeNull();
+    expect(mem.getResetEmail()).toBe("doc@clinic.com");
+  });
+});

@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { ManageApiError, requestPasswordReset } from "@/lib/manage-api";
-import { setResetEmail, takeLoginEmail } from "@/lib/password-reset-memory";
+import { forgetResetToken, setResetEmail, takeLoginEmail } from "@/lib/password-reset-memory";
 
 import { AuthShell } from "../_shared/AuthShell";
 import { StepIndicator } from "../_shared/StepIndicator";
@@ -26,8 +26,10 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
 
   // --- Effects ---
-  // Prefill with what was typed on /login (read-once memory hand-off).
+  // Prefill with what was typed on /login (read-once memory hand-off), and drop any
+  // token left by an abandoned new-password step.
   useEffect(() => {
+    forgetResetToken();
     const handed = takeLoginEmail();
     if (handed) setEmail(handed);
   }, []);

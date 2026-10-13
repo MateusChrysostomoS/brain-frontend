@@ -10,7 +10,12 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { ManageApiError, requestPasswordReset, verifyResetCode } from "@/lib/manage-api";
-import { getResetEmail, normalizeResetCode, setResetToken } from "@/lib/password-reset-memory";
+import {
+  forgetResetToken,
+  getResetEmail,
+  normalizeResetCode,
+  setResetToken,
+} from "@/lib/password-reset-memory";
 
 import { AuthShell } from "../../_shared/AuthShell";
 import { StepIndicator } from "../../_shared/StepIndicator";
@@ -29,7 +34,9 @@ export default function ResetCodePage() {
   const [cooldown, setCooldown] = useState(RESEND_COOLDOWN_SECONDS);
 
   // --- Effects ---
+  // A token from an earlier pass must not survive into this step (review F2).
   useEffect(() => {
+    forgetResetToken();
     const current = getResetEmail();
     if (!current) router.replace("/esqueci_senha");
     else setEmail(current);

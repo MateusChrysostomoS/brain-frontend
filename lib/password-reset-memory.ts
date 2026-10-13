@@ -36,6 +36,13 @@ export function getResetToken(): string | null {
   return resetToken;
 }
 
+// Drops the token but keeps the e-mail being reset: called as every screen OUTSIDE the
+// new-password step mounts, so leaving that step never leaves a usable token behind
+// for the browser's Back button (TASK-056 review F2).
+export function forgetResetToken(): void {
+  resetToken = null;
+}
+
 export function clearResetFlow(): void {
   resetEmail = "";
   resetToken = null;
