@@ -1,7 +1,12 @@
 "use client";
 
+// PreCheck demo request form (/precheck#contato). Posts to the PreCheck API
+// (lib/api.ts -> POST /leads/demo-request) with the same payload as before;
+// only the markup moved to the marketing stylesheet (.mk-*).
+
 import { useState } from "react";
 import { submitDemoRequest } from "@/lib/api";
+import { BrandIcon } from "@/app/(site)/_components/BrandIcon";
 
 const PROFILE_OPTIONS = [
   "Clínica privada",
@@ -54,135 +59,111 @@ export default function ContactForm() {
     }
   }
 
-  return (
-    <form className="final-cta-form" id="lp-contact-form" onSubmit={handleSubmit} noValidate>
-      {sent ? (
-        <div className="form-success">
-          <strong>Recebemos seu pedido.</strong> Entraremos em contato em até 1 dia útil
-          pelo email informado. Acabamos de te mandar uma confirmação por e-mail.
+  if (sent) {
+    return (
+      <div className="mk-form">
+        <div className="mk-form__done" role="status">
+          <span className="mk-form__done-ico" aria-hidden="true">
+            <BrandIcon name="check" />
+          </span>
+          <h3>Recebemos seu pedido.</h3>
+          <p>Vamos responder pelo e-mail informado para combinar a demonstração.</p>
         </div>
-      ) : (
-        <>
-          <div className="row">
-            <div className="field">
-              <label htmlFor="f-nome">Nome</label>
-              <input
-                id="f-nome"
-                type="text"
-                required
-                placeholder="Dr. Ana Almeida"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                disabled={submitting}
-                autoComplete="name"
-              />
-            </div>
-            <div className="field">
-              <label htmlFor="f-email">Email profissional</label>
-              <input
-                id="f-email"
-                type="email"
-                required
-                placeholder="ana@clinica.com.br"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={submitting}
-                autoComplete="email"
-              />
-            </div>
-          </div>
-          <div className="row">
-            <div className="field">
-              <label htmlFor="f-clinica">Clínica ou instituição</label>
-              <input
-                id="f-clinica"
-                type="text"
-                placeholder="Clínica São Lucas"
-                value={clinic}
-                onChange={(e) => setClinic(e.target.value)}
-                disabled={submitting}
-                autoComplete="organization"
-              />
-            </div>
-            <div className="field">
-              <label htmlFor="f-perfil">Perfil</label>
-              <select
-                id="f-perfil"
-                value={profile}
-                onChange={(e) => setProfile(e.target.value)}
-                disabled={submitting}
-              >
-                {PROFILE_OPTIONS.map((option) => (
-                  <option key={option}>{option}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <div className="field" style={{ marginBottom: "16px" }}>
-            <label htmlFor="f-msg">
-              O que você quer ver na demo?{" "}
-              <span style={{ color: "var(--dim)", fontWeight: 400 }}>(opcional)</span>
-            </label>
-            <textarea
-              id="f-msg"
-              placeholder="Atendemos cardiologia ambulatorial, queremos avaliar redução do tempo de anamnese."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              disabled={submitting}
-            />
-          </div>
+      </div>
+    );
+  }
 
-          {error && (
-            <div
-              role="alert"
-              style={{
-                marginBottom: "12px",
-                padding: "10px 14px",
-                fontSize: "13.5px",
-                color: "#7a2c25",
-                background: "rgba(196, 84, 76, 0.08)",
-                border: "1px solid rgba(196, 84, 76, 0.25)",
-                borderRadius: "10px",
-              }}
-            >
-              {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            className="btn btn-primary form-submit"
+  return (
+    <form className="mk-form" id="lp-contact-form" onSubmit={handleSubmit} noValidate>
+      <div className="mk-form__row">
+        <div className="mk-field">
+          <label htmlFor="f-nome">Nome</label>
+          <input
+            id="f-nome"
+            className="mk-input"
+            type="text"
+            required
+            placeholder="Dra. Helena Souza"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            disabled={submitting}
+            autoComplete="name"
+          />
+        </div>
+        <div className="mk-field">
+          <label htmlFor="f-email">E-mail profissional</label>
+          <input
+            id="f-email"
+            className="mk-input"
+            type="email"
+            required
+            placeholder="voce@clinica.com.br"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={submitting}
+            autoComplete="email"
+          />
+        </div>
+      </div>
+      <div className="mk-form__row">
+        <div className="mk-field">
+          <label htmlFor="f-clinica">
+            Clínica ou instituição <span className="mk-optional">(opcional)</span>
+          </label>
+          <input
+            id="f-clinica"
+            className="mk-input"
+            type="text"
+            placeholder="Clínica Exemplo"
+            value={clinic}
+            onChange={(e) => setClinic(e.target.value)}
+            disabled={submitting}
+            autoComplete="organization"
+          />
+        </div>
+        <div className="mk-field">
+          <label htmlFor="f-perfil">Perfil</label>
+          <select
+            id="f-perfil"
+            className="mk-input"
+            value={profile}
+            onChange={(e) => setProfile(e.target.value)}
             disabled={submitting}
           >
-            {submitting ? "Enviando…" : "Agendar minha demonstração"}
-            {!submitting && (
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M5 12h14M13 6l6 6-6 6" />
-              </svg>
-            )}
-          </button>
-          <p
-            style={{
-              fontSize: "12px",
-              color: "var(--dim)",
-              marginTop: "12px",
-              textAlign: "center",
-            }}
-          >
-            Ao enviar, você concorda com nossa Política de Privacidade. Não compartilhamos
-            seus dados.
-          </p>
-        </>
+            {PROFILE_OPTIONS.map((option) => (
+              <option key={option}>{option}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div className="mk-field">
+        <label htmlFor="f-msg">
+          O que você quer ver na demonstração? <span className="mk-optional">(opcional)</span>
+        </label>
+        <textarea
+          id="f-msg"
+          className="mk-input"
+          placeholder="Ex.: atendemos clínica geral e queremos ver como o resumo chega ao médico"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          disabled={submitting}
+        />
+      </div>
+
+      {error && (
+        <p className="mk-form__error" role="alert">
+          {error}
+        </p>
       )}
+
+      <button
+        type="submit"
+        className="mk-btn mk-btn--primary mk-btn--block mk-form__submit"
+        disabled={submitting}
+      >
+        {submitting ? "Enviando…" : "Agendar demonstração"}
+      </button>
+      <p className="mk-form__fine">Usamos estes dados só para responder ao seu pedido.</p>
     </form>
   );
 }

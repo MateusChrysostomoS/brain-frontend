@@ -12,14 +12,15 @@ import {
 // RootLayout — the single <html>/<body> shell for the whole unified app
 // (Brain umbrella + secretarIA product + the ported PreCheck app).
 // It deliberately imports NO component CSS: each route group imports its own
-// stylesheet (PreCheck → globals.css in the (SignIn)/(SignOut)/precheck routes;
-// Brain → brand-ds.css in the (site) group), so the two design systems are
-// code-split per route and can never collide on the same page.
+// stylesheet (PreCheck → globals.css in the (SignIn)/(SignOut) routes;
+// Brain → brand-ds.css in the (site) group; the marketing pages / and /precheck
+// → components/landing/site.css), so the design systems are code-split per
+// route and can never collide on the same page.
 
 export const metadata: Metadata = {
-  title: "Brain — Inteligência no WhatsApp para clínicas",
+  title: "Brain — PreCheck e secretarIA para clínicas",
   description:
-    "A Brain coloca inteligência no WhatsApp da sua clínica: o PreCheck conduz a anamnese antes da consulta e a secretarIA atende pacientes e cuida da agenda.",
+    "O PreCheck conduz a anamnese antes da consulta e a secretarIA atende pacientes e cuida da agenda da clínica.",
 };
 
 // Fonts for BOTH design systems: PreCheck (Space Grotesk / DM Sans / Instrument
@@ -116,8 +117,10 @@ const FONT_VARIABLES = [
 // Shared localStorage key `precheck_theme` so the toggle persists across the whole
 // app. Default with no stored value: dark on the ported PreCheck routes (their
 // original default), light on the new Brain routes (the brand design's default).
+// /precheck is a Brain marketing page since 2026-10-19, so it defaults to light
+// like the home; it is no longer in the dark list.
 const THEME_INIT_SCRIPT =
-  "(function(){try{var t=localStorage.getItem('precheck_theme');if(t!=='light'&&t!=='dark'){var p=location.pathname;var dark=/^\\/(dashboard|summary|inbound|login|esqueci_senha|precheck)(\\/|$)/.test(p);t=dark?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();";
+  "(function(){try{var t=localStorage.getItem('precheck_theme');if(t!=='light'&&t!=='dark'){var p=location.pathname;var dark=/^\\/(dashboard|summary|inbound|login|esqueci_senha)(\\/|$)/.test(p);t=dark?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();";
 
 export default function RootLayout({
   children,
