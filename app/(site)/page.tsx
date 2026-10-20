@@ -1,757 +1,458 @@
-// Brain umbrella home page — server component, composes shared components + static JSX.
-// Hero variant A only (dual-product split). All other sections ported verbatim from brain.html.
+// Brain home (/) — the umbrella marketing page for PreCheck and secretarIA.
+//
+// Sections live here as plain JSX; reusable pieces (header, footer, pricing,
+// security, FAQ, product vignettes) are in components/landing. Styles come from
+// components/landing/site.css, scoped to `.site`, so nothing here can leak into
+// the app screens that share the (site) layout.
+//
+// COPY RULE: every claim on this page is something the product does today.
+// The 2026-10-05 audit removed: "IA da Anthropic (Claude)" (the model is
+// OpenAI), "dados só no Brasil" / "servidor brasileiro" (files are on
+// Cloudflare R2), "criptografia em trânsito e repouso", "WhatsApp oficial /
+// homologado pela Meta" (approval pending), "DPO designado", "Melhor valor",
+// "Lei 14.133" and "demonstração de 25 minutos". Do not reintroduce a claim
+// without the evidence for it.
 
+import type { CSSProperties } from "react";
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
 import Link from "next/link";
 
-import { BrandHeader } from "./_components/BrandHeader";
-import { BrandFooter } from "./_components/BrandFooter";
 import { BrandIcon } from "./_components/BrandIcon";
-import { PriceCard } from "./_components/PriceCard";
-import { PlanCheckoutCta } from "./_components/PlanCheckoutCta";
-import { Faq } from "./_components/Faq";
 import { ContactForm } from "./_components/ContactForm";
-import { Reveal } from "./_components/Reveal";
-import { PRICING } from "./_lib/pricing";
+import { PRICING, PRECHECK_QUOTA } from "./_lib/pricing";
 
-// ---------------------------------------------------------------------------
-// Metadata — ported from <title> and <meta name="description"> in brain.html
-// ---------------------------------------------------------------------------
+import "@/components/landing/site.css";
+import { PreCheckMark, SecretariaMark, SectionLabel, StatusTag } from "@/components/landing/brand";
+import { Faq, type FaqEntry } from "@/components/landing/Faq";
+import { PlayInView } from "@/components/landing/PlayInView";
+import { Pricing } from "@/components/landing/Pricing";
+import { SecuritySection } from "@/components/landing/SecuritySection";
+import { SiteFooter } from "@/components/landing/SiteFooter";
+import { SiteHeader } from "@/components/landing/SiteHeader";
+import {
+  AgendaWeek,
+  PatientConversation,
+  PortalWindow,
+  SummaryCard,
+} from "@/components/landing/vignettes";
 
 export const metadata: Metadata = {
-  title: "Brain — Inteligência no WhatsApp para clínicas | PreCheck + secretarIA",
+  title: "Brain — PreCheck e secretarIA para clínicas",
   description:
-    "A Brain coloca inteligência no WhatsApp da sua clínica: PreCheck conduz a anamnese antes da consulta e a secretarIA atende pacientes e cuida da agenda.",
+    "O PreCheck conduz a pré-consulta e entrega ao médico um resumo com os sinais de alarme em destaque. A secretarIA responde pacientes e marca, remarca e cancela consultas no Google Agenda da clínica.",
 };
 
-// ---------------------------------------------------------------------------
-// FAQ data — 5 Brain FAQ items, answers may contain <strong>
-// ---------------------------------------------------------------------------
+const NAV = [
+  { href: "#produtos", label: "Produtos" },
+  { href: "#como-funciona", label: "Como funciona" },
+  { href: "#planos", label: "Planos" },
+  { href: "#seguranca", label: "Segurança" },
+  { href: "#faq", label: "Perguntas" },
+];
 
-const FAQ_ITEMS: { q: string; a: ReactNode }[] = [
+const FAQ: FaqEntry[] = [
   {
     q: "Preciso contratar os dois produtos?",
-    a: "Não. PreCheck e secretarIA funcionam de forma independente — você pode começar pelo que faz mais sentido para a sua clínica. O pacote Brain Completo junta os dois com vantagem, mas é opcional. Em todos os casos, o acesso é por um único login.",
+    a: "Não. PreCheck e secretarIA são independentes: dá para começar por um e somar o outro depois. Os dois usam a mesma conta Brain.",
   },
   {
     q: "Qual a diferença entre PreCheck e secretarIA?",
-    a: (
-      <>
-        O PreCheck atua <strong>antes</strong> da consulta: conduz a anamnese
-        pelo WhatsApp e entrega ao médico um resumo estruturado com sinais de
-        alarme. A secretarIA atua no <strong>dia a dia</strong>: responde
-        dúvidas dos pacientes no WhatsApp e agenda, cancela e remarca consultas.
-        Um prepara a consulta; o outro cuida do paciente e da agenda.
-      </>
-    ),
+    a: "O PreCheck cuida do antes da consulta: conduz a anamnese com o paciente e entrega ao médico um resumo estruturado. A secretarIA cuida do atendimento do dia a dia: responde dúvidas e marca, remarca e cancela consultas na agenda da clínica.",
   },
   {
-    q: "Os dados dos pacientes ficam no Brasil?",
-    a: "Sim. O armazenamento permanente é exclusivamente em servidor brasileiro, para os dois produtos. A inteligência das conversas usa o Claude (Anthropic, EUA), com política de não treinar sobre dados de API e conformidade com a LGPD via cláusulas contratuais.",
+    q: "O paciente precisa instalar alguma coisa?",
+    a: "Não. A conversa acontece no chat da clínica, que abre no navegador do celular a partir de um link ou de um QR code. Não é preciso baixar aplicativo.",
   },
   {
-    q: "Quem é o responsável legal pelos dados?",
-    a: "A clínica contratante é a controladora dos dados. A Brain é operadora, com DPO designado e contrato de tratamento específico, cumprindo os requisitos da LGPD para dados sensíveis de saúde (Art. 11). A entidade legal é a PMB Consultoria e Assessoria Empresarial e Projetos LTDA.",
+    q: "Funciona pelo WhatsApp?",
+    a: "Ainda não. Hoje o canal é o chat da clínica, no Portal Brain. O WhatsApp está a caminho, e avisamos os clientes quando estiver disponível.",
   },
   {
-    q: "Como funciona a contratação pública?",
-    a: "Os dois produtos são compatíveis com a Lei 14.133/2021, com faturamento por nota fiscal contra empenho e suporte ao processo licitatório. Atendemos clínicas privadas, médicos autônomos e o setor público — fale com a gente para o modelo adequado.",
+    q: "A secretarIA já está disponível?",
+    a: "Ela está entrando em piloto com as primeiras clínicas. Se quiser participar, ou só ser avisado quando abrir, deixe seu contato no formulário abaixo.",
+  },
+  {
+    q: "A IA substitui o médico ou a recepção?",
+    a: "Não. O PreCheck prepara a consulta, mas quem avalia e decide é o médico. A secretarIA cuida das conversas repetitivas e passa para a equipe quando é preciso uma pessoa.",
+  },
+  {
+    q: "Qual inteligência artificial vocês usam?",
+    a: "Usamos modelos de linguagem da OpenAI, acessados por API.",
+  },
+  {
+    q: "Quem é o responsável pelos dados dos pacientes?",
+    a: "Na LGPD, a clínica que contrata é a controladora dos dados dos seus pacientes. A Brain atua como operadora, tratando esses dados em nome da clínica.",
   },
 ];
 
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
+const d = (n: number) => ({ "--d": n }) as CSSProperties;
 
 export default function BrainHomePage() {
   return (
-    <>
-      {/* ====================== HEADER ====================== */}
-      <BrandHeader
-        variant="brain"
-        navLinks={[
-          { href: "#produtos", label: "Produtos" },
-          { href: "#planos", label: "Planos" },
-          { href: "#empresa", label: "A empresa" },
-          { href: "#seguranca", label: "Segurança" },
-          { href: "#faq", label: "FAQ" },
-        ]}
-      />
+    <div className="site">
+      <a href="#conteudo" className="mk-skip">
+        Pular para o conteúdo
+      </a>
+      <SiteHeader nav={NAV} plansHref="#planos" contactHref="#contato" />
 
-      {/* ====================== HERO — VARIANT A (dual-product split) ====================== */}
-      <section className="hero hero-variant" data-variant="A">
-        <div className="container hero-inner">
-          {/* Left: copy */}
-          <div className="hero-copy">
-            <span className="eyebrow">Plataforma Brain · PreCheck + secretarIA</span>
-            <h1 className="display">
-              Inteligência no WhatsApp,{" "}
-              <span className="em">do primeiro &ldquo;oi&rdquo; à consulta</span>.
-            </h1>
-            <p className="lead">
-              A Brain coloca duas IAs no WhatsApp da sua clínica: o{" "}
-              <strong>PreCheck</strong> conduz a anamnese antes do atendimento e
-              a <strong>secretarIA</strong> responde os pacientes e cuida da
-              agenda. Mais contexto para o médico, menos atrito para todos.
-            </p>
-            <div className="hero-cta">
-              <a className="btn btn--primary btn--lg" href="#planos">
+      <main id="conteudo">
+        {/* ============================ HERO ============================ */}
+        <section className="mk-hero" aria-labelledby="hero-t">
+          <div className="mk-wrap">
+            <div className="mk-hero__copy mk-enter">
+              <a href="#secretaria" className="mk-announce" style={d(0)}>
+                <span className="mk-announce__tag">
+                  <span className="mk-dot mk-dot--pilot" aria-hidden="true" />
+                  Piloto
+                </span>
+                A secretarIA está chegando às primeiras clínicas
                 <BrandIcon name="arrowR" />
-                Começar Agora
               </a>
-              <a className="btn btn--outline btn--lg" href="#contato">
-                Agendar demonstração
-              </a>
-            </div>
-            <div className="hero-trust">
-              <div className="chip-row">
-                <span className="chip">
-                  <BrandIcon name="check" />
-                  Dois produtos, uma clínica
-                </span>
-                <span className="chip">
-                  <BrandIcon name="check" />
-                  WhatsApp oficial
-                </span>
-                <span className="chip">
-                  <BrandIcon name="check" />
-                  Conformidade LGPD
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Right: visual — .prod-stack with two mini-cards (no phone mockup) */}
-          <div className="hero-visual">
-            <Reveal>
-              <div className="prod-stack">
-                {/* PreCheck mini card — resumo da pré-consulta */}
-                <div className="mini-card mini-precheck">
-                  <div className="mini-head">
-                    <span
-                      className="mini-dot"
-                      style={{ background: "var(--brand)" }}
-                    />
-                    PreCheck · resumo da pré-consulta
-                  </div>
-                  <div className="mini-line">
-                    <span className="mk">QP</span> Cefaleia há 4 dias, com fotofobia
-                  </div>
-                  <div className="mini-alerts">
-                    <span className="alert-line alert-line--red">
-                      <span className="dot dot--red" />
-                      Sinal de alarme: rigidez de nuca
-                    </span>
-                    <span className="alert-line alert-line--green">
-                      <span className="dot dot--green" />
-                      Sem febre · sem déficit focal
-                    </span>
-                  </div>
-                </div>
-
-                {/* secretarIA mini card — WhatsApp chat bubbles */}
-                <div className="mini-card mini-secretaria">
-                  <div className="mini-head">
-                    <span
-                      className="mini-dot"
-                      style={{ background: "#25a35f" }}
-                    />
-                    secretarIA · WhatsApp
-                  </div>
-                  <div className="bub bub--out show" style={{ maxWidth: "88%" }}>
-                    Dá pra marcar um retorno quinta?
-                  </div>
-                  <div
-                    className="bub bub--in show"
-                    style={{ maxWidth: "92%" }}
-                  >
-                    Tenho <strong>quinta 14:00</strong> ✅ Quer que eu confirme?
-                  </div>
-                </div>
-              </div>
-            </Reveal>
-          </div>
-        </div>
-      </section>
-
-      {/* ====================== PRODUTOS ====================== */}
-      <section className="section" id="produtos">
-        <div className="container">
-          <div className="sec-head center">
-            <Reveal>
-              <span className="eyebrow eyebrow--center">Produtos</span>
-              <h2 className="h-sec mt-s">
-                Dois produtos, <span className="em">uma só clínica</span>.
-              </h2>
-              <p className="lead mt-s" style={{ marginInline: "auto" }}>
-                Use cada um por conta própria ou combine os dois. Mesma
-                engenharia, mesma conformidade.
+              <h1 id="hero-t" className="mk-display" style={d(1)}>
+                A consulta começa antes do paciente chegar.
+              </h1>
+              <p className="mk-lead" style={d(2)}>
+                O <strong>PreCheck</strong> conduz a anamnese com o paciente e entrega ao médico um
+                resumo com os sinais de alarme em destaque. A <strong>secretarIA</strong> responde
+                os pacientes e marca, remarca e cancela consultas no Google Agenda da clínica.
               </p>
-            </Reveal>
+              <div className="mk-hero__ctas" style={d(3)}>
+                <a href="#contato" className="mk-btn mk-btn--primary">
+                  Agendar demonstração
+                </a>
+                <a href="#planos" className="mk-btn mk-btn--secondary">
+                  Ver planos
+                </a>
+              </div>
+              <p className="mk-hero__login" style={d(4)}>
+                Já é cliente?{" "}
+                <Link href="/login" className="mk-inline-link">
+                  Entrar
+                </Link>
+              </p>
+            </div>
           </div>
 
-          <div className="grid grid-2 prod-grid">
-            {/* PreCheck product card */}
-            <Reveal>
-              <div className="card prod-card">
-                <div className="prod-top">
-                  <span className="prod-badge">Antes da consulta</span>
-                  <h3 className="prod-h">
-                    Pre<span className="em">Check</span>
-                  </h3>
+          <div className="mk-stage-band">
+            <div className="mk-wrap">
+              <div className="mk-stage">
+                <div>
+                  <PortalWindow />
+                  <p className="mk-caption mk-stage__caption">
+                    Ilustrações do Portal Brain e do PreCheck, com dados fictícios.
+                  </p>
                 </div>
-                <p className="muted prod-lead">
-                  Conduz a anamnese pré-consulta pelo WhatsApp. O médico define
-                  o roteiro e recebe um resumo estruturado, com sinais de alarme
-                  destacados, antes do atendimento começar.
+                <div className="mk-stage__side">
+                  <SummaryCard />
+                </div>
+              </div>
+
+              {/* Honest status line: what is live, what is in pilot, what is next. */}
+              <ul className="mk-status" aria-label="Onde estamos hoje">
+                <li className="mk-status__item">
+                  <div className="mk-status__head">
+                    <PreCheckMark />
+                    <span className="mk-status__state">
+                      <StatusTag status="live" />
+                    </span>
+                  </div>
+                  <p>Em funcionamento nas clínicas que já usam a Brain.</p>
+                </li>
+                <li className="mk-status__item">
+                  <div className="mk-status__head">
+                    <SecretariaMark />
+                    <span className="mk-status__state">
+                      <StatusTag status="pilot" />
+                    </span>
+                  </div>
+                  <p>Entrando em piloto com as primeiras clínicas.</p>
+                </li>
+                <li className="mk-status__item">
+                  <div className="mk-status__head">
+                    <span>WhatsApp</span>
+                    <span className="mk-status__state">
+                      <StatusTag status="soon" />
+                    </span>
+                  </div>
+                  <p>Hoje o paciente conversa pelo chat da clínica, no navegador.</p>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* ========================== PRODUTOS ========================== */}
+        <section id="produtos" className="mk-section" aria-label="Produtos">
+          <div className="mk-wrap" style={{ display: "grid", gap: "clamp(96px, 12vw, 160px)" }}>
+            {/* PreCheck */}
+            <article id="precheck" className="mk-feature" aria-labelledby="precheck-t">
+              <div className="mk-feature__copy">
+                <SectionLabel num="01">
+                  <PreCheckMark /> · antes da consulta
+                </SectionLabel>
+                <h2 id="precheck-t" className="mk-h2">
+                  O médico chega à consulta já sabendo o caso.
+                </h2>
+                <p className="mk-lead">
+                  O PreCheck conversa com o paciente antes do atendimento, seguindo o roteiro que o
+                  médico define, e organiza as respostas num resumo estruturado.
                 </p>
-                <ul className="tick-list mt-m">
-                  <li className="ok">
-                    <BrandIcon name="check" />
-                    Anamnese guiada por IA, sem app
+                <ul className="mk-points">
+                  <li>
+                    <BrandIcon name="chat" />
+                    <span>
+                      <strong>Anamnese guiada por IA.</strong> As perguntas se aprofundam conforme o
+                      que o paciente responde.
+                    </span>
                   </li>
-                  <li className="ok">
-                    <BrandIcon name="check" />
-                    Resumo no padrão POMR + SOAP
+                  <li>
+                    <BrandIcon name="doc" />
+                    <span>
+                      <strong>Resumo estruturado.</strong> Queixa principal, história, antecedentes,
+                      medicações e alergias, prontos para leitura.
+                    </span>
                   </li>
-                  <li className="ok">
-                    <BrandIcon name="check" />
-                    Alertas em vermelho / amarelo / verde
+                  <li>
+                    <BrandIcon name="bell" />
+                    <span>
+                      <strong>Sinais de alarme em destaque,</strong> em vermelho, amarelo ou verde,
+                      no topo do resumo.
+                    </span>
+                  </li>
+                  <li>
+                    <BrandIcon name="phone" />
+                    <span>
+                      <strong>No tempo do paciente.</strong> Ele responde pelo celular antes de
+                      chegar, sem instalar aplicativo.
+                    </span>
                   </li>
                 </ul>
-                {/* Alert strip demo — mirrors the color-coded severity indicators */}
-                <div className="alert-strip mt-m">
-                  <span className="alert-line alert-line--red">
-                    <span className="dot dot--red" />
-                    Dor torácica + dispneia há 6h
-                  </span>
-                  <span className="alert-line alert-line--amber">
-                    <span className="dot dot--amber" />
-                    HAS sem aferição há 8 meses
-                  </span>
-                  <span className="alert-line alert-line--green">
-                    <span className="dot dot--green" />
-                    Sem sinais de alarme
-                  </span>
+                <div className="mk-feature__more">
+                  <Link href="/precheck" className="mk-link">
+                    Conhecer o PreCheck <BrandIcon name="arrowR" />
+                  </Link>
                 </div>
-                <Link
-                  href="/precheck"
-                  className="btn btn--outline btn--block mt-l"
-                >
-                  Conhecer PreCheck <BrandIcon name="arrowR" />
-                </Link>
               </div>
-            </Reveal>
+              <PlayInView>
+                <PatientConversation />
+              </PlayInView>
+            </article>
 
-            {/* secretarIA product card */}
-            <Reveal delay={1}>
-              <div className="card prod-card">
-                <div className="prod-top">
-                  <span className="prod-badge">No dia a dia</span>
-                  <h3 className="prod-h">
-                    secretar<span className="em">IA</span>
-                  </h3>
-                </div>
-                <p className="muted prod-lead">
-                  Uma secretária com IA no WhatsApp que responde os pacientes
-                  como se fosse o próprio médico — e agenda, cancela e remarca
-                  consultas sozinha, com o contexto que o médico configura.
+            {/* secretarIA */}
+            <article
+              id="secretaria"
+              className="mk-feature mk-feature--flip"
+              aria-labelledby="secretaria-t"
+            >
+              <div className="mk-feature__copy">
+                <SectionLabel num="02">
+                  <SecretariaMark /> · no dia a dia
+                </SectionLabel>
+                <h2 id="secretaria-t" className="mk-h2">
+                  Responde, agenda e remarca. E chama a equipe quando precisa.
+                </h2>
+                <p className="mk-lead">
+                  A secretarIA atende os pacientes com as informações que a clínica configura e
+                  cuida da agenda direto no Google Agenda.
                 </p>
-                <ul className="tick-list mt-m">
-                  <li className="ok">
-                    <BrandIcon name="check" />
-                    Responde dúvidas no tom do médico
+                <ul className="mk-points">
+                  <li>
+                    <BrandIcon name="chat" />
+                    <span>
+                      <strong>Tira dúvidas</strong> com o contexto da clínica: horários, endereço e
+                      orientações.
+                    </span>
                   </li>
-                  <li className="ok">
-                    <BrandIcon name="check" />
-                    Agenda, cancela e remarca consultas
+                  <li>
+                    <BrandIcon name="calendar" />
+                    <span>
+                      <strong>Marca, remarca e cancela</strong> consultas no Google Agenda da
+                      clínica.
+                    </span>
                   </li>
-                  <li className="ok">
-                    <BrandIcon name="check" />
-                    Sincronizada com o Google Calendar
+                  <li>
+                    <BrandIcon name="bell" />
+                    <span>
+                      <strong>Envia lembretes</strong> antes da consulta.
+                    </span>
+                  </li>
+                  <li>
+                    <BrandIcon name="users" />
+                    <span>
+                      <strong>Passa para a equipe</strong> quando a conversa pede uma pessoa.
+                    </span>
                   </li>
                 </ul>
-                {/* Mini WhatsApp chat preview inside the card */}
-                <div
-                  className="card-soft mt-m"
-                  style={{ padding: 14, background: "var(--wa-screen)" }}
-                >
-                  <div className="bub bub--out show" style={{ maxWidth: "80%" }}>
-                    Vocês atendem Unimed?
-                  </div>
-                  <div
-                    className="bub bub--in show mt-s"
-                    style={{ maxWidth: "90%" }}
-                  >
-                    Atendemos sim 😊 Quer agendar uma{" "}
-                    <strong>primeira consulta</strong>?
-                  </div>
+                <div className="mk-note">
+                  <BrandIcon name="phone" />
+                  <span>
+                    <strong>Canal de hoje: o chat da clínica.</strong> Um link ou QR code que a
+                    clínica compartilha; o paciente conversa pelo navegador, sem instalar nada.
+                    WhatsApp em breve.
+                  </span>
                 </div>
-                <Link
-                  href="/secretaria"
-                  className="btn btn--primary btn--block mt-l"
-                >
-                  Conhecer secretarIA <BrandIcon name="arrowR" />
-                </Link>
+                <div className="mk-feature__more">
+                  <a href="#contato" className="mk-link">
+                    Quero participar do piloto <BrandIcon name="arrowR" />
+                  </a>
+                </div>
               </div>
-            </Reveal>
+              <AgendaWeek />
+            </article>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ====================== PLANOS ====================== */}
-      <section
-        className="section"
-        id="planos"
-        style={{ background: "var(--page-grad)" }}
-      >
-        <div className="container">
-          <div className="sec-head center">
-            <Reveal>
-              <span className="eyebrow eyebrow--center">Planos</span>
-              <h2 className="h-sec mt-s">
-                Leve um. Ou leve <span className="em">a clínica toda</span>.
+        {/* ======================== COMO FUNCIONA ======================== */}
+        <section
+          id="como-funciona"
+          className="mk-section mk-section--alt"
+          aria-labelledby="como-t"
+        >
+          <div className="mk-wrap">
+            <div className="mk-head">
+              <SectionLabel>Como funciona</SectionLabel>
+              <h2 id="como-t" className="mk-h2">
+                Um link para o paciente. Um portal para a equipe.
               </h2>
-              <p className="lead mt-s" style={{ marginInline: "auto" }}>
-                Cada produto pode ser contratado sozinho, e o pacote Brain
-                Completo junta os dois com vantagem.
+              <p className="mk-lead">
+                Nada para o paciente instalar e um só lugar para a clínica acompanhar tudo. A
+                implantação é feita junto com a sua equipe.
               </p>
-            </Reveal>
-          </div>
-
-          {/* As TRÊS faixas do PreCheck numa linha só: a escolha aqui é de
-              VOLUME (50/100/300), e volume só se compara lado a lado. O combo e
-              a secretarIA — que não são faixa de PreCheck — descem para a linha
-              de baixo em vez de disputar espaço nesta comparação. */}
-          <div className="price-grid price-grid--3">
-            {/* PreCheck Start — faixa de entrada (2026-09-03), mesmo checkout
-                self-service das outras duas. */}
-            <Reveal>
-              <PriceCard
-                name={PRICING.precheckStart.name}
-                tagline={PRICING.precheckStart.tagline}
-                amount={PRICING.precheckStart.amount}
-                unit={PRICING.precheckStart.unit}
-                features={PRICING.precheckStart.features}
-                ctaLabel="Falar com a Brain"
-                ctaHref="#contato"
-                cta={
-                  <PlanCheckoutCta
-                    plan="precheck_start"
-                    catalogIds={PRICING.precheckStart.catalogIds ?? []}
-                    label="Contratar Start"
-                    secondaryHref="#contato"
-                    secondaryLabel="Falar com a Brain"
-                  />
-                }
-              />
-            </Reveal>
-
-            {/* PreCheck Basic — self-service checkout wired for anonymous visitors */}
-            <Reveal delay={1}>
-              <PriceCard
-                name={PRICING.precheck.name}
-                tagline={PRICING.precheck.tagline}
-                amount={PRICING.precheck.amount}
-                unit={PRICING.precheck.unit}
-                features={PRICING.precheck.features}
-                ctaLabel="Falar com a Brain"
-                ctaHref="#contato"
-                cta={
-                  <PlanCheckoutCta
-                    plan="precheck_basic"
-                    catalogIds={PRICING.precheck.catalogIds ?? []}
-                    label="Contratar Basic"
-                    secondaryHref="#contato"
-                    secondaryLabel="Falar com a Brain"
-                  />
-                }
-              />
-            </Reveal>
-
-            {/* PreCheck Advanced — same checkout flow as Basic, higher monthly
-                quota. Was a secondary text link under the Basic card until
-                2026-08-02; a purchasable plan the grid never priced read as
-                "not for sale", so it is a full card now. */}
-            <Reveal delay={2}>
-              <PriceCard
-                name={PRICING.precheckAdvanced.name}
-                tagline={PRICING.precheckAdvanced.tagline}
-                amount={PRICING.precheckAdvanced.amount}
-                unit={PRICING.precheckAdvanced.unit}
-                features={PRICING.precheckAdvanced.features}
-                ctaLabel="Falar com a Brain"
-                ctaHref="#contato"
-                cta={
-                  <PlanCheckoutCta
-                    plan="precheck_advanced"
-                    catalogIds={PRICING.precheckAdvanced.catalogIds ?? []}
-                    label="Contratar Advanced"
-                    secondaryHref="#contato"
-                    secondaryLabel="Falar com a Brain"
-                  />
-                }
-              />
-            </Reveal>
-
-          </div>
-
-          <div className="price-grid price-grid--2">
-            {/* Brain Completo (featured) — plain sum of the two plans; no Stripe
-                Price configured yet, so the CTA stays consultant-only. */}
-            <Reveal>
-              <PriceCard
-                name={PRICING.combo.name}
-                tagline={PRICING.combo.tagline}
-                amount={PRICING.combo.amount}
-                unit={PRICING.combo.unit}
-                features={PRICING.combo.features}
-                ctaLabel="Falar com Consultor"
-                ctaHref="#contato"
-                featured
-                flag="Melhor valor"
-              />
-            </Reveal>
-
-            {/* secretarIA plan — self-service checkout wired for anonymous visitors */}
-            <Reveal delay={1}>
-              <PriceCard
-                name={PRICING.secretaria.name}
-                tagline={PRICING.secretaria.tagline}
-                amount={PRICING.secretaria.amount}
-                unit={PRICING.secretaria.unit}
-                features={PRICING.secretaria.features}
-                ctaLabel="Falar com a Brain"
-                ctaHref="#contato"
-                cta={
-                  <PlanCheckoutCta
-                    plan="secretaria_basico"
-                    catalogIds={PRICING.secretaria.catalogIds ?? []}
-                    label="Contratar secretarIA"
-                    secondaryHref="#contato"
-                    secondaryLabel="Falar com a Brain"
-                  />
-                }
-              />
-            </Reveal>
-          </div>
-        </div>
-      </section>
-
-      {/* ====================== A EMPRESA ====================== */}
-      <section className="section" id="empresa">
-        <div className="container split">
-          {/* Left: text */}
-          <Reveal>
-            <span className="eyebrow">A empresa</span>
-            <h2 className="h-sec mt-s">
-              A Brain existe para devolver{" "}
-              <span className="em">tempo de consulta</span>.
-            </h2>
-            <p className="lead mt-s">
-              Nossa missão é simples: dar contexto ao médico antes do
-              atendimento e tirar o atrito do caminho do paciente. Construímos
-              nativos do WhatsApp porque é onde a clínica brasileira já conversa
-              — sem app, sem fricção.
-            </p>
-            <p className="lead mt-m">
-              A Brain é dona de dois produtos: o <strong>PreCheck</strong>, que
-              cuida da pré-consulta, e a <strong>secretarIA</strong>, que cuida
-              do atendimento e da agenda. Mesma engenharia, mesma conformidade,
-              mesma obsessão por simplicidade.
-            </p>
-          </Reveal>
-
-          {/* Right: stats + legal entity card */}
-          <Reveal delay={1}>
-            <div className="grid grid-2" style={{ gap: 18 }}>
-              <div className="card-soft">
-                <div
-                  className="serif-num"
-                  style={{ fontSize: 40, color: "var(--brand)" }}
-                >
-                  2
-                </div>
-                <p className="muted mt-s" style={{ fontSize: 13.5 }}>
-                  produtos sob a mesma plataforma
-                </p>
-              </div>
-              <div className="card-soft">
-                <div
-                  className="serif-num"
-                  style={{ fontSize: 40, color: "var(--brand)" }}
-                >
+            </div>
+            <ol className="mk-steps">
+              <li className="mk-step">
+                <span className="mk-step__num" aria-hidden="true">
                   1
-                </div>
-                <p className="muted mt-s" style={{ fontSize: 13.5 }}>
-                  plataforma para toda a clínica
-                </p>
-              </div>
-              <div className="card-soft">
-                <span
-                  className="feat-ico"
-                  style={{ width: 38, height: 38 }}
-                >
-                  <BrandIcon name="server" />
                 </span>
-                <p className="muted mt-s" style={{ fontSize: 13.5 }}>
-                  Hospedagem em servidor brasileiro
+                <h3 className="mk-h3">A clínica configura</h3>
+                <p>
+                  Horários, orientações e respostas da secretarIA; o roteiro da pré-consulta do
+                  PreCheck. A agenda vem do Google Agenda da clínica.
                 </p>
-              </div>
-              <div className="card-soft">
-                <span
-                  className="feat-ico"
-                  style={{ width: 38, height: 38 }}
-                >
-                  <BrandIcon name="shield" />
+              </li>
+              <li className="mk-step">
+                <span className="mk-step__num" aria-hidden="true">
+                  2
                 </span>
-                <p className="muted mt-s" style={{ fontSize: 13.5 }}>
-                  Conformidade LGPD &amp; CFM nativa
+                <h3 className="mk-h3">Compartilha o link</h3>
+                <p>
+                  O chat da clínica tem um link e um QR code para usar no site, nas redes sociais,
+                  na confirmação da consulta ou na recepção.
                 </p>
-              </div>
-            </div>
-            {/* Legal entity row */}
-            <div
-              className="card-soft mt-m"
-              style={{ display: "flex", alignItems: "center", gap: 12 }}
-            >
-              <span className="feat-ico" style={{ width: 38, height: 38 }}>
-                <BrandIcon name="doc" />
-              </span>
-              <div>
-                <div
-                  className="faint"
-                  style={{
-                    fontSize: 11.5,
-                    fontWeight: 700,
-                    letterSpacing: ".06em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Entidade legal
-                </div>
-                <div
-                  style={{
-                    fontSize: 13.5,
-                    fontWeight: 600,
-                    marginTop: 2,
-                  }}
-                >
-                  PMB Consultoria e Assessoria Empresarial e Projetos LTDA
-                </div>
-              </div>
-            </div>
-          </Reveal>
-        </div>
-      </section>
+              </li>
+              <li className="mk-step">
+                <span className="mk-step__num" aria-hidden="true">
+                  3
+                </span>
+                <h3 className="mk-h3">Acompanha no portal</h3>
+                <p>
+                  A equipe vê as conversas e a agenda e entra quando precisa. O médico lê o resumo
+                  da anamnese antes de chamar o paciente.
+                </p>
+                <ul aria-label="Áreas do portal">
+                  <li className="mk-tag">Conversas</li>
+                  <li className="mk-tag">Agenda</li>
+                  <li className="mk-tag">Anamneses</li>
+                </ul>
+              </li>
+            </ol>
+          </div>
+        </section>
 
-      {/* ====================== SEGURANÇA (dark band) ====================== */}
-      <section className="section band-dark" id="seguranca">
-        <div className="container">
-          <div className="sec-head center">
-            <Reveal>
-              <span className="eyebrow eyebrow--center">Segurança &amp; LGPD</span>
-              <h2 className="h-sec mt-s">
-                Dado de saúde é dado <span className="em">sensível</span>. Nos
-                dois produtos.
+        <Pricing />
+
+        <SecuritySection />
+
+        {/* ========================== A EMPRESA ========================== */}
+        <section id="empresa" className="mk-section" aria-labelledby="empresa-t">
+          <div className="mk-wrap mk-about">
+            <div>
+              <SectionLabel>A Brain</SectionLabel>
+              <h2 id="empresa-t" className="mk-h2" style={{ marginTop: 18 }}>
+                Software brasileiro para clínicas.
               </h2>
-              <p className="lead mt-s" style={{ marginInline: "auto" }}>
-                A mesma camada de segurança protege o PreCheck e a secretarIA:
-                conformidade com a LGPD, a Resolução CFM 2.314/2022 e boas
-                práticas de telemedicina.
+            </div>
+            <div>
+              <p className="mk-about__text">
+                A Brain existe para devolver ao médico o tempo da consulta e tirar da recepção o
+                trabalho repetitivo. Fazemos dois produtos, o PreCheck e a secretarIA, e
+                implantamos cada um junto com a equipe da clínica.
               </p>
-            </Reveal>
-          </div>
-
-          <div className="grid grid-3">
-            {/* Six security feature cards */}
-            <Reveal>
-              <div className="card-soft">
-                <span className="feat-ico" style={{ width: 38, height: 38 }}>
-                  <BrandIcon name="lock" />
-                </span>
-                <h3 style={{ fontSize: 16, fontWeight: 700, marginTop: 14 }}>
-                  Criptografia em trânsito e repouso
-                </h3>
-                <p className="muted mt-s" style={{ fontSize: 13.5, lineHeight: 1.55 }}>
-                  TLS 1.3 no tráfego e dados em repouso criptografados no banco.
-                  Segredos nunca em claro.
-                </p>
-              </div>
-            </Reveal>
-            <Reveal delay={1}>
-              <div className="card-soft">
-                <span className="feat-ico" style={{ width: 38, height: 38 }}>
-                  <BrandIcon name="check" />
-                </span>
-                <h3 style={{ fontSize: 16, fontWeight: 700, marginTop: 14 }}>
-                  Consentimento explícito
-                </h3>
-                <p className="muted mt-s" style={{ fontSize: 13.5, lineHeight: 1.55 }}>
-                  Antes de qualquer coleta, o paciente aceita o termo. Registro
-                  auditável.
-                </p>
-              </div>
-            </Reveal>
-            <Reveal delay={2}>
-              <div className="card-soft">
-                <span className="feat-ico" style={{ width: 38, height: 38 }}>
-                  <BrandIcon name="users" />
-                </span>
-                <h3 style={{ fontSize: 16, fontWeight: 700, marginTop: 14 }}>
-                  Isolamento por clínica
-                </h3>
-                <p className="muted mt-s" style={{ fontSize: 13.5, lineHeight: 1.55 }}>
-                  Tenancy lógico. Uma clínica nunca vê pacientes da outra.
-                  Auditoria por atendimento.
-                </p>
-              </div>
-            </Reveal>
-            <Reveal>
-              <div className="card-soft">
-                <span className="feat-ico" style={{ width: 38, height: 38 }}>
-                  <BrandIcon name="server" />
-                </span>
-                <h3 style={{ fontSize: 16, fontWeight: 700, marginTop: 14 }}>
-                  Servidor brasileiro
-                </h3>
-                <p className="muted mt-s" style={{ fontSize: 13.5, lineHeight: 1.55 }}>
-                  Armazenamento em datacenter no Brasil, sem trânsito
-                  internacional desnecessário.
-                </p>
-              </div>
-            </Reveal>
-            <Reveal delay={1}>
-              <div className="card-soft">
-                <span className="feat-ico" style={{ width: 38, height: 38 }}>
-                  <BrandIcon name="whatsapp" />
-                </span>
-                <h3 style={{ fontSize: 16, fontWeight: 700, marginTop: 14 }}>
-                  WhatsApp Business API oficial
-                </h3>
-                <p className="muted mt-s" style={{ fontSize: 13.5, lineHeight: 1.55 }}>
-                  Integração homologada pela Meta Cloud API. Nada de apps ou
-                  números não oficiais.
-                </p>
-              </div>
-            </Reveal>
-            <Reveal delay={2}>
-              <div className="card-soft">
-                <span className="feat-ico" style={{ width: 38, height: 38 }}>
-                  <BrandIcon name="shield" />
-                </span>
-                <h3 style={{ fontSize: 16, fontWeight: 700, marginTop: 14 }}>
-                  LGPD &amp; CFM
-                </h3>
-                <p className="muted mt-s" style={{ fontSize: 13.5, lineHeight: 1.55 }}>
-                  DPO designado e contrato de tratamento de dados. A clínica é a
-                  controladora; a Brain, operadora.
-                </p>
-              </div>
-            </Reveal>
-          </div>
-
-          {/* Tech strip — "Sob o capô" */}
-          <div style={{ marginTop: 48 }}>
-            <div
-              className="eyebrow eyebrow--center"
-              style={{ justifyContent: "center", marginBottom: 20 }}
-            >
-              Sob o capô
-            </div>
-            <div className="tech-strip">
-              <span className="ti">
-                <BrandIcon name="sparkle" />
-                IA da Anthropic (Claude)
-              </span>
-              <span className="tech-sep" />
-              <span className="ti">
-                <BrandIcon name="whatsapp" />
-                WhatsApp Business API (Meta Cloud)
-              </span>
-              <span className="tech-sep" />
-              <span className="ti">
-                <BrandIcon name="server" />
-                Infraestrutura em servidor brasileiro
-              </span>
-              <span className="tech-sep" />
-              <span className="ti">
-                <BrandIcon name="shield" />
-                Conformidade LGPD
-              </span>
+              <dl className="mk-about__meta">
+                <div>
+                  <dt>Produtos</dt>
+                  <dd>PreCheck (pré-consulta) e secretarIA (atendimento e agenda)</dd>
+                </div>
+                <div>
+                  <dt>Razão social</dt>
+                  <dd>PMB Consultoria e Assessoria Empresarial e Projetos LTDA</dd>
+                </div>
+              </dl>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ====================== FAQ ====================== */}
-      <section
-        className="section"
-        id="faq"
-        style={{ background: "var(--page-grad)" }}
-      >
-        <div className="container">
-          <div className="sec-head center">
-            <Reveal>
-              <span className="eyebrow eyebrow--center">
-                Perguntas frequentes
-              </span>
-              <h2 className="h-sec mt-s">
-                Sobre a Brain e os <span className="em">dois produtos</span>.
+        {/* ============================= FAQ ============================= */}
+        <section id="faq" className="mk-section mk-section--rule" aria-labelledby="faq-t">
+          <div className="mk-wrap mk-split">
+            <div className="mk-sticky">
+              <SectionLabel>Perguntas frequentes</SectionLabel>
+              <h2 id="faq-t" className="mk-h2" style={{ marginTop: 18 }}>
+                O que as clínicas costumam perguntar.
               </h2>
-            </Reveal>
+              <p className="mk-lead" style={{ marginTop: 18 }}>
+                Não encontrou o que procurava?{" "}
+                <a href="#contato" className="mk-inline-link">
+                  Fale com a gente
+                </a>
+                .
+              </p>
+            </div>
+            <Faq items={FAQ} />
           </div>
-          {/* Faq is a client component — no Reveal wrapper needed (it handles its own state) */}
-          <Faq items={FAQ_ITEMS} />
-        </div>
-      </section>
+        </section>
 
-      {/* ====================== CONTATO ====================== */}
-      <section className="section" id="contato">
-        <div className="container split">
-          {/* Left: pitch copy */}
-          <Reveal>
-            <span className="eyebrow">Vamos conversar</span>
-            <h2 className="h-sec mt-s">
-              Veja a Brain rodando{" "}
-              <span className="em">no seu serviço</span>.
-            </h2>
-            <p className="lead mt-s">
-              Demonstração de 25 minutos com um caso real do seu fluxo.
-              Mostramos o produto certo para a sua necessidade — ou os dois. Sem
-              compromisso, sem proposta empurrada.
-            </p>
-            <ul className="tick-list mt-l">
-              <li className="ok">
-                <BrandIcon name="check" />
-                Diagnóstico do fluxo atual da clínica
-              </li>
-              <li className="ok">
-                <BrandIcon name="check" />
-                Demonstração do PreCheck e/ou da secretarIA
-              </li>
-              <li className="ok">
-                <BrandIcon name="check" />
-                Implantação assistida pela equipe Brain
-              </li>
-            </ul>
-          </Reveal>
-
-          {/* Right: controlled form (client component) */}
-          <Reveal delay={1}>
-            {/* Makes self-service an "and", not a replacement, for the demo form below. */}
-            <p className="muted mt-s" style={{ fontSize: 13.5 }}>
-              Prefere começar agora? Assine em poucos minutos em vez de esperar
-              uma conversa — veja os <a href="#planos">planos</a>.
-            </p>
+        {/* =========================== CONTATO =========================== */}
+        <section id="contato" className="mk-section mk-section--alt" aria-labelledby="contato-t">
+          <div className="mk-wrap mk-contact">
+            <div>
+              <SectionLabel>Demonstração</SectionLabel>
+              <h2 id="contato-t" className="mk-h2" style={{ marginTop: 18 }}>
+                Veja a Brain com o fluxo da sua clínica.
+              </h2>
+              <p className="mk-lead" style={{ marginTop: 18 }}>
+                Uma conversa com a nossa equipe para entender como a clínica funciona hoje e mostrar
+                o produto que faz sentido para ela, ou os dois.
+              </p>
+              <ul className="mk-contact__list">
+                <li>
+                  <BrandIcon name="check" />
+                  Como a clínica atende e agenda hoje
+                </li>
+                <li>
+                  <BrandIcon name="check" />
+                  O PreCheck e a secretarIA funcionando
+                </li>
+                <li>
+                  <BrandIcon name="check" />
+                  Como é a implantação com a sua equipe
+                </li>
+              </ul>
+              <p className="mk-contact__alt">
+                Prefere começar agora? O PreCheck pode ser contratado direto pelo site, a partir de{" "}
+                {PRICING.precheckStart.amount}
+                {PRICING.precheckStart.unit} ({PRECHECK_QUOTA.start} pré-consultas).{" "}
+                <a href="#planos" className="mk-inline-link">
+                  Ver planos
+                </a>
+              </p>
+            </div>
             <ContactForm variant="brain" />
-          </Reveal>
-        </div>
-      </section>
+          </div>
+        </section>
+      </main>
 
-      {/* ====================== FOOTER ====================== */}
-      <BrandFooter variant="brain" />
-    </>
+      <SiteFooter />
+    </div>
   );
 }

@@ -1,9 +1,12 @@
 "use client";
 
-// ContactForm — "Agendar demo" lead-capture form (the #contato section).
+// ContactForm — "Agendar demonstração" lead capture on the Brain home (#contato).
 // "brain" variant: interest radio (PreCheck / secretarIA / Os dois) -> product_interest.
 // "secretaria" variant: profile radio (Clínica privada / Médico autônomo / Setor público) -> profile.
 // Submits to brain-api POST /demo-requests, then shows the confirmation state.
+//
+// Markup uses the marketing stylesheet (components/landing/site.css, .mk-*).
+// The submit payload and the API call are unchanged.
 
 import { useState, type FormEvent } from "react";
 import {
@@ -45,9 +48,7 @@ type FormState = {
 };
 
 export function ContactForm({ variant = "brain" }: ContactFormProps) {
-  // Default radio selection differs per variant (matches the "on" class in the HTML).
-  const defaultRadio =
-    variant === "secretaria" ? "Clínica privada" : "Os dois";
+  const defaultRadio = variant === "secretaria" ? "Clínica privada" : "Os dois";
 
   const [fields, setFields] = useState<FormState>({
     name: "",
@@ -78,65 +79,60 @@ export function ContactForm({ variant = "brain" }: ContactFormProps) {
         message: fields.message.trim() || null,
         source: variant === "secretaria" ? "secretaria" : "brain",
         // secretaria variant collects a profile; brain variant collects interest.
-        profile:
-          variant === "secretaria" ? mapProfile(fields.radioValue) : null,
+        profile: variant === "secretaria" ? mapProfile(fields.radioValue) : null,
         product_interest:
-          variant === "secretaria"
-            ? "secretaria"
-            : mapInterest(fields.radioValue),
+          variant === "secretaria" ? "secretaria" : mapInterest(fields.radioValue),
       });
       setSubmitted(true);
     } catch {
-      setError(
-        "Não foi possível enviar agora. Verifique os dados e tente novamente.",
-      );
+      setError("Não foi possível enviar agora. Verifique os dados e tente novamente.");
       setSubmitting(false);
     }
   }
 
   if (submitted) {
     return (
-      <div className="card" style={{ textAlign: "center", padding: "48px 30px" }}>
-        <span style={{ fontSize: 40 }}>✅</span>
-        <h3 className="h-card" style={{ marginTop: 18 }}>
-          Recebemos seu pedido!
-        </h3>
-        <p className="muted" style={{ marginTop: 12, fontSize: 15 }}>
-          Nossa equipe vai entrar em contato em até 1 dia útil para confirmar o
-          horário da demonstração. Até já!
-        </p>
+      <div className="mk-form">
+        <div className="mk-form__done" role="status">
+          <span className="mk-form__done-ico" aria-hidden="true">
+            <BrandIcon name="check" />
+          </span>
+          <h3>Recebemos seu pedido.</h3>
+          <p>Vamos responder pelo e-mail informado para combinar a demonstração.</p>
+        </div>
       </div>
     );
   }
 
-  // Radio options differ by variant.
-  const radioLabel =
-    variant === "secretaria" ? "Perfil" : "Tenho interesse em";
+  const radioLabel = variant === "secretaria" ? "Perfil" : "Tenho interesse em";
   const radioOptions =
     variant === "secretaria"
       ? ["Clínica privada", "Médico autônomo", "Setor público"]
       : ["PreCheck", "secretarIA", "Os dois"];
 
   return (
-    <form className="card" onSubmit={handleSubmit}>
-      {/* Name + email row */}
-      <div className="form-grid">
-        <label className="field-l">
+    <form className="mk-form" onSubmit={handleSubmit}>
+      <div className="mk-form__row">
+        <label className="mk-field">
           <span>Nome</span>
           <input
-            className="input"
+            className="mk-input"
             type="text"
-            placeholder="Dr. Aurélio Lima"
+            name="name"
+            autoComplete="name"
+            placeholder="Dra. Helena Souza"
             value={fields.name}
             onChange={(e) => update("name", e.target.value)}
             required
           />
         </label>
-        <label className="field-l">
+        <label className="mk-field">
           <span>E-mail profissional</span>
           <input
-            className="input"
+            className="mk-input"
             type="email"
+            name="email"
+            autoComplete="email"
             placeholder="voce@clinica.com.br"
             value={fields.email}
             onChange={(e) => update("email", e.target.value)}
@@ -145,32 +141,27 @@ export function ContactForm({ variant = "brain" }: ContactFormProps) {
         </label>
       </div>
 
-      {/* Clinic / institution */}
-      <label className="field-l mt-m">
+      <label className="mk-field">
         <span>
-          {variant === "secretaria" ? "Clínica ou consultório" : "Clínica ou instituição"}
+          {variant === "secretaria" ? "Clínica ou consultório" : "Clínica ou instituição"}{" "}
+          <span className="mk-optional">(opcional)</span>
         </span>
         <input
-          className="input"
+          className="mk-input"
           type="text"
-          placeholder="Consultório Dr. Aurélio Lima"
+          name="organization"
+          autoComplete="organization"
+          placeholder="Clínica Exemplo"
           value={fields.clinic}
           onChange={(e) => update("clinic", e.target.value)}
         />
       </label>
 
-      {/* Radio pills */}
-      <div className="field-l mt-m">
-        <span>{radioLabel}</span>
-        <div className="radio-row">
+      <fieldset className="mk-fieldset">
+        <legend>{radioLabel}</legend>
+        <div className="mk-choices">
           {radioOptions.map((opt) => (
-            <label
-              key={opt}
-              className={
-                "radio-pill" + (fields.radioValue === opt ? " on" : "")
-              }
-            >
-              {/* Input is visually hidden per brand-ds.css; click on label selects it */}
+            <label key={opt} className="mk-choice">
               <input
                 type="radio"
                 name="radio-option"
@@ -182,48 +173,40 @@ export function ContactForm({ variant = "brain" }: ContactFormProps) {
             </label>
           ))}
         </div>
-      </div>
+      </fieldset>
 
-      {/* Optional message */}
-      <label className="field-l mt-m">
-        <span>O que você quer ver na demo? (opcional)</span>
+      <label className="mk-field">
+        <span>
+          O que você quer ver na demonstração? <span className="mk-optional">(opcional)</span>
+        </span>
         <textarea
-          className="textarea"
+          className="mk-input"
+          name="message"
           placeholder={
             variant === "secretaria"
-              ? "Ex.: como ela responde dúvidas de convênio e marca um retorno…"
-              : "Conte um pouco sobre a sua clínica e o que mais te interessa…"
+              ? "Ex.: como ela responde dúvidas de convênio e marca um retorno"
+              : "Conte um pouco sobre a clínica e o que mais interessa"
           }
           value={fields.message}
           onChange={(e) => update("message", e.target.value)}
         />
       </label>
 
-      {/* Submit CTA — secretaria variant includes a whatsapp icon per SecretarIA.html */}
       <button
-        className="btn btn--primary btn--block btn--lg mt-m"
+        className="mk-btn mk-btn--primary mk-btn--block mk-form__submit"
         type="submit"
         disabled={submitting}
       >
-        {!submitting && variant === "secretaria" && <BrandIcon name="whatsapp" />}
-        {submitting ? "Enviando…" : "Agendar minha demonstração"}
+        {submitting ? "Enviando…" : "Agendar demonstração"}
       </button>
 
-      {/* Submit error */}
       {error && (
-        <p className="center mt-s" role="alert" style={{ fontSize: 13, color: "var(--danger, #c0392b)" }}>
+        <p className="mk-form__error" role="alert">
           {error}
         </p>
       )}
 
-      {/* Privacy note */}
-      <p
-        className="faint center mt-s"
-        style={{ fontSize: 12 }}
-      >
-        Ao enviar, você concorda com a nossa Política de Privacidade. Não
-        compartilhamos seus dados.
-      </p>
+      <p className="mk-form__fine">Usamos estes dados só para responder ao seu pedido.</p>
     </form>
   );
 }
