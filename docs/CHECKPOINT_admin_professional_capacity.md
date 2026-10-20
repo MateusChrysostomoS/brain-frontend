@@ -1,8 +1,6 @@
 # CHECKPOINT — card "Profissionais" no detalhe da clínica (TASK-063)
 
-Estado: **implementado e commitado só na branch `task/TASK-063-capacidade-profissionais`
-(worktree `BRAIN-worktrees/TASK-063/brain-frontend`). Não mesclado, não pushado, não
-deployado.** Deploy só depois do brain-api da mesma tarefa.
+Estado: **mesclado em `main` e pushado em 2026-10-20 (brain-api `99d3b3d`, brain-frontend `e2c82bd`). Deploy pendente, feito pelo dono: brain-api primeiro, depois brain-frontend. Sem migração.**
 
 Contrato, regras e decisões do servidor: `brain-api/docs/CHECKPOINT_admin_professional_capacity.md`.
 
