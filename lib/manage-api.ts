@@ -1415,6 +1415,48 @@ export function adminPatchEntitlements(
   );
 }
 
+// GET/PUT /admin/tenants/{id}/professional-capacity (TASK-063, brain-api
+// docs/CHECKPOINT_admin_professional_capacity.md). How many professionals the clinic
+// may keep active — the cap the secretarIA checks on every invite. `active_professionals`
+// is read live from the secretarIA; null means "could not read", never zero.
+export type CapacityBlockedReason = "stripe_managed" | "secretaria_disabled";
+
+export type ProfessionalCapacity = {
+  tenant_id: string;
+  max_professionals: number;
+  multi_professional: boolean;
+  active_professionals: number | null;
+  editable: boolean;
+  blocked_reason: CapacityBlockedReason | null;
+  max_allowed: number;
+};
+
+export function adminGetProfessionalCapacity(
+  session: Session,
+  tenantId: string,
+): Promise<ProfessionalCapacity> {
+  return manageFetch<ProfessionalCapacity>(
+    `/admin/tenants/${tenantId}/professional-capacity`,
+    {},
+    session.token,
+  );
+}
+
+// The body is closed server-side (extra="forbid"): send ONLY max_professionals.
+// Throws ManageApiError 409 with detail stripe_managed | secretaria_disabled |
+// below_active_professionals, or 422 for an out-of-range value.
+export function adminSetProfessionalCapacity(
+  session: Session,
+  tenantId: string,
+  maxProfessionals: number,
+): Promise<ProfessionalCapacity> {
+  return manageFetch<ProfessionalCapacity>(
+    `/admin/tenants/${tenantId}/professional-capacity`,
+    { method: "PUT", body: JSON.stringify({ max_professionals: maxProfessionals }) },
+    session.token,
+  );
+}
+
 export function adminListUsers(
   session: Session,
   skip = 0,
