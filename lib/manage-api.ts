@@ -49,6 +49,8 @@
 export type Role = "admin" | "doctor" | "manager" | "secretary";
 
 export type Session = {
+  // Personal-account clinic sessions renew by reselecting this exact membership.
+  accountUserId?: string;
   token: string;
   tenantId: string;
   email: string;
@@ -208,6 +210,8 @@ export function getSession(): Session | null {
 
 export function clearSession(): void {
   activeSession = null;
+  personalAccount = null;
+  personalEpoch += 1;
   // A full logout also leaves doctor-mode: drop the marker + the stashed admin
   // session so no impersonation state outlives the session it belonged to.
   adminStash = null;
@@ -321,6 +325,7 @@ type RefreshOutcome =
   | { kind: "offline" };
 
 let refreshInFlight: Promise<RefreshOutcome> | null = null;
+let refreshEpoch = -1;
 
 function redirectToLogin(): void {
   if (typeof window !== "undefined") window.location.assign("/login");
@@ -344,6 +349,7 @@ function sessionFromTokenResponse(
     email: data.email ?? fallbackEmail,
     role: typeof claims?.role === "string" ? (claims.role as string) : "",
     refreshable: true,
+    accountUserId: typeof claims?.account_sid === "string" && typeof claims?.sub === "string" ? claims.sub : undefined,
     professionalId: readProfessionalIdClaim(claims),
     isOwner: readBoolClaim(claims, "is_owner"),
     isManager: readBoolClaim(claims, "is_manager"),
@@ -351,6 +357,24 @@ function sessionFromTokenResponse(
 }
 
 async function performRefresh(): Promise<RefreshOutcome> {
+  const previous = activeSession;
+  const epoch = personalEpoch;
+  if (previous?.accountUserId) {
+    try {
+      const account = await resumePersonalAccount();
+      if (!account || activeSession !== previous) return { kind: "rejected" };
+      const data = await personalFetch<TokenResponse>("/auth/account/select", {
+        method: "POST", body: JSON.stringify({ user_id: previous.accountUserId }),
+      });
+      if (activeSession !== previous) return { kind: "rejected" };
+      const session = sessionFromTokenResponse(data);
+      saveSession(session);
+      return { kind: "ok", session };
+    } catch (error) {
+      return error instanceof ManageApiError && error.status === 401
+        ? { kind: "rejected" } : { kind: "offline" };
+    }
+  }
   let res: Response;
   try {
     res = await rawManageFetch("/auth/refresh", { method: "POST" });
@@ -359,15 +383,18 @@ async function performRefresh(): Promise<RefreshOutcome> {
   }
   if (!res.ok) return { kind: "rejected" };
   const session = sessionFromTokenResponse((await res.json()) as TokenResponse);
+  if (epoch !== personalEpoch || activeSession !== previous) return { kind: "rejected" };
   saveSession(session);
   return { kind: "ok", session };
 }
 
 function refreshFromCookie(): Promise<RefreshOutcome> {
-  if (!refreshInFlight) {
-    refreshInFlight = performRefresh().finally(() => {
-      refreshInFlight = null;
+  if (!refreshInFlight || refreshEpoch !== personalEpoch) {
+    refreshEpoch = personalEpoch;
+    const flight = performRefresh().finally(() => {
+      if (refreshInFlight === flight) refreshInFlight = null;
     });
+    refreshInFlight = flight;
   }
   return refreshInFlight;
 }
@@ -397,7 +424,7 @@ async function manageFetch<T>(
           await rawManageFetch(path, opts, outcome.session.token),
         );
       }
-      if (outcome.kind === "rejected") {
+      if (outcome.kind === "rejected" && getSession() === current) {
         // The revocable leg is dead. Clear locally and send them to log in
         // again. An "offline" outcome deliberately falls through instead: a
         // transient outage must not force a logout, and callers already bounce
@@ -432,6 +459,7 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
 // §2.1: refresh_token (opaque, revocable) + expires_in (access TTL, seconds) are
 // additive fields on the same TokenResponse shape /auth/refresh also returns.
 type TokenResponse = {
+  user_id?: string;
   access_token: string;
   token_type: string;
   // Still returned by brain-api (CONTRACTS §2.1) but no longer read here: the
@@ -452,10 +480,13 @@ type TokenResponse = {
 // Stores and returns the Session (access + refresh pair; access is 30 min, the
 // refresh flow in manageFetch keeps the session alive past it).
 export async function login(email: string, password: string): Promise<Session> {
+  const epoch = ++personalEpoch;
+  personalAccount = null;
   const data = await manageFetch<TokenResponse>("/auth/token", {
     method: "POST",
     body: JSON.stringify({ email, password }),
   });
+  if (epoch !== personalEpoch) throw new ManageApiError(401, "session_changed");
   // The response also planted the __Host-refresh_token cookie, so there is no
   // refresh leg to keep here — only the access token and the identity decoded
   // from it. `email` is passed as the fallback for the one moment the client
@@ -463,6 +494,127 @@ export async function login(email: string, password: string): Promise<Session> {
   const session = sessionFromTokenResponse(data, email);
   saveSession(session);
   return session;
+}
+
+export type PersonalAccount = { email: string; name: string };
+type PersonalAccountWire = PersonalAccount & { account_token: string };
+let personalAccount: PersonalAccountWire | null = null;
+let personalEpoch = 0;
+let personalResume: Promise<PersonalAccount | null> | null = null;
+let personalResumeEpoch = -1;
+
+function personalIdentity(account: PersonalAccountWire): string {
+  // Display/continuity check only; the API verifies all proof and permissions.
+  const subject = decodeJwtPayload(account.account_token)?.sub;
+  return typeof subject === "string" ? `id:${subject}` : `email:${account.email.toLowerCase().trim()}`;
+}
+
+// MANAGE-API CALL SITE #12 — personal account proof (opens no clinical context).
+export async function loginPersonalAccount(email: string, password: string): Promise<PersonalAccount> {
+  const epoch = ++personalEpoch;
+  personalAccount = null;
+  activeSession = null;
+  const wire = await parseManageResponse<PersonalAccountWire>(await rawManageFetch("/auth/account/login", {
+    method: "POST", body: JSON.stringify({ email, password }),
+  }));
+  if (!wire.account_token) throw new ManageApiError(409, "requires_password_change");
+  if (epoch !== personalEpoch) throw new ManageApiError(401, "session_changed");
+  personalAccount = wire;
+  return { email: wire.email, name: wire.name };
+}
+
+async function resumePersonalAccount(): Promise<PersonalAccount | null> {
+  if (!personalResume || personalResumeEpoch !== personalEpoch) {
+    const epoch = personalEpoch;
+    const previous = personalAccount;
+    personalResumeEpoch = epoch;
+    const flight = (async () => {
+      const res = await rawManageFetch("/auth/account/resume", { method: "POST" });
+      if (res.status === 401) {
+        if (epoch === personalEpoch) personalAccount = null;
+        return null;
+      }
+      const wire = await parseManageResponse<PersonalAccountWire>(res);
+      if (!wire.account_token || epoch !== personalEpoch) throw new ManageApiError(401, "session_changed");
+      if (previous && personalIdentity(previous) !== personalIdentity(wire)) {
+        // A different tab may have signed into another account. Do not replay
+        // the old person's create/checkout request with that new cookie's proof.
+        clearSession();
+        throw new ManageApiError(401, "session_changed");
+      }
+      personalAccount = wire;
+      return { email: wire.email, name: wire.name };
+    })().finally(() => { if (personalResume === flight) personalResume = null; });
+    personalResume = flight;
+  }
+  return personalResume;
+}
+
+// MANAGE-API CALL SITE #13 — resume host-only personal cookie, single flight.
+export function ensurePersonalAccount(): Promise<PersonalAccount | null> {
+  return personalAccount ? Promise.resolve({ email: personalAccount.email, name: personalAccount.name }) : resumePersonalAccount();
+}
+
+async function personalFetch<T>(path: string, opts: RequestInit = {}): Promise<T> {
+  const epoch = personalEpoch;
+  if (!personalAccount) await ensurePersonalAccount();
+  if (!personalAccount || epoch !== personalEpoch) throw new ManageApiError(401, "personal_authentication_required");
+  let response = await rawManageFetch(path, opts, personalAccount.account_token);
+  if (response.status === 401 && await resumePersonalAccount()) {
+    if (epoch !== personalEpoch || !personalAccount) throw new ManageApiError(401, "session_changed");
+    response = await rawManageFetch(path, opts, personalAccount.account_token);
+  }
+  const data = await parseManageResponse<T>(response);
+  // Reading the body is asynchronous too: a login/logout can happen after
+  // headers arrive but before JSON finishes. Check after the LAST await.
+  if (epoch !== personalEpoch) throw new ManageApiError(401, "session_changed");
+  return data;
+}
+
+function adoptPersonalSession(data: TokenResponse, epoch: number): Session {
+  if (epoch !== personalEpoch) throw new ManageApiError(401, "session_changed");
+  const session = sessionFromTokenResponse(data);
+  saveSession(session);
+  return session;
+}
+
+export type PersonalClinicInput = {
+  operation_id: string; clinic_name: string; whatsapp_phone: string; catalog_ids: string[];
+  intake?: { whatsapp_usage: string; prior_api: string; fb_page: string };
+  precheck_template_slug?: string;
+};
+export type PersonalClinic = {
+  intent_id: string; operation_id: string; clinic_name: string; whatsapp_phone: string;
+  catalog_ids: string[]; status: "pending_payment" | "completed" | "failed"; session: TokenResponse;
+};
+
+// MANAGE-API CALL SITE #14 — explicit creation and idempotent retry with the same operation.
+export async function createPersonalClinic(input: PersonalClinicInput): Promise<PersonalClinic> {
+  const epoch = personalEpoch;
+  const clinic = await personalFetch<PersonalClinic>("/auth/account/clinics", { method: "POST", body: JSON.stringify(input) });
+  adoptPersonalSession(clinic.session, epoch);
+  return clinic;
+}
+// MANAGE-API CALL SITE #15 — restore the purchase after reload/cancellation; proof is personal.
+export async function getPersonalClinic(operation: string): Promise<PersonalClinic> {
+  const epoch = personalEpoch;
+  const clinic = await personalFetch<PersonalClinic>(`/auth/account/clinics/${encodeURIComponent(operation)}`);
+  adoptPersonalSession(clinic.session, epoch);
+  return clinic;
+}
+// MANAGE-API CALL SITE #16 — purchase ONLY the clinic created by the proved account operation.
+export function checkoutPersonalClinic(operation: string): Promise<{ checkout_url: string }> {
+  return personalFetch(`/auth/account/clinics/${encodeURIComponent(operation)}/checkout`, { method: "POST" });
+}
+
+// MANAGE-API CALL SITE #17 — same personal selection contract used by the console.
+// A clinical URL hint never grants access and never selects a remembered alternative.
+export async function selectPersonalClinic(userId: string): Promise<Session> {
+  const epoch = personalEpoch;
+  const data = await personalFetch<TokenResponse>("/auth/account/select", {
+    method: "POST", body: JSON.stringify({ user_id: userId }),
+  });
+  return adoptPersonalSession(data, epoch);
 }
 
 // Reads the optional `professional_id` claim (string UUID or absent/null) from
