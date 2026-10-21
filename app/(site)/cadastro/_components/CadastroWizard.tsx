@@ -30,6 +30,7 @@ import { SummaryStep } from "./SummaryStep";
 import { registerSignup, saveSession, ManageApiError } from "@/lib/manage-api";
 import { EMPTY_ANSWERS, SIGNUP_ADDON_IDS, type StepId, type WizardAnswers } from "../lib/types";
 import { isPrecheckPlan, planChoices, type ResolvedPlan } from "../lib/plans";
+import { createClinicRoute } from "@/lib/new-clinic";
 
 // Ordinal position per step, used only for the progress bar (0..8). Branches
 // that skip a conditional screen simply jump positions instead of by one —
@@ -226,6 +227,7 @@ export function CadastroWizard({
           submitting={registering}
           serverError={registerError}
           showLoginLink={showLoginLink}
+          loginHref={`/login?${new URLSearchParams({ next: createClinicRoute(plan.planId, plan.catalogIds) })}`}
           // Some depois do registro: o plano já está gravado no intent e o
           // backend recusa trocá-lo (`plan_change_not_allowed`).
           onBack={history.length > 0 && !intentId ? goBack : undefined}
