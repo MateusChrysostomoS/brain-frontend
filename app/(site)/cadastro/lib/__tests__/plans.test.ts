@@ -64,10 +64,10 @@ describe("planChoices", () => {
   it("herda os add-ons do ?catalog= em toda alternativa", () => {
     // Trocar de FAIXA não pode descartar em silêncio um add-on que o link trazia:
     // seria uma cobrança a menos que ninguém veria.
-    const comAddon = resolve("plan=precheck_basic&catalog=precheck_basic,pix_deposit");
+    const comAddon = resolve("plan=precheck_basic&catalog=precheck_basic,analytics_bi_advanced");
     for (const c of planChoices(comAddon)) {
       expect(c.catalogIds[0]).toBe(c.planId);
-      expect(c.catalogIds).toContain("pix_deposit");
+      expect(c.catalogIds).toContain("analytics_bi_advanced");
       // e nunca a OUTRA faixa junto — exatamente um plano por seleção.
       expect(c.catalogIds.filter((id) => id.startsWith("precheck_"))).toEqual([c.planId]);
     }
