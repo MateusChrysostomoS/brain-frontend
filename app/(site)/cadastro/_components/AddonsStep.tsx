@@ -28,11 +28,6 @@ const ADDON_COPY: Record<SignupAddonId, { title: string; blurb: string }> = {
     blurb:
       "Acompanhe a evolução dos agendamentos mês a mês, por profissional e por origem — dados para a clínica decidir com mais segurança.",
   },
-  pix_deposit: {
-    title: "Sinal via Pix",
-    blurb:
-      "Reduza faltas cobrando um sinal antecipado via Pix, direto na conversa do WhatsApp.",
-  },
 };
 
 type AddonsStepProps = {
@@ -161,10 +156,7 @@ export function AddonsStep({
   );
 }
 
-// AddonToggleCard — one checkbox card for a single add-on. The pix_deposit id
-// additionally gets an expandable "Como funciona" (native <details>, Task 1b) as a
-// SIBLING of the checkbox <label>, not nested inside it — nesting a <details> inside
-// a <label> risks the browser also forwarding clicks on <summary> to the checkbox.
+// AddonToggleCard — one checkbox card for a single add-on.
 function AddonToggleCard({
   id,
   checked,
@@ -187,30 +179,6 @@ function AddonToggleCard({
           <span className="cad-addon-desc">{copy.blurb}</span>
         </span>
       </label>
-
-      {id === "pix_deposit" && (
-        <details className="cad-addon-details">
-          <summary>Como funciona</summary>
-          <div className="cad-addon-details-body">
-            <p>
-              Faltas e no-shows são um dos maiores ralos de faturamento em consultórios — estudos
-              do setor apontam que algo entre 20% e 30% das consultas agendadas acabam não
-              acontecendo, virando agenda parada e custo fixo perdido.
-            </p>
-            <p>
-              Com o sinal via Pix, o paciente agenda pelo WhatsApp, recebe a cobrança do sinal na
-              própria conversa e o pagamento confirma a reserva do horário. Quem não paga dentro do
-              prazo não garante a vaga — sem ligação de cobrança, sem constrangimento. O valor pago
-              é abatido da consulta (ou tratado conforme a política que a clínica define).
-            </p>
-            <p>
-              Depois de ativar, você configura: percentual ou valor do sinal, janela de reembolso
-              (em horas), política de retenção quando o paciente cancela fora do prazo, percentual
-              de reembolso parcial e o limite de remarcações permitido.
-            </p>
-          </div>
-        </details>
-      )}
     </div>
   );
 }

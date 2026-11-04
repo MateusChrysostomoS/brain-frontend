@@ -32,13 +32,22 @@ import {
   type CreateTenantForm,
 } from "./lib/create-tenant";
 import {
+  describeBlockedReason,
+  describeCapacityError,
+  describeUsage,
+  parseCapacityInput,
+} from "./lib/professional-capacity";
+import {
   adminCreateTenant,
   adminDeleteTenant,
+  adminGetProfessionalCapacity,
   adminGetTenant,
   adminListTenants,
   adminPatchEntitlements,
+  adminSetProfessionalCapacity,
   type AdminTenant,
   type AdminTenantDetail,
+  type ProfessionalCapacity,
   type Session,
 } from "@/lib/manage-api";
 
@@ -649,7 +658,170 @@ function TenantDetail({
           onToggle={() => toggleProduct("secretaria")}
         />
       </div>
+
+      <ProfessionalCapacityCard
+        session={session}
+        tenantId={tenantId}
+        secretariaEnabled={ent.secretaria_enabled}
+        onAuthError={() => {
+          clearSession();
+          router.replace("/login");
+        }}
+      />
     </>
+  );
+}
+
+// ProfessionalCapacityCard — how many professionals the clinic may keep active (the cap
+// the secretarIA checks on every invite), over GET/PUT /admin/tenants/{id}/
+// professional-capacity. Reloads when the secretarIA is toggled, since that decides
+// whether the cap is editable. Validation/copy live in ./lib/professional-capacity.
+function ProfessionalCapacityCard({
+  session,
+  tenantId,
+  secretariaEnabled,
+  onAuthError,
+}: {
+  session: Session;
+  tenantId: string;
+  secretariaEnabled: boolean;
+  onAuthError: () => void;
+}) {
+  const [capacity, setCapacity] = useState<ProfessionalCapacity | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [input, setInput] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [ok, setOk] = useState<string | null>(null);
+
+  const dismissOk = useCallback(() => setOk(null), []);
+  // onAuthError is a fresh closure on every parent render; read it through a ref so it
+  // never retriggers the load below.
+  const onAuthErrorRef = useRef(onAuthError);
+  onAuthErrorRef.current = onAuthError;
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoadError(null);
+    setError(null);
+    setOk(null);
+    adminGetProfessionalCapacity(session, tenantId)
+      .then((c) => {
+        if (cancelled) return;
+        setCapacity(c);
+        setInput(String(c.max_professionals));
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        if (isSessionExpired(e)) {
+          onAuthErrorRef.current();
+          return;
+        }
+        setLoadError(describeApiError(e));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [session, tenantId, secretariaEnabled]);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!capacity) return;
+    setError(null);
+    setOk(null);
+    const parsed = parseCapacityInput(input, capacity);
+    if (!parsed.ok) {
+      setError(parsed.error);
+      return;
+    }
+    setSaving(true);
+    try {
+      const updated = await adminSetProfessionalCapacity(session, tenantId, parsed.value);
+      setCapacity(updated);
+      setInput(String(updated.max_professionals));
+      setOk(
+        `Limite salvo: ${updated.max_professionals} ${
+          updated.max_professionals === 1 ? "profissional" : "profissionais"
+        }.`,
+      );
+    } catch (err) {
+      if (isSessionExpired(err)) {
+        onAuthError();
+        return;
+      }
+      setError(describeCapacityError(err));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const blocked = capacity ? describeBlockedReason(capacity.blocked_reason) : null;
+  const unchanged = capacity !== null && input.trim() === String(capacity.max_professionals);
+
+  return (
+    <section className="card" style={{ marginTop: 24 }}>
+      <h2 className="h-card" style={{ marginBottom: 6 }}>
+        Profissionais
+      </h2>
+      <p style={{ fontSize: 13.5, color: "var(--ink-soft)", marginBottom: 16 }}>
+        Quantos médicos ou profissionais a clínica pode manter ativos. Ao chegar no limite,
+        novos convites são recusados. Baixar o limite nunca desativa ninguém. Se a clínica
+        assinar um plano pelo Stripe, o limite passa a vir do plano.
+      </p>
+
+      {loadError ? (
+        <div className="portal-error">{loadError}</div>
+      ) : !capacity ? (
+        <div className="portal-loading">
+          <div className="portal-spinner" aria-hidden="true" />
+          <div>Carregando…</div>
+        </div>
+      ) : (
+        <>
+          <div style={{ fontWeight: 600, fontSize: 15, color: "var(--ink)", marginBottom: 12 }}>
+            {describeUsage(capacity)}
+          </div>
+
+          {blocked ? (
+            <p style={{ fontSize: 13.5, color: "var(--ink-soft)" }}>{blocked}</p>
+          ) : (
+            <form onSubmit={handleSubmit} noValidate>
+              <div
+                style={{ display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap" }}
+              >
+                <div className="pfield" style={{ marginBottom: 0, width: 180 }}>
+                  <label htmlFor="cap-max">Limite de profissionais</label>
+                  <input
+                    id="cap-max"
+                    type="number"
+                    inputMode="numeric"
+                    min={Math.max(1, capacity.active_professionals ?? 1)}
+                    max={capacity.max_allowed}
+                    step={1}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    aria-describedby={error ? "cap-error" : undefined}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="btn btn--primary btn--sm"
+                  disabled={saving || unchanged}
+                >
+                  {saving ? "Salvando…" : "Salvar limite"}
+                </button>
+              </div>
+              {error && (
+                <div id="cap-error" className="portal-error" role="alert" style={{ marginTop: 14 }}>
+                  {error}
+                </div>
+              )}
+              <Notice message={ok} onDismiss={dismissOk} style={{ marginTop: 14 }} />
+            </form>
+          )}
+        </>
+      )}
+    </section>
   );
 }
 

@@ -32,16 +32,15 @@ export const EMPTY_CONTACT: ContactFields = {
   website: "",
 };
 
-// The two add-ons the /cadastro wizard can offer today (Task 1a) — both only make
-// sense for a secretarIA purchase, see the plan.planId gate in CadastroWizard's
-// nextAfterEligibility. Shared between CadastroWizard (initial preselection from
-// plan.catalogIds) and AddonsStep (rendering + the PATCH payload) so the two can
-// never drift apart.
-export type SignupAddonId = "analytics_bi_advanced" | "pix_deposit";
-export const SIGNUP_ADDON_IDS: readonly SignupAddonId[] = [
-  "analytics_bi_advanced",
-  "pix_deposit",
-];
+// The add-ons the /cadastro wizard can offer today (Task 1a) — only for a secretarIA
+// purchase, see the plan.planId gate in CadastroWizard's nextAfterEligibility. Shared
+// between CadastroWizard (initial preselection from plan.catalogIds) and AddonsStep
+// (rendering + the PATCH payload) so the two can never drift apart.
+// `pix_deposit` left this list on 2026-10-28: the sinal via Pix is a standard
+// secretarIA capability now, no longer sold as an add-on (brain-api reports it
+// `available: false` either way).
+export type SignupAddonId = "analytics_bi_advanced";
+export const SIGNUP_ADDON_IDS: readonly SignupAddonId[] = ["analytics_bi_advanced"];
 
 // Every step the wizard can visit. `plan` abre o wizard só quando a família do
 // plano tem mais de uma faixa comprável (planChoices em lib/plans.ts) — hoje

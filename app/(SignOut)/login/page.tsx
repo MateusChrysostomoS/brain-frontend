@@ -11,7 +11,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
-import { login } from "@/lib/manage-api";
+import { login, loginPersonalAccount, selectPersonalClinic } from "@/lib/manage-api";
+import { loginClinicDestination, rememberClinicDestination } from "@/lib/new-clinic";
 import { forgetResetToken, rememberLoginEmail, takeLoginEmail } from "@/lib/password-reset-memory";
 import { withConsoleOrigin } from "@/lib/console-return";
 import { postLoginRoute, safeNextPath } from "@/lib/safe-next";
@@ -55,6 +56,7 @@ function LoginInner() {
   const success = justReset
     ? "Senha redefinida com sucesso. Faça login com a nova senha."
     : "";
+  const creationDestination = loginClinicDestination(search.get("next"));
 
   // --- Handlers ---
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -66,6 +68,24 @@ function LoginInner() {
     }
     setLoading(true);
     try {
+      if (creationDestination) {
+        rememberClinicDestination(creationDestination);
+        await loginPersonalAccount(email.trim(), password);
+        router.push(creationDestination);
+        return;
+      }
+      if (search.get("conta") === "pessoal") {
+        const userId = search.get("vinculo");
+        if (!userId || !/^[0-9a-f-]{36}$/i.test(userId)) {
+          setError("Volte ao portal e abra o plano da clínica que deseja gerenciar.");
+          setLoading(false);
+          return;
+        }
+        await loginPersonalAccount(email.trim(), password);
+        await selectPersonalClinic(userId);
+        router.push(`/app/billing?${new URLSearchParams({ vinculo: userId })}`);
+        return;
+      }
       // login() authenticates against brain-api and persists the session.
       const session = await login(email.trim(), password);
       // `?next=` (e.g. the Brain-Message console's "Ver planos" link, which
@@ -143,7 +163,7 @@ function LoginInner() {
             />
             Lembrar de mim
           </label>
-          <Link href="/esqueci_senha" onClick={() => rememberLoginEmail(email)}>
+          <Link href="/esqueci_senha" onClick={() => { rememberLoginEmail(email); rememberClinicDestination(creationDestination); }}>
             Esqueci a senha
           </Link>
         </div>

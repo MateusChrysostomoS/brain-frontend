@@ -35,6 +35,7 @@ type ContactStepProps = {
   serverError: string | null;
   // True when serverError means "you already have a Brain account" — show a login link.
   showLoginLink: boolean;
+  loginHref?: string;
   // Volta para o passo de escolha de plano. Chega `undefined` quando não há para
   // onde voltar (família de um plano só) E, de propósito, depois que o registro
   // acontece: dali em diante o plano está gravado no intent e o backend recusa
@@ -52,6 +53,7 @@ export function ContactStep({
   submitting,
   serverError,
   showLoginLink,
+  loginHref = "/login",
   onBack,
 }: ContactStepProps) {
   // Local (pre-network) validation error, e.g. weak password / mismatch.
@@ -195,7 +197,7 @@ export function ContactStep({
           {showLoginLink && (
             <>
               {" "}
-              <Link href="/login">Entrar</Link>
+              <Link href={loginHref}>Entrar e criar minha clínica</Link>
             </>
           )}
         </p>

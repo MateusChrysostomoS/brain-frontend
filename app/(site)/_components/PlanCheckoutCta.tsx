@@ -6,6 +6,8 @@
 // live here.
 //
 // Purchase flows share this one button:
+// - Explicit intencao=nova-clinica -> personal-account creation of a NEW clinic,
+//   before looking at any old clinical session or add-product decision.
 // - Exactly one product and the other product card -> AddProductDialog: preview, then
 //   add to the existing subscription. A courtesy clinic falls back to checkout.
 // - Session exists (logged-in tenant) → unchanged from before: POST
@@ -58,6 +60,7 @@ import { anonymousCheckoutRoute, checkoutErrorMessage } from "@/lib/checkout-cta
 import { isPurchaseGated } from "../_lib/launch";
 import { CheckoutTrialNotice } from "./CheckoutTrialNotice";
 import { LaunchWaitlistModal } from "./LaunchWaitlistModal";
+import { createClinicRoute, wantsNewClinic } from "@/lib/new-clinic";
 
 const readCardEntitlement = createEntitlementReader(async (key: string) => {
   const session = getSession();
@@ -125,6 +128,7 @@ export function PlanCheckoutCta({
     if (gated) return;
     let canceled = false;
     void (async () => {
+      if (wantsNewClinic(new URLSearchParams(window.location.search))) return;
       const session = getSession() ?? await ensureSession();
       if (!session?.tenantId || session.role === "admin") return;
       try {
@@ -146,6 +150,11 @@ export function PlanCheckoutCta({
     // Checkout, logged in or not. Collect the lead instead.
     if (gated) {
       setWaitlistOpen(true);
+      return;
+    }
+
+    if (wantsNewClinic(new URLSearchParams(window.location.search))) {
+      router.push(createClinicRoute(plan, catalogIds));
       return;
     }
 

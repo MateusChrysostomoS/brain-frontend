@@ -27,3 +27,4 @@ subscription management, public signup/checkout and the platform admin portal.
 - Chrome against the production export with synthetic doctor/manager API fixtures: profile renders, sidebar contains only Meu Perfil, subscription screen renders, light/dark rendering checked. Profile at 320px has no horizontal overflow or header overlap.
 - Browser checks did not use real credentials or execute Stripe actions. External checkout/portal session continuity was not exercised against live services.
 - Graphify code graph rebuilt with `graphify update .`.
+> TASK-062, somente local: planos/criar clínica por conta pessoal e retorno C no console. [Checkpoint](CHECKPOINT_criar_clinica_conta_existente.md). Não reintroduz o portal retirado nem transforma JWT revogado em autorização de billing.

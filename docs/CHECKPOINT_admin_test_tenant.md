@@ -66,3 +66,5 @@ com o brain-api antigo, o POST responde 405/404 e o formulário mostra "Algo deu
 
 - Push e deploy, **depois** do brain-api da parte 1 (com a 0025 aplicada).
 - Reconfirmar contra o brain-api real depois do deploy.
+
+Capacidade de profissionais por clínica (TASK-063): `docs/CHECKPOINT_admin_professional_capacity.md`.

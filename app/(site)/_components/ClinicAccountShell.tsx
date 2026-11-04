@@ -38,7 +38,9 @@ export default function ClinicAccountShell({ children }: { children: React.React
     <PortalShell
       portalLabel="Clínica"
       userLabel={impersonation ? impersonation.clinicName : session.email}
-      nav={ACCOUNT_NAV}
+      nav={ACCOUNT_NAV.map(item => item.href === "/app/billing" && session.accountUserId
+        ? { ...item, href: `${item.href}?${new URLSearchParams({ vinculo: session.accountUserId })}` }
+        : item)}
       onLogout={handleLogout}
       headerActions={<BackToAdminButton />}
     >

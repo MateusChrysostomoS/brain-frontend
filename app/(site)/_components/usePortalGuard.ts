@@ -10,10 +10,9 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { billingMembership, ensurePortalClinic, personalBillingLogin } from "@/lib/clinic-session";
 
 import {
-  ensureSession,
-  getSession,
   ManageApiError,
   type Session,
   clearSession,
@@ -38,7 +37,16 @@ export function usePortalGuard(allowed: string[]): {
     // they are.
     let cancelled = false;
     void (async () => {
-      const current = getSession() ?? (await ensureSession());
+      let current: Session | null;
+      try {
+        current = await ensurePortalClinic(window.location.pathname, window.location.search);
+      } catch {
+        if (!cancelled) {
+          const target = billingMembership(window.location.pathname, window.location.search);
+          router.replace(target ? personalBillingLogin(target) : "/login");
+        }
+        return;
+      }
       if (cancelled) return;
       if (!current?.token) {
         router.replace("/login");

@@ -9,3 +9,4 @@ Fonte de verdade da tarefa inteira (contrato, regras, ordem de publicação, pen
 - Segurança: e-mail e passe só em variáveis de módulo — nada em localStorage, sessionStorage,
   cookie ou URL; F5 recomeça do e-mail. Provado no navegador contra brain-api local.
 - Publicar só depois do brain-api (SMTP configurado + migração `0030` + deploy).
+> TASK-062, somente local: criação de clínica retoma intenção não sensível em memória após este reset existente; nenhuma rota, token, validação, cooldown ou quota substituída. F5 reinicia e Voltar não ressuscita autorização; senha antiga falha/nova funciona e A/B seguem revogadas. [Checkpoint](CHECKPOINT_criar_clinica_conta_existente.md).
