@@ -32,6 +32,16 @@ import {
   type CreateTenantForm,
 } from "./lib/create-tenant";
 import {
+  contactEmailChanged,
+  describeContactEmailError,
+  describeContactEmailLoadError,
+  describeContactEmailSaved,
+  describeCurrentContactEmail,
+  isSecretariaRecordMissing,
+  parseContactEmailInput,
+  SECRETARIA_RECORD_MISSING_TEXT,
+} from "./lib/contact-email";
+import {
   describeBlockedReason,
   describeCapacityError,
   describeUsage,
@@ -45,10 +55,13 @@ import {
   adminListTenants,
   adminPatchEntitlements,
   adminSetProfessionalCapacity,
+  getTenantContactEmail,
+  patchTenantContactEmail,
   type AdminTenant,
   type AdminTenantDetail,
   type ProfessionalCapacity,
   type Session,
+  type TenantContactEmail,
 } from "@/lib/manage-api";
 
 // Entitlement status → badge tone.
@@ -668,6 +681,16 @@ function TenantDetail({
           router.replace("/login");
         }}
       />
+
+      <ContactEmailCard
+        session={session}
+        tenantId={tenantId}
+        secretariaEnabled={ent.secretaria_enabled}
+        onAuthError={() => {
+          clearSession();
+          router.replace("/login");
+        }}
+      />
     </>
   );
 }
@@ -819,6 +842,227 @@ function ProfessionalCapacityCard({
               <Notice message={ok} onDismiss={dismissOk} style={{ marginTop: 14 }} />
             </form>
           )}
+        </>
+      )}
+    </section>
+  );
+}
+
+// ContactEmailCard — the clinic's operational e-mail (where it receives new-booking,
+// payment and handoff alerts), over GET/PATCH /admin/tenants/{id}/contact-email. The
+// value lives in the secretarIA: a clinic with no record there (PreCheck-only) gets an
+// explanation instead of the form. Validation/copy live in ./lib/contact-email.
+function ContactEmailCard({
+  session,
+  tenantId,
+  secretariaEnabled,
+  onAuthError,
+}: {
+  session: Session;
+  tenantId: string;
+  secretariaEnabled: boolean;
+  onAuthError: () => void;
+}) {
+  const [saved, setSaved] = useState<TenantContactEmail | null>(null);
+  const [noRecord, setNoRecord] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [input, setInput] = useState("");
+  const [saving, setSaving] = useState<"save" | "remove" | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [ok, setOk] = useState<string | null>(null);
+
+  const dismissOk = useCallback(() => setOk(null), []);
+  // onAuthError is a fresh closure on every parent render; read it through a ref so it
+  // never retriggers the load below.
+  const onAuthErrorRef = useRef(onAuthError);
+  onAuthErrorRef.current = onAuthError;
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoadError(null);
+    setNoRecord(false);
+    setError(null);
+    setOk(null);
+    getTenantContactEmail(session, tenantId)
+      .then((c) => {
+        if (cancelled) return;
+        setSaved(c);
+        setInput(c.contact_email ?? "");
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        if (isSessionExpired(e)) {
+          onAuthErrorRef.current();
+          return;
+        }
+        if (isSecretariaRecordMissing(e)) {
+          setNoRecord(true);
+          return;
+        }
+        setLoadError(describeContactEmailLoadError(e));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [session, tenantId, secretariaEnabled, reloadKey]);
+
+  async function persist(next: string | null, action: "save" | "remove") {
+    setError(null);
+    setOk(null);
+    setSaving(action);
+    try {
+      const updated = await patchTenantContactEmail(session, tenantId, next);
+      setSaved(updated);
+      setInput(updated.contact_email ?? "");
+      setOk(describeContactEmailSaved(updated.contact_email));
+    } catch (err) {
+      if (isSessionExpired(err)) {
+        onAuthError();
+        return;
+      }
+      if (isSecretariaRecordMissing(err)) {
+        setNoRecord(true);
+        return;
+      }
+      setError(describeContactEmailError(err));
+    } finally {
+      setSaving(null);
+    }
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!saved) return;
+    const parsed = parseContactEmailInput(input);
+    if (!parsed.ok) {
+      setOk(null);
+      setError(parsed.error);
+      return;
+    }
+    void persist(parsed.value, "save");
+  }
+
+  const busy = saving !== null;
+  const changed = saved !== null && contactEmailChanged(input, saved.contact_email);
+  const clearing = saved?.contact_email != null && input.trim() === "";
+
+  return (
+    <section className="card" style={{ marginTop: 24 }}>
+      <h2 className="h-card" style={{ marginBottom: 6 }}>
+        E-mail da clínica
+      </h2>
+      <p style={{ fontSize: 13.5, color: "var(--ink-soft)", marginBottom: 16 }}>
+        É neste e-mail que a clínica recebe os avisos: novas consultas marcadas, avisos de
+        pagamento e conversas que precisam de atendimento humano.
+      </p>
+
+      {loadError ? (
+        <>
+          <div className="portal-error" role="alert">
+            {loadError}
+          </div>
+          <button
+            type="button"
+            className="btn btn--outline btn--sm"
+            style={{ marginTop: 12 }}
+            onClick={() => setReloadKey((k) => k + 1)}
+          >
+            Tentar de novo
+          </button>
+        </>
+      ) : noRecord ? (
+        <div
+          className="card-soft"
+          role="status"
+          style={{ padding: 16, fontSize: 13.5, color: "var(--ink-soft)" }}
+        >
+          {SECRETARIA_RECORD_MISSING_TEXT} Quando a clínica passar a usar a secretarIA, o e-mail
+          poderá ser cadastrado aqui.
+        </div>
+      ) : !saved ? (
+        <div className="portal-loading">
+          <div className="portal-spinner" aria-hidden="true" />
+          <div>Carregando…</div>
+        </div>
+      ) : (
+        <>
+          <div
+            style={{
+              fontWeight: 600,
+              fontSize: 15,
+              color: saved.contact_email ? "var(--ink)" : "var(--ink-soft)",
+              marginBottom: 14,
+              overflowWrap: "anywhere",
+            }}
+          >
+            {describeCurrentContactEmail(saved.contact_email)}
+          </div>
+
+          {/* Right under the value it confirms, so it is seen without scrolling. */}
+          <Notice message={ok} onDismiss={dismissOk} style={{ marginBottom: 14 }} />
+
+          <form onSubmit={handleSubmit} noValidate>
+            <div className="pfield" style={{ marginBottom: 12, maxWidth: 420 }}>
+              <label htmlFor="contact-email">E-mail da clínica</label>
+              <input
+                id="contact-email"
+                type="email"
+                inputMode="email"
+                autoComplete="off"
+                maxLength={254}
+                placeholder="contato@clinica.com.br"
+                value={input}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  setError(null);
+                }}
+                aria-invalid={error ? true : undefined}
+                aria-describedby={
+                  [error ? "contact-email-error" : null, clearing ? "contact-email-hint" : null]
+                    .filter(Boolean)
+                    .join(" ") || undefined
+                }
+              />
+              {clearing && (
+                <p
+                  id="contact-email-hint"
+                  style={{ fontSize: 12.5, color: "var(--ink-soft)", marginTop: 7 }}
+                >
+                  Com o campo vazio, salvar remove o e-mail da clínica.
+                </p>
+              )}
+            </div>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <button
+                type="submit"
+                className="btn btn--primary btn--sm"
+                disabled={busy || !changed}
+              >
+                {saving === "save" ? "Salvando…" : "Salvar e-mail"}
+              </button>
+              {saved.contact_email && (
+                <button
+                  type="button"
+                  className="btn btn--outline btn--sm"
+                  disabled={busy}
+                  onClick={() => void persist(null, "remove")}
+                >
+                  {saving === "remove" ? "Removendo…" : "Remover e-mail"}
+                </button>
+              )}
+            </div>
+            {error && (
+              <div
+                id="contact-email-error"
+                className="portal-error"
+                role="alert"
+                style={{ marginTop: 14 }}
+              >
+                {error}
+              </div>
+            )}
+          </form>
         </>
       )}
     </section>

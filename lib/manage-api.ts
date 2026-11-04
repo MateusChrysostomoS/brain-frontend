@@ -1609,6 +1609,41 @@ export function adminSetProfessionalCapacity(
   );
 }
 
+// GET/PATCH /admin/tenants/{id}/contact-email (brain-api; the value is stored by the
+// secretarIA). The clinic's operational e-mail: where it receives new-booking, payment
+// and handoff alerts. `contact_email` null means none registered.
+// Errors (ManageApiError.message = backend detail): 404 secretaria_tenant_not_found
+// (clinic has no secretarIA record, e.g. PreCheck-only) | 404 "Tenant not found" |
+// 422 invalid_contact_email | 502 secretaria_unavailable.
+export type TenantContactEmail = {
+  tenant_id: string;
+  contact_email: string | null;
+};
+
+export function getTenantContactEmail(
+  session: Session,
+  tenantId: string,
+): Promise<TenantContactEmail> {
+  return manageFetch<TenantContactEmail>(
+    `/admin/tenants/${tenantId}/contact-email`,
+    {},
+    session.token,
+  );
+}
+
+// The body is exactly { contact_email }; null clears the stored e-mail.
+export function patchTenantContactEmail(
+  session: Session,
+  tenantId: string,
+  contactEmail: string | null,
+): Promise<TenantContactEmail> {
+  return manageFetch<TenantContactEmail>(
+    `/admin/tenants/${tenantId}/contact-email`,
+    { method: "PATCH", body: JSON.stringify({ contact_email: contactEmail }) },
+    session.token,
+  );
+}
+
 export function adminListUsers(
   session: Session,
   skip = 0,
