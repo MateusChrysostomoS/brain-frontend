@@ -3,7 +3,7 @@
 //
 // It used to be a separate design (globals.css + landing.css) with its own
 // claims; the 2026-10-05 audit found several of them false or unsubstantiated:
-// "IA da Anthropic (Claude)", "WhatsApp Business API oficial (Meta Cloud)",
+// "WhatsApp Business API oficial (Meta Cloud)",
 // "servidor brasileiro", "criptografia em repouso", "DPO designado",
 // "implantação em 7 dias", usage statistics and a "quase metade do tempo"
 // figure. They are gone; keep it that way unless there is evidence.
@@ -67,7 +67,7 @@ const FAQ: FaqEntry[] = [
   },
   {
     q: "Qual inteligência artificial vocês usam?",
-    a: "Usamos modelos de linguagem da OpenAI, acessados por API.",
+    a: "Usamos modelos da Anthropic (Claude) e da OpenAI, acessados por API.",
   },
   {
     q: "Quem é o responsável pelos dados dos pacientes?",

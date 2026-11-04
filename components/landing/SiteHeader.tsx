@@ -3,11 +3,12 @@
 // Marketing header, shared by / and /precheck. Sticky, solid background; the
 // hairline under it only appears once the page has scrolled.
 //
-// Destinations are the ones the site always had: Entrar -> /login,
+// Destinations: Entrar -> the clinic portal's login (lib/portal-login.ts),
 // Assinar -> the pricing section, Agendar demonstração -> the contact form.
 
 import { useEffect, useId, useState } from "react";
 import Link from "next/link";
+import { PORTAL_LOGIN_HREF } from "@/lib/portal-login";
 import { BrandGlyph } from "@/app/(site)/_components/BrandGlyph";
 import { BrandIcon } from "@/app/(site)/_components/BrandIcon";
 import { PreCheckMark } from "./brand";
@@ -100,7 +101,7 @@ export function SiteHeader({ nav, product, plansHref, contactHref }: SiteHeaderP
 
         <div className="mk-header__actions">
           <ThemeButton className="mk-hide-xs" />
-          <Link href="/login" className="mk-btn mk-btn--sm mk-btn--quiet mk-hide-md">
+          <Link href={PORTAL_LOGIN_HREF} className="mk-btn mk-btn--sm mk-btn--quiet mk-hide-md">
             Entrar
           </Link>
           <a href={plansHref} className="mk-btn mk-btn--sm mk-btn--secondary mk-hide-md">
@@ -133,7 +134,7 @@ export function SiteHeader({ nav, product, plansHref, contactHref }: SiteHeaderP
             <NavLink key={item.href} {...item} onClick={close} />
           ))}
           <div className="mk-mnav__ctas">
-            <Link href="/login" className="mk-btn mk-btn--secondary" onClick={close}>
+            <Link href={PORTAL_LOGIN_HREF} className="mk-btn mk-btn--secondary" onClick={close}>
               Entrar
             </Link>
             <a href={plansHref} className="mk-btn mk-btn--secondary" onClick={close}>

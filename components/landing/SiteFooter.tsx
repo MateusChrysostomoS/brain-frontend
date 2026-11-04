@@ -4,6 +4,7 @@
 // the legal pages need to exist before they are linked.
 
 import Link from "next/link";
+import { PORTAL_LOGIN_HREF } from "@/lib/portal-login";
 import { BrandGlyph } from "@/app/(site)/_components/BrandGlyph";
 
 type FooterLink = { href: string; label: string };
@@ -28,7 +29,7 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
   {
     title: "Clientes",
     links: [
-      { href: "/login", label: "Entrar" },
+      { href: PORTAL_LOGIN_HREF, label: "Entrar" },
       { href: "/#planos", label: "Assinar" },
       { href: "/#contato", label: "Agendar demonstração" },
     ],

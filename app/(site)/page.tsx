@@ -6,8 +6,7 @@
 // the app screens that share the (site) layout.
 //
 // COPY RULE: every claim on this page is something the product does today.
-// The 2026-10-05 audit removed: "IA da Anthropic (Claude)" (the model is
-// OpenAI), "dados só no Brasil" / "servidor brasileiro" (files are on
+// The 2026-10-05 audit removed: "dados só no Brasil" / "servidor brasileiro" (files are on
 // Cloudflare R2), "criptografia em trânsito e repouso", "WhatsApp oficial /
 // homologado pela Meta" (approval pending), "DPO designado", "Melhor valor",
 // "Lei 14.133" and "demonstração de 25 minutos". Do not reintroduce a claim
@@ -17,6 +16,7 @@ import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { PORTAL_LOGIN_HREF } from "@/lib/portal-login";
 import { BrandIcon } from "./_components/BrandIcon";
 import { ContactForm } from "./_components/ContactForm";
 import { PRICING, PRECHECK_QUOTA } from "./_lib/pricing";
@@ -77,7 +77,7 @@ const FAQ: FaqEntry[] = [
   },
   {
     q: "Qual inteligência artificial vocês usam?",
-    a: "Usamos modelos de linguagem da OpenAI, acessados por API.",
+    a: "Usamos modelos de linguagem da Anthropic (Claude) e da OpenAI, acessados por API.",
   },
   {
     q: "Quem é o responsável pelos dados dos pacientes?",
@@ -126,7 +126,7 @@ export default function BrainHomePage() {
               </div>
               <p className="mk-hero__login" style={d(4)}>
                 Já é cliente?{" "}
-                <Link href="/login" className="mk-inline-link">
+                <Link href={PORTAL_LOGIN_HREF} className="mk-inline-link">
                   Entrar
                 </Link>
               </p>

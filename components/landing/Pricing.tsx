@@ -5,6 +5,7 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { PORTAL_LOGIN_HREF } from "@/lib/portal-login";
 import { BrandIcon } from "@/app/(site)/_components/BrandIcon";
 import { PlanCheckoutCta } from "@/app/(site)/_components/PlanCheckoutCta";
 import { isPurchaseGated } from "@/app/(site)/_lib/launch";
@@ -155,7 +156,7 @@ export function Pricing() {
             </span>
             <span>
               Já é cliente?{" "}
-              <Link href="/login" className="mk-inline-link">
+              <Link href={PORTAL_LOGIN_HREF} className="mk-inline-link">
                 Entrar
               </Link>
             </span>
