@@ -26,6 +26,7 @@ import { Faq } from "./_components/Faq";
 import { ContactForm } from "./_components/ContactForm";
 import { MotionReveal } from "./_components/demo/MotionReveal";
 import { PreCheckDemo } from "./_components/demo/PreCheckDemo";
+import { ScrollCue } from "./_components/demo/ScrollCue";
 import { SecretariaDemo } from "./_components/demo/SecretariaDemo";
 import { SmoothScroll } from "./_components/demo/SmoothScroll";
 import { PRICING } from "./_lib/pricing";
@@ -95,7 +96,7 @@ const HOW: { title: string; lines: { tone: "pc" | "sa"; product: string; text: s
   {
     title: "A clínica configura",
     lines: [
-      { tone: "pc", product: "PreCheck", text: "O médico define o roteiro de perguntas de cada tipo de atendimento." },
+      { tone: "pc", product: "PreCheck", text: "O médico define as perguntas padrão de cada tipo de atendimento. Depois delas, a IA aprofunda a queixa de cada paciente." },
       { tone: "sa", product: "secretarIA", text: "A equipe cadastra profissionais, horários, serviços e convênios. É isso que ela responde." },
     ],
   },
@@ -186,6 +187,7 @@ export default function BrainHomePage() {
               </div>
             </figure>
           </div>
+          <ScrollCue to="precheck" />
         </section>
 
         {/* ====================== ATO 2 — PRECHECK ====================== */}
