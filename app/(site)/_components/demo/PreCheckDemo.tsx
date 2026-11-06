@@ -141,20 +141,22 @@ export function PreCheckDemo({ cta, contexts }: PreCheckDemoProps) {
           <div className="gd-phone">
             <ThreadHead product="pc" />
             <div className="gd-chat" role="region" aria-label="Conversa de exemplo do PreCheck" tabIndex={0}>
-              <DayPill>Hoje</DayPill>
-              {CHAT.map((m) => (
-                <Bubble
-                  key={m.beat}
-                  voice={m.voice}
-                  beat={m.beat}
-                  time={m.time}
-                  echo={m.echo}
-                  buttons={m.buttons}
-                  chooseBeat={m.buttons ? m.beat + 1 : undefined}
-                >
-                  {m.text}
-                </Bubble>
-              ))}
+              <div className="gd-chat__track">
+                <DayPill>Hoje</DayPill>
+                {CHAT.map((m) => (
+                  <Bubble
+                    key={m.beat}
+                    voice={m.voice}
+                    beat={m.beat}
+                    time={m.time}
+                    echo={m.echo}
+                    buttons={m.buttons}
+                    chooseBeat={m.buttons ? m.beat + 1 : undefined}
+                  >
+                    {m.text}
+                  </Bubble>
+                ))}
+              </div>
             </div>
             <Composer />
           </div>
