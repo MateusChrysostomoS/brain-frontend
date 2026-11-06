@@ -8,25 +8,58 @@
 // summary never reads as a diagnosis; status label "em uso" is fixed.
 
 import type { ReactNode } from "react";
+import { Bubble, Composer, DayPill, ThreadHead, type ReplyButton } from "./ChatParts";
 import { PinnedAct } from "./PinnedAct";
 
-type Msg = { beat: number; from: "in" | "out"; text: ReactNode; chips?: string[] };
+// The conversation follows the shape of the real PreCheck flow in the Portal:
+// the terms are accepted with "✅ Concordo", closed questions come as buttons
+// (Sim / Não / Voltar), open ones carry only "⬅️ Voltar", and a tapped option
+// returns as "Opção escolhida". Content is invented (owner rule).
+type Msg = {
+  beat: number;
+  voice: "pc" | "patient";
+  time: string;
+  text: ReactNode;
+  echo?: boolean;
+  buttons?: ReplyButton[];
+};
+
+const BACK: ReplyButton = { label: "Voltar", icon: "⬅️" };
 
 const CHAT: Msg[] = [
   {
     beat: 1,
-    from: "in",
-    text: "Olá! Antes da sua consulta com o Dr. Almeida, vou fazer algumas perguntas. Para começar, você aceita o termo de uso dos seus dados?",
-    chips: ["Aceito"],
+    voice: "pc",
+    time: "09:12",
+    text: "Olá! Antes da sua consulta com o Dr. Almeida, vou fazer algumas perguntas. Para continuar, é preciso concordar com os termos.",
+    buttons: [{ label: "Concordo", icon: "✅", chosen: true }],
   },
-  { beat: 2, from: "out", text: "Aceito" },
-  { beat: 3, from: "in", text: "Qual o motivo principal da consulta? Pode contar com as suas palavras." },
-  { beat: 4, from: "out", text: "Dor de cabeça forte há 4 dias, mais do lado direito." },
-  { beat: 5, from: "in", text: "A dor é constante ou vem em crises? Notou algum gatilho, como luz ou barulho?" },
-  { beat: 6, from: "out", text: "Vem em crises à tarde. Piora com luz forte e tive enjoo ontem." },
-  { beat: 7, from: "in", text: "Sente rigidez ou dor ao mexer o pescoço?" },
-  { beat: 8, from: "out", text: "Sim, um pouco." },
-  { beat: 9, from: "in", text: "Obrigado! Suas respostas já foram enviadas para o Dr. Almeida." },
+  { beat: 2, voice: "patient", time: "09:12", echo: true, text: <>✅ Concordo</> },
+  {
+    beat: 3,
+    voice: "pc",
+    time: "09:12",
+    text: "Qual o motivo principal da consulta? Pode contar com as suas palavras.",
+    buttons: [BACK],
+  },
+  { beat: 4, voice: "patient", time: "09:13", text: "Dor de cabeça forte há 4 dias, mais do lado direito." },
+  {
+    beat: 5,
+    voice: "pc",
+    time: "09:13",
+    text: "A dor vem em crises? Piora com luz ou barulho?",
+    buttons: [BACK],
+  },
+  { beat: 6, voice: "patient", time: "09:14", text: "Vem em crises à tarde. Piora com luz forte e tive enjoo ontem." },
+  {
+    beat: 7,
+    voice: "pc",
+    time: "09:14",
+    text: "Sente rigidez ou dor ao mexer o pescoço?",
+    buttons: [{ label: "Sim", icon: "✅", chosen: true }, { label: "Não", icon: "❌" }, BACK],
+  },
+  { beat: 8, voice: "patient", time: "09:14", echo: true, text: <>✅ Sim</> },
+  { beat: 9, voice: "pc", time: "09:15", text: "Obrigado! Suas respostas já foram enviadas para o Dr. Almeida." },
 ];
 
 const STEPS: { at: number; text: string }[] = [
@@ -84,32 +117,24 @@ export function PreCheckDemo({ cta, contexts }: PreCheckDemoProps) {
           <figcaption className="gd-fict">Ilustração com dados fictícios</figcaption>
 
           <div className="gd-phone">
-            <div className="gd-phone__bar" aria-hidden="true">
-              <span className="gd-phone__ava">P</span>
-              <span>
-                <strong>PreCheck</strong>
-                <small>online</small>
-              </span>
-            </div>
-            <div className="gd-chat gd-chat--wa">
+            <ThreadHead product="pc" />
+            <div className="gd-chat">
+              <DayPill>Hoje</DayPill>
               {CHAT.map((m) => (
-                <div key={m.beat} className="gd-msg" data-beat={m.beat} data-fx="msg">
-                  <div className={`gd-bub gd-bub--${m.from}`}>
-                    {m.text}
-                    {m.chips && (
-                      <span className="gd-bub__chips" aria-hidden="true">
-                        {m.chips.map((c) => (
-                          <span key={c}>{c}</span>
-                        ))}
-                      </span>
-                    )}
-                  </div>
-                </div>
+                <Bubble
+                  key={m.beat}
+                  voice={m.voice}
+                  beat={m.beat}
+                  time={m.time}
+                  echo={m.echo}
+                  buttons={m.buttons}
+                  chooseBeat={m.buttons ? m.beat + 1 : undefined}
+                >
+                  {m.text}
+                </Bubble>
               ))}
             </div>
-            <div className="gd-phone__input" aria-hidden="true">
-              <span>Digite sua resposta…</span>
-            </div>
+            <Composer />
           </div>
 
           <div className="gd-summary" data-beat="10" data-fx="cover">
