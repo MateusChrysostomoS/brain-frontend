@@ -98,9 +98,12 @@ type PreCheckDemoProps = {
   cta: ReactNode;
   /** Optional chips under the value line (the PreCheck site lists its contexts). */
   contexts?: string[];
+  /** Heading override. The Brain home names no channel here: its status line
+   *  already says where WhatsApp stands (2026-11-06 merge with the redesign). */
+  title?: ReactNode;
 };
 
-export function PreCheckDemo({ cta, contexts }: PreCheckDemoProps) {
+export function PreCheckDemo({ cta, contexts, title }: PreCheckDemoProps) {
   return (
     <PinnedAct id="precheck" tone="pc" labelledBy="gd-pc-title" beatVh={22}>
       <div className="gd-wrap gd-act__grid">
@@ -110,7 +113,11 @@ export function PreCheckDemo({ cta, contexts }: PreCheckDemoProps) {
             PreCheck <span className="gd-tag__state">em uso</span>
           </p>
           <h2 id="gd-pc-title" className="gd-h2">
-            A pré-consulta acontece no WhatsApp, <em>antes do paciente chegar.</em>
+            {title ?? (
+              <>
+                A pré-consulta acontece no WhatsApp, <em>antes do paciente chegar.</em>
+              </>
+            )}
           </h2>
           <ol className="gd-steps">
             {STEPS.map((s, i) => (

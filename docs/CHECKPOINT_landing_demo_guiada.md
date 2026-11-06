@@ -141,3 +141,14 @@ Pedido do dono, a partir de prints numa tela de 1920×1080 com Windows em 125% (
   lista). Logo do cabeçalho do site da secretarIA subida (espaço embaixo) para os olhos ficarem na altura
   do topo das letras. Validação: tsc, vitest (295 / 623 / 20) e build verdes; atos cabem em 1366×657,
   1280×600 e 390×664.
+
+- **Junção com o redesenho da main (2026-11-06):** enquanto a demo era feita, a página inicial da Brain foi
+  redesenhada na main (Lucas Raposo: `components/landing/site.css`, cabeçalho/rodapé/planos/segurança/FAQ
+  novos, frases sem comprovação removidas). Decisão do dono: manter o redesenho e colocar nele os dois atos
+  fixados. A seção "Produtos" dele virou o PreCheckDemo + SecretariaDemo (dentro de `#produtos`), a seta
+  "Role para ver" foi para o topo dele e a rolagem suave entrou na página. O bloco SITE MAPPING do
+  `guided-demo.css` da Brain agora lê os tokens `--mk-*` (cores, fontes, sombras, cabeçalho 68/60 px).
+  O título do ato do PreCheck na Brain não cita canal ("pelo celular"), porque a linha de status do
+  redesenho trata o WhatsApp como "em breve". Etapas do ato da secretarIA encurtadas para caber numa linha.
+  Validação: tsc, vitest (325) e build verdes; fim de cada ato com o botão dentro da tela em 1280×600,
+  1366×657, 1366×768, 1536×729 e 1920×911; claro e escuro.

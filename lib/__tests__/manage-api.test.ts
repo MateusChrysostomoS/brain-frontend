@@ -1232,6 +1232,77 @@ describe("adminDeleteTenant", () => {
   });
 });
 
+describe("tenant contact e-mail (admin)", () => {
+  it("19. GETs /admin/tenants/{id}/contact-email with the admin bearer", async () => {
+    const session = makeSession({ token: "admtok", role: "admin" });
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(200, { tenant_id: "ten-9", contact_email: "clinica@x.com" }),
+    );
+
+    const result = await api.getTenantContactEmail(session, "ten-9");
+
+    expect(result).toEqual({ tenant_id: "ten-9", contact_email: "clinica@x.com" });
+    const call = fetchMock.mock.calls[0];
+    expect(call[0]).toBe("/admin/tenants/ten-9/contact-email");
+    expect(call[1].method).toBeUndefined();
+    expect(call[1].headers.Authorization).toBe("Bearer admtok");
+  });
+
+  it("19b. PATCHes ONLY { contact_email } with the address", async () => {
+    const session = makeSession({ token: "admtok", role: "admin" });
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(200, { tenant_id: "ten-9", contact_email: "novo@x.com" }),
+    );
+
+    const result = await api.patchTenantContactEmail(session, "ten-9", "novo@x.com");
+
+    expect(result.contact_email).toBe("novo@x.com");
+    const call = fetchMock.mock.calls[0];
+    expect(call[0]).toBe("/admin/tenants/ten-9/contact-email");
+    expect(call[1].method).toBe("PATCH");
+    expect(call[1].headers.Authorization).toBe("Bearer admtok");
+    expect(JSON.parse(call[1].body)).toEqual({ contact_email: "novo@x.com" });
+  });
+
+  it("19c. null clears the e-mail and is sent as JSON null, not omitted", async () => {
+    const session = makeSession({ token: "admtok", role: "admin" });
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(200, { tenant_id: "ten-9", contact_email: null }),
+    );
+
+    const result = await api.patchTenantContactEmail(session, "ten-9", null);
+
+    expect(result.contact_email).toBeNull();
+    expect(fetchMock.mock.calls[0][1].body).toBe('{"contact_email":null}');
+  });
+
+  it("19d. surfaces the backend detail codes as ManageApiError.message", async () => {
+    const session = makeSession({ token: "admtok", role: "admin" });
+    const cases: Array<[number, string]> = [
+      [404, "secretaria_tenant_not_found"],
+      [404, "Tenant not found"],
+      [422, "invalid_contact_email"],
+      [502, "secretaria_unavailable"],
+    ];
+    for (const [status, detail] of cases) {
+      fetchMock.mockResolvedValueOnce(mockResponse(status, { detail }));
+      await expectManageError(
+        api.patchTenantContactEmail(session, "ten-9", "a@b.com"),
+        status,
+        detail,
+      );
+    }
+    fetchMock.mockResolvedValueOnce(
+      mockResponse(404, { detail: "secretaria_tenant_not_found" }),
+    );
+    await expectManageError(
+      api.getTenantContactEmail(session, "ten-9"),
+      404,
+      "secretaria_tenant_not_found",
+    );
+  });
+});
+
 // ---------------------------------------------------------------------------
 // Doctor appointments / patients — /app dashboard SecretariaPanel data-truth pass
 // ---------------------------------------------------------------------------

@@ -63,7 +63,7 @@ export const PRICING: Record<PricingPlanKey, PricingPlan> = {
   // <faixa de baixo>" instead of repeating the same four lines three times.
   precheckStart: {
     name: "PreCheck Start",
-    tagline: "Pré-consulta no WhatsApp",
+    tagline: "A faixa de entrada",
     amount: "R$ 119,99",
     unit: "/mês",
     features: [
@@ -115,7 +115,10 @@ export const PRICING: Record<PricingPlanKey, PricingPlan> = {
   },
   secretaria: {
     name: "Plano secretarIA",
-    tagline: "Secretária com IA no WhatsApp",
+    // Not "no WhatsApp": the channel today is the clinic's own chat (Portal
+    // Brain); WhatsApp is still pending Meta approval. Taglines are read only by
+    // the marketing pricing section (/cadastro has its own copy in plans.ts).
+    tagline: "Secretária virtual da clínica",
     // secretarIA is fully metered — no flat/anchor monthly fee (2026-07-22 catalog
     // collapse). Billed on active professionals, billable patients, and reminders
     // sent outside the WhatsApp 24h window, so there is no single "R$ X/mês" to show.

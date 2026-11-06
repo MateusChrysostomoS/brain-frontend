@@ -24,21 +24,26 @@ html.lenis, html.lenis body { height: auto; }
 .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
 .lenis.lenis-stopped { overflow: hidden; }
 
-/* ---------- SITE MAPPING (brain-frontend: brand-ds.css tokens) ---------- */
+/* ---------- SITE MAPPING (brain-frontend: the marketing system's --mk-* tokens) ---------- */
+/* The Brain home was redesigned on main (components/landing/site.css, scoped to
+   .site) while this demo was being built; on 2026-11-06 the owner chose to keep
+   that page and drop the two pinned acts into it, so the acts read the
+   redesign's tokens, fonts and header height. The WhatsApp-style tokens still
+   come from brand-ds.css, which the (site) layout keeps loading. */
 .gd-page {
-  --gd-page: var(--page);
-  --gd-surface: var(--surface);
-  --gd-surface-2: var(--surface-2);
-  --gd-ink: var(--ink);
-  --gd-soft: var(--ink-soft);
-  --gd-line: var(--line);
-  --gd-line-strong: var(--line-strong);
-  --gd-serif: var(--font-serif);
-  --gd-sans: var(--font-sans);
-  --gd-accent: var(--brand);
+  --gd-page: var(--mk-bg);
+  --gd-surface: var(--mk-surface);
+  --gd-surface-2: var(--mk-surface-2);
+  --gd-ink: var(--mk-ink);
+  --gd-soft: var(--mk-ink-2);
+  --gd-line: var(--mk-line);
+  --gd-line-strong: var(--mk-line-2);
+  --gd-serif: var(--mk-serif);
+  --gd-sans: var(--mk-sans);
+  --gd-accent: var(--mk-brand);
   --gd-header: 68px;
-  --gd-shadow: var(--shadow-lg);
-  --gd-shadow-sm: var(--shadow-sm);
+  --gd-shadow: var(--mk-shadow-float);
+  --gd-shadow-sm: var(--mk-shadow-card);
   --gd-wa-screen: var(--wa-screen);
   --gd-wa-in: var(--wa-in);
   --gd-wa-in-ink: var(--wa-in-ink);
@@ -47,17 +52,12 @@ html.lenis, html.lenis body { height: auto; }
   --gd-wa-bar: var(--wa-bar);
   --gd-frame: #1d2b28;
 }
-/* Brain's own identity is green: the brand token is re-pointed for this page
-   only (buttons, italic highlights, links), the portal keeps its teal. */
-.gd-site--brain {
-  --brand: #27704a; --brand-strong: #1d5a3a; --brand-tint: #dbeede; --brand-ink: #1f5a3b;
-}
-[data-theme="dark"] .gd-site--brain {
-  --brand: #5cc088; --brand-strong: #74cf9b; --brand-tint: #103425; --brand-ink: #7fd3a2;
-  --gd-frame: #2b333c;
-}
-[data-theme="dark"] .gd-site--brain .btn--primary,
-[data-theme="dark"] .gd-site--brain .price-flag { color: #0d1117; }
+[data-theme="dark"] .gd-page { --gd-frame: #2b333c; }
+/* site.css: the header drops to 60px on small screens */
+@media (max-width: 640px) { .gd-page { --gd-header: 60px; } }
+/* the "role para ver" arrow sits at the foot of the redesign's hero */
+.gd-page .mk-hero { position: relative; }
+.gd-page .mk-hero .gd-scrolldown { z-index: 3; }
 
 /* ---------- product tones ---------- */
 .gd-page {
@@ -562,7 +562,7 @@ html.lenis, html.lenis body { height: auto; }
   .gd-scene--pc, .gd-scene--sa { grid-template-columns: 1fr; }
   .gd-phone { max-width: 360px; width: 100%; justify-self: center; }
   .gd-how__grid { grid-template-columns: 1fr; }
-  .gd-act__cta .btn, .gd-act__cta .btn-primary { width: 100%; justify-content: center; }
+  .gd-act__cta .btn, .gd-act__cta .btn-primary, .gd-act__cta .mk-btn { width: 100%; justify-content: center; }
 
   .is-live .gd-stage { padding-top: calc(var(--gd-header) + 12px); padding-bottom: 12px; }
   .is-live .gd-act__grid { display: flex; flex-direction: column; gap: 10px; }
