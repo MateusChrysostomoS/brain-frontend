@@ -102,7 +102,7 @@ type PreCheckDemoProps = {
 
 export function PreCheckDemo({ cta, contexts }: PreCheckDemoProps) {
   return (
-    <PinnedAct id="precheck" tone="pc" labelledBy="gd-pc-title" beatVh={18}>
+    <PinnedAct id="precheck" tone="pc" labelledBy="gd-pc-title" beatVh={22}>
       <div className="gd-wrap gd-act__grid">
         <div className="gd-act__copy">
           <p className="gd-tag">
