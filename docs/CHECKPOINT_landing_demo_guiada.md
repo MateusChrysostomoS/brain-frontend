@@ -152,3 +152,8 @@ Pedido do dono, a partir de prints numa tela de 1920×1080 com Windows em 125% (
   redesenho trata o WhatsApp como "em breve". Etapas do ato da secretarIA encurtadas para caber numa linha.
   Validação: tsc, vitest (325) e build verdes; fim de cada ato com o botão dentro da tela em 1280×600,
   1366×657, 1366×768, 1536×729 e 1920×911; claro e escuro.
+
+- **Canal do PreCheck (2026-11-06, dono):** o PreCheck funciona só no chat da clínica (Portal Brain); o WhatsApp
+  não está em uso. Site do PreCheck sem "pelo WhatsApp" (descrição, topo, passo 1, rodapé, "Sob o capô" agora
+  diz "Chat da clínica no Portal Brain"); o ato do PreCheck diz "A pré-consulta acontece no chat da clínica" em
+  todos os sites. Ficaram de fora, para o dono decidir: /comecar e /outros-produtos ainda citam WhatsApp.

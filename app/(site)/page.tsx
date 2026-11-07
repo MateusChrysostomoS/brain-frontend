@@ -199,11 +199,6 @@ export default function BrainHomePage() {
             PinnedAct; static and complete without JS or with reduced motion. */}
         <div id="produtos">
           <PreCheckDemo
-            title={
-              <>
-                A pré-consulta acontece pelo celular, <em>antes do paciente chegar.</em>
-              </>
-            }
             cta={
               <Link href="/precheck" className="mk-btn mk-btn--primary">
                 Conhecer o PreCheck

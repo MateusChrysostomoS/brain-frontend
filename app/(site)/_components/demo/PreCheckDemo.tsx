@@ -1,5 +1,5 @@
-// PreCheckDemo — act 2 of the guided demo: the pre-visit conversation on
-// WhatsApp, message by message (terms → standard questions → the AI's
+// PreCheckDemo — act 2 of the guided demo: the pre-visit conversation in the
+// clinic's chat (Portal Brain), message by message (terms → standard questions → the AI's
 // deepening questions), and then the summary the doctor receives, with the
 // alarm sign highlighted. Scroll-scrubbed by PinnedAct (see the data-*
 // contract there). A server component: all of the copy is in the static HTML.
@@ -7,6 +7,8 @@
 // Copy rules (owner, 2026-11-05): made-up data only, labelled as such; the
 // PreCheck organises the answers and the DOCTOR evaluates and decides — the
 // summary never reads as a diagnosis; status label "em uso" is fixed.
+// CHANNEL (owner, 2026-11-06): the PreCheck runs only in the clinic's chat on
+// the Portal Brain; WhatsApp is not in use, so no copy here may say it is.
 
 import type { ReactNode } from "react";
 import { Bubble, Composer, DayPill, ThreadHead, type ReplyButton } from "./ChatParts";
@@ -98,8 +100,7 @@ type PreCheckDemoProps = {
   cta: ReactNode;
   /** Optional chips under the value line (the PreCheck site lists its contexts). */
   contexts?: string[];
-  /** Heading override. The Brain home names no channel here: its status line
-   *  already says where WhatsApp stands (2026-11-06 merge with the redesign). */
+  /** Heading override (defaults to the clinic-chat heading). */
   title?: ReactNode;
 };
 
@@ -115,7 +116,7 @@ export function PreCheckDemo({ cta, contexts, title }: PreCheckDemoProps) {
           <h2 id="gd-pc-title" className="gd-h2">
             {title ?? (
               <>
-                A pré-consulta acontece no WhatsApp, <em>antes do paciente chegar.</em>
+                A pré-consulta acontece no chat da clínica, <em>antes do paciente chegar.</em>
               </>
             )}
           </h2>
