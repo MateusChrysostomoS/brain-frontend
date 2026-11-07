@@ -50,8 +50,8 @@ function Plan({
 const tier = (name: string) => name.replace(/^PreCheck\s+/, "");
 
 export function Pricing() {
-  // While secretarIA is behind the launch gate its button opens the waitlist,
-  // so say that on the button. Flipping PRODUCT_LAUNCHED restores the label.
+  // While secretarIA is behind the launch gate its card points to the team
+  // (contact form). Flipping PRODUCT_LAUNCHED restores the checkout button.
   const secretariaIds = PRICING.secretaria.catalogIds ?? [];
   const secretariaGated = isPurchaseGated(["secretaria_basico", ...secretariaIds]);
 
@@ -65,7 +65,7 @@ export function Pricing() {
           </h2>
           <p className="mk-lead">
             O PreCheck tem três faixas, pelo volume de pré-consultas do mês, e pode ser contratado
-            aqui mesmo. A secretarIA é cobrada pelo uso e está em piloto.
+            aqui mesmo. A secretarIA é cobrada pelo uso; para contratar, fale com a equipe.
           </p>
         </div>
 
@@ -124,13 +124,22 @@ export function Pricing() {
               <Plan
                 plan={PRICING.secretaria}
                 name={<SecretariaMark />}
-                badge={<StatusTag status="pilot" />}
+                badge={<StatusTag status="live" label="Disponível" />}
                 cta={
-                  <PlanCheckoutCta
-                    plan="secretaria_basico"
-                    catalogIds={secretariaIds}
-                    label={secretariaGated ? "Entrar na lista de espera" : "Contratar secretarIA"}
-                  />
+                  // Ready in the Portal (owner, 2026-11-06), but the self-service
+                  // checkout is still gated (it sells the WhatsApp-based setup), so
+                  // while the gate is on the way in is the team, not a waitlist.
+                  secretariaGated ? (
+                    <a href="#contato" className="mk-btn mk-btn--primary mk-btn--block">
+                      Falar com a equipe
+                    </a>
+                  ) : (
+                    <PlanCheckoutCta
+                      plan="secretaria_basico"
+                      catalogIds={secretariaIds}
+                      label="Contratar secretarIA"
+                    />
+                  )
                 }
               />
               <Plan

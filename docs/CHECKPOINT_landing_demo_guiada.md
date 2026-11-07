@@ -157,3 +157,11 @@ Pedido do dono, a partir de prints numa tela de 1920×1080 com Windows em 125% (
   não está em uso. Site do PreCheck sem "pelo WhatsApp" (descrição, topo, passo 1, rodapé, "Sob o capô" agora
   diz "Chat da clínica no Portal Brain"); o ato do PreCheck diz "A pré-consulta acontece no chat da clínica" em
   todos os sites. Ficaram de fora, para o dono decidir: /comecar e /outros-produtos ainda citam WhatsApp.
+
+- **secretarIA pronta + PreCheck no Portal (2026-11-06, dono):** a secretarIA não está mais "em piloto": é
+  "disponível" no chat da clínica (Portal Brain), só o WhatsApp é "em breve". Trocado nos três sites (selos, topo,
+  status, perguntas frequentes, botões "Quero a secretarIA na clínica"). Na Brain, o cartão de preço da
+  secretarIA mostra "Disponível" e, enquanto a compra direta continua bloqueada no código (ela vende a
+  instalação com WhatsApp), o botão leva à equipe em vez da lista de espera. No site do PreCheck,
+  /comecar e /outros-produtos agora explicam o link/QR Code que abre a conversa no Portal Brain, "como
+  no WhatsApp", e a secretarIA aparece como disponível.

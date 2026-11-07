@@ -76,7 +76,7 @@ const FAQ: FaqEntry[] = [
   },
   {
     q: "A secretarIA já está disponível?",
-    a: "Ela está entrando em piloto com as primeiras clínicas. Se quiser participar, ou só ser avisado quando abrir, deixe seu contato no formulário abaixo.",
+    a: "Sim. Ela já atende pelo chat da clínica, no Portal Brain: o paciente entra na conversa por um link ou QR code. O WhatsApp chega em breve. Para começar, deixe seu contato no formulário abaixo.",
   },
   {
     q: "A IA substitui o médico ou a recepção?",
@@ -110,10 +110,10 @@ export default function BrainHomePage() {
             <div className="mk-hero__copy mk-enter">
               <a href="#secretaria" className="mk-announce" style={d(0)}>
                 <span className="mk-announce__tag">
-                  <span className="mk-dot mk-dot--pilot" aria-hidden="true" />
-                  Piloto
+                  <span className="mk-dot mk-dot--live" aria-hidden="true" />
+                  Novo
                 </span>
-                A secretarIA está chegando às primeiras clínicas
+                A secretarIA já atende no chat da clínica
                 <BrandIcon name="arrowR" />
               </a>
               <h1 id="hero-t" className="mk-display" style={d(1)}>
@@ -155,7 +155,8 @@ export default function BrainHomePage() {
                 </div>
               </div>
 
-              {/* Honest status line: what is live, what is in pilot, what is next. */}
+              {/* Honest status line: what is live and what is next. The secretarIA is
+                  ready in the Portal (owner, 2026-11-06); only WhatsApp is "em breve". */}
               <ul className="mk-status" aria-label="Onde estamos hoje">
                 <li className="mk-status__item">
                   <div className="mk-status__head">
@@ -170,10 +171,10 @@ export default function BrainHomePage() {
                   <div className="mk-status__head">
                     <SecretariaMark />
                     <span className="mk-status__state">
-                      <StatusTag status="pilot" />
+                      <StatusTag status="live" label="Disponível" />
                     </span>
                   </div>
-                  <p>Entrando em piloto com as primeiras clínicas.</p>
+                  <p>Pronta no chat da clínica, no Portal Brain.</p>
                 </li>
                 <li className="mk-status__item">
                   <div className="mk-status__head">
@@ -208,7 +209,7 @@ export default function BrainHomePage() {
           <SecretariaDemo
             cta={
               <a href="#contato" className="mk-btn mk-btn--primary">
-                Quero participar do piloto
+                Quero a secretarIA na clínica
               </a>
             }
           />
